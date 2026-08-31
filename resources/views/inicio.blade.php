@@ -8,7 +8,7 @@
 
 <div class="space-y-6">
 
-    {{-- Encabezado --}}
+     <!-- Encabezado  -->
     <div>
         <h2 class="text-2xl font-bold text-texto">
             Bienvenido al sistema
@@ -20,7 +20,7 @@
     </div>
 
 
-    {{-- Estado del periodo --}}
+    <!-- Estado del periodo  -->
     <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -46,10 +46,10 @@
     </div>
 
 
-    {{-- Tarjetas de resumen --}}
+    <!-- Tarjetas de resumen  -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-        {{-- Carreras --}}
+        <!-- Carreras -->
         <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
@@ -97,7 +97,7 @@
         </div>
 
 
-        {{-- Profesores --}}
+        <!-- Profesores  -->
         <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
@@ -148,7 +148,7 @@
         </div>
 
 
-        {{-- Salas --}}
+        <!-- Salas -->
         <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
@@ -191,7 +191,7 @@
         </div>
 
 
-        {{-- Cursos --}}
+        <!-- Cursos  -->
         <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
@@ -241,10 +241,10 @@
     </div>
 
 
-    {{-- Panel inferior --}}
+    <!-- Panel inferior  -->
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
-        {{-- Vista semanal --}}
+        <!-- Vista semanal  -->
         <div class="xl:col-span-2 rounded-xl border border-borde bg-superficie shadow-sm">
 
             <div class="border-b border-borde px-5 py-4">
@@ -282,7 +282,7 @@
         </div>
 
 
-        {{-- Estado de validación --}}
+        <!-- Estado de validación  -->
         <div class="rounded-xl border border-borde bg-superficie shadow-sm">
 
             <div class="border-b border-borde px-5 py-4">
