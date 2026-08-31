@@ -2,7 +2,7 @@
 
     <div class="flex h-full flex-col">
 
-        {{-- Logo y nombre del sistema --}}
+       <!-- Logo y nombre del sistema -->
 <div class="border-b border-borde px-6 py-5">
 
     <div class="flex justify-center">
@@ -13,17 +13,17 @@
         >
     </div>
 
-    <div class="mt-4">
+    <div class="mt-3">
 
-        <p class="text-base font-bold text-texto">
+        <p class="text-lg font-bold text-texto">
             Sistema de Gestión
         </p>
 
-        <p class="text-base font-bold text-texto">
+        <p class="text-lg font-bold text-texto">
             de Horarios y Salas
         </p>
 
-        <p class="mt-1 text-xs text-texto-secundario">
+        <p class="mt-1 text-sm text-texto-secundario">
             Gestión académica
         </p>
 
@@ -209,3 +209,160 @@
     </div>
 
 </aside>
+
+<!-- Sidebar móvil -->
+<div
+    id="sidebar-movil"
+    class="fixed inset-0 z-50 hidden lg:hidden"
+    aria-hidden="true"
+>
+
+    <!-- Fondo oscuro -->
+    <div
+        id="fondo-sidebar-movil"
+        class="absolute inset-0 bg-black/40"
+    ></div>
+
+    <!-- Panel lateral -->
+    <aside
+        class="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-superficie shadow-xl"
+    >
+
+        <div class="flex h-full flex-col">
+
+        <!-- Encabezado del Sidebar móvil -->
+<div class="relative border-b border-borde px-6 py-5">
+
+    <!-- Botón cerrar -->
+    <button
+        type="button"
+        id="cerrar-menu-movil"
+        class="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-lg text-texto-secundario transition-colors hover:bg-fondo hover:text-texto"
+        aria-label="Cerrar menú"
+    >
+
+        <svg
+            class="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+            />
+
+        </svg>
+
+    </button>
+
+
+    <!-- Logo -->
+    <div class="flex justify-center">
+
+        <img
+            src="{{ asset('images/main-logo.svg') }}"
+            alt="Universidad Católica de la Santísima Concepción"
+            class="h-14 w-auto -translate-x-2"
+        >
+
+    </div>
+
+
+   <!-- Nombre del sistema -->
+<div class="mt-3">
+
+    <p class="text-lg font-bold text-texto">
+        Sistema de Gestión
+    </p>
+
+    <p class="text-lg font-bold text-texto">
+        de Horarios y Salas
+    </p>
+
+    <p class="mt-1 text-sm text-texto-secundario">
+        Gestión académica
+    </p>
+
+</div>
+
+</div>
+
+            <!-- Navegación móvil -->
+            <nav class="flex-1 overflow-y-auto px-4 py-6">
+
+                <p class="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-texto-secundario">
+                    Menú principal
+                </p>
+
+                <div class="space-y-1">
+
+                    <!-- Inicio -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg bg-institucional px-3 py-2.5 text-sm font-medium text-white"
+                    >
+                        Inicio
+                    </a>
+
+                    <!-- Planificación -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Planificación
+                    </a>
+
+                    <!-- Horarios -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Horarios
+                    </a>
+
+                    <!-- Profesores -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Profesores
+                    </a>
+
+                    <!-- Salas y recursos -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Salas y recursos
+                    </a>
+
+                    <!-- Validación -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Validación
+                    </a>
+
+                    <!-- Reportes -->
+                    <a
+                        href="#"
+                        class="flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-texto transition-colors hover:bg-fondo"
+                    >
+                        Reportes
+                    </a>
+
+                </div>
+
+            </nav>
+
+        </div>
+
+    </aside>
+
+</div>
