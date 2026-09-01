@@ -21,3 +21,8 @@
 
     --color-borde: #e5e7eb;
 }
+
+/* Sombra de las tarjetas */
+.sombra-card {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
