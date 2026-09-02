@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Iniciar sesión | Sistema de Gestión de Horarios y Salas</title>
+    <title>Iniciar sesión | PROSEC</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -25,60 +25,32 @@
         <!-- Tarjeta principal -->
         <div
             class="sombra-card w-full rounded-xl border border-borde bg-superficie"
-            style="max-width: 500px;"
+            style="max-width: 450px;"
         >
 
             <div
-                style="padding: 38px 42px 34px 42px;"
+                style="padding: 50px 42px 30px 42px;"
             >
 
-                <!-- Logo -->
+                <!-- Logo PROSEC -->
                 <div class="flex justify-center">
 
                     <img
-                        src="{{ asset('images/main-logo.svg') }}"
-                        alt="Universidad Católica de la Santísima Concepción"
-                        style="height: 82px; width: auto;"
+                        src="{{ asset('images/prosec-logo.svg') }}"
+                        alt="PROSEC - Programación Semestral de Cursos"
+                        style="width: 245px; height: auto;"
                     >
 
                 </div>
 
 
-                <!-- Nombre del sistema -->
-                <div
-                    class="text-center"
-                    style="margin-top: 12px;"
-                >
-
-                    <h1
-                        class="font-bold text-texto"
-                        style="font-size: 27px; line-height: 1.25;"
-                    >
-                        Sistema de Gestión
-                    </h1>
-
-                    <h2
-                        class="font-bold text-texto"
-                        style="font-size: 27px; line-height: 1.25;"
-                    >
-                        de Horarios y Salas
-                    </h2>
-
-                    <p
-                        class="text-texto-secundario"
-                        style="margin-top: 6px; font-size: 16px;"
-                    >
-                        Gestión académica
-                    </p>
-
-                </div>
+                
 
 
                 <!-- Formulario -->
                 <div
                     style="margin-top: 28px;"
                 >
-
 
                     <!-- Mensaje de error -->
                     @if ($errors->any())
@@ -172,6 +144,21 @@
 
                     </form>
 
+
+                    <!-- Logo UCSC -->
+                    <div
+                        class="flex justify-center border-t border-borde"
+                        style="margin-top: 28px; padding-top: 22px;"
+                    >
+
+                        <img
+                            src="{{ asset('images/main-logo.svg') }}"
+                            alt="Universidad Católica de la Santísima Concepción"
+                            style="height: 48px; width: auto;"
+                        >
+
+                    </div>
+
                 </div>
 
             </div>
@@ -180,9 +167,9 @@
             <!-- Pie -->
             <div
                 class="border-t border-borde text-center text-texto-secundario"
-                style="padding: 14px 20px; font-size: 12px;"
+                style="padding: 12px 20px; font-size: 12px;"
             >
-                Sistema de Gestión de Horarios y Salas
+                PROSEC · Programación Semestral de Cursos
             </div>
 
         </div>
