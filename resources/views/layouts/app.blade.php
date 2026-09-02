@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
-        @yield('title', 'Sistema de Gestión de Horarios y Salas')
+        @yield('title', 'PROSEC - Programación Semestral de Cursos')
     </title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,16 +18,21 @@
 
     <div class="min-h-screen">
 
-        {{-- Sidebar --}}
+        <!-- Sidebar -->
         @include('components.sidebar')
 
-        {{-- Contenido principal --}}
-        <div class="lg:pl-64">
 
-            {{-- Navbar --}}
+        <!-- Contenido principal -->
+        <div
+            id="contenido-principal"
+            class="transition-all duration-300 lg:ml-64"
+        >
+
+            <!-- Navbar -->
             @include('components.navbar')
 
-            {{-- Contenido de cada página --}}
+
+            <!-- Contenido de cada página -->
             <main class="p-6">
 
                 @yield('content')
