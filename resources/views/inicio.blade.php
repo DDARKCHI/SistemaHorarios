@@ -8,7 +8,7 @@
 
 <div class="space-y-6">
 
-     <!-- Encabezado  -->
+     <!-- primer titulo  -->
     <div>
         <h2 class="text-2xl font-bold text-texto">
             Bienvenido al sistema
@@ -20,7 +20,7 @@
     </div>
 
 
-    <!-- Estado del periodo  -->
+    <!-- Estado del periodo academico  -->
     <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
 
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -46,7 +46,7 @@
     </div>
 
 
-    <!-- Tarjetas de resumen  -->
+    <!-- Tarjetas resumen  -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
         <!-- Carreras -->
@@ -241,7 +241,7 @@
     </div>
 
 
-    <!-- Panel inferior  -->
+    
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
         <!-- Vista semanal  -->

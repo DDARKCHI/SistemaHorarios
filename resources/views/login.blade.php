@@ -22,7 +22,7 @@
         class="flex min-h-screen items-center justify-center px-5 py-8"
     >
 
-        <!-- Tarjeta principal -->
+       
         <div
             class="sombra-card w-full rounded-xl border border-borde bg-superficie"
             style="max-width: 450px;"
@@ -32,7 +32,7 @@
                 style="padding: 50px 42px 30px 42px;"
             >
 
-                <!-- Logo PROSEC -->
+                <!-- Logo -->
                 <div class="flex justify-center">
 
                     <img
@@ -52,7 +52,7 @@
                     style="margin-top: 28px;"
                 >
 
-                    <!-- Mensaje de error -->
+                    
                     @if ($errors->any())
 
                         <div
@@ -106,7 +106,7 @@
                         </div>
 
 
-                        <!-- Contraseña -->
+                        
                         <div
                             style="margin-bottom: 22px;"
                         >
@@ -133,7 +133,7 @@
                         </div>
 
 
-                        <!-- Botón -->
+                       
                         <button
                             type="submit"
                             class="w-full rounded-lg bg-institucional font-semibold text-white transition-colors hover:bg-institucional-oscuro"
@@ -145,7 +145,7 @@
                     </form>
 
 
-                    <!-- Logo UCSC -->
+                    <!-- Logo -->
                     <div
                         class="flex justify-center border-t border-borde"
                         style="margin-top: 28px; padding-top: 22px;"
@@ -164,7 +164,7 @@
             </div>
 
 
-            <!-- Pie -->
+            
             <div
                 class="border-t border-borde text-center text-texto-secundario"
                 style="padding: 12px 20px; font-size: 12px;"
