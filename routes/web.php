@@ -2,19 +2,41 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
-
+use App\Http\Controllers\ImportacionProgramacionController;
+use App\Imports\PruebaImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 // Login
 Route::get('/login', [LoginController::class, 'mostrarLogin'])->name('login');
 
 Route::post('/login', [LoginController::class, 'iniciarSesion'])->name('login.procesar');
 
-
 // Cerrar sesión
 Route::post('/logout', [LoginController::class, 'cerrarSesion'])->name('logout');
-
 
 // Inicio
 Route::get('/', function () {
     return view('inicio');
 })->middleware('auth')->name('inicio');
+
+// Cargar programación anterior
+Route::middleware('auth')->group(function () {
+    Route::get('/programacion/importar', [ImportacionProgramacionController::class, 'index'])
+        ->name('programacion.importar');
+
+    Route::post('/programacion/importar/analizar', [ImportacionProgramacionController::class, 'analizar'])
+        ->name('programacion.importar.analizar');
+});
+
+// Prueba temporal de Laravel Excel
+Route::get('/prueba-excel', function () {
+    $archivo = storage_path('app/prueba.xlsx');
+
+    $datos = Excel::toArray(new PruebaImport, $archivo);
+
+    return response()->json([
+        'hojas' => count($datos),
+        'filas_primera_hoja' => count($datos[0] ?? []),
+        'primeras_filas' => array_slice($datos[0] ?? [], 0, 5),
+    ]);
+});
