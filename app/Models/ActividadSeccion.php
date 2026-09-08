@@ -23,6 +23,11 @@ class ActividadSeccion extends Model
         return $this->belongsTo(Seccion::class);
     }
 
+    public function grupos()
+    {
+        return $this->hasMany(GrupoSeccion::class);
+    }
+
     public function requerimientos()
     {
         return $this->hasMany(RequerimientoActividad::class);

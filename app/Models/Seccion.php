@@ -9,8 +9,8 @@ class Seccion extends Model
     protected $table = 'secciones';
 
     protected $fillable = [
+        'identificador_externo',
         'asignatura_id',
-        'carrera_id',
         'periodo_academico_id',
         'codigo',
         'nombre',
@@ -32,9 +32,12 @@ class Seccion extends Model
         return $this->belongsTo(Asignatura::class);
     }
 
-    public function carrera()
+    public function carreras()
     {
-        return $this->belongsTo(Carrera::class);
+        return $this->belongsToMany(
+            Carrera::class,
+            'secciones_carreras'
+        );
     }
 
     public function periodoAcademico()
@@ -45,6 +48,18 @@ class Seccion extends Model
     public function actividades()
     {
         return $this->hasMany(ActividadSeccion::class);
+    }
+
+    public function grupos()
+    {
+        return $this->hasManyThrough(
+            GrupoSeccion::class,
+            ActividadSeccion::class,
+            'seccion_id',
+            'actividad_seccion_id',
+            'id',
+            'id'
+        );
     }
 
     public function profesores()

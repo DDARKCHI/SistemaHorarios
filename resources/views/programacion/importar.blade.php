@@ -9,11 +9,12 @@
         </h1>
 
         <p class="mt-1 text-sm text-gray-500">
-            Carga un archivo Excel de programación para revisar su estructura antes de incorporarlo al sistema.
+            Carga una programación anterior para analizar sus datos antes de incorporarlos al sistema.
         </p>
     </div>
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+
         <form
             action="{{ route('programacion.importar.analizar') }}"
             method="POST"
@@ -57,7 +58,9 @@
                     Analizar archivo
                 </button>
             </div>
+
         </form>
+
     </div>
 
     @isset($resultado)
@@ -65,6 +68,7 @@
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 
             <div class="flex items-center justify-between gap-4">
+
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800">
                         Resultado del análisis
@@ -88,6 +92,7 @@
                     </span>
 
                 @endif
+
             </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -167,17 +172,182 @@
 
                     <div class="mt-8">
 
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                Resumen de la programación
+                            </h3>
+
+                            <p class="mt-1 text-sm text-gray-500">
+                                Resumen general de los datos que contiene el archivo antes de incorporarlos al sistema.
+                            </p>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Periodos académicos
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $totales['periodos'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Periodos detectados
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Carreras
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $totales['carreras'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Carreras asociadas
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Asignaturas
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $totales['asignaturas'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Asignaturas detectadas
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Secciones
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $totales['secciones'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Secciones reales
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Profesores
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $totales['profesores'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Profesores detectados
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Grupos
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $diagnostico['grupos_unicos'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Grupos detectados
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Relaciones sección-carrera
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $diagnostico['relaciones_seccion_carrera'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Asociaciones detectadas
+                                </p>
+
+                            </div>
+
+                            <div class="rounded-xl border border-gray-200 bg-white p-5">
+
+                                <p class="text-sm text-gray-500">
+                                    Registros procesados
+                                </p>
+
+                                <p class="mt-2 text-3xl font-semibold text-gray-800">
+                                    {{ $resultado['total_registros'] ?? 0 }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Filas del archivo
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+
+                            <p class="font-medium text-blue-800">
+                                Programación detectada correctamente
+                            </p>
+
+                            <p class="mt-1 text-sm text-blue-700">
+                                El archivo contiene
+                                {{ $totales['secciones'] ?? 0 }}
+                                secciones distribuidas entre
+                                {{ $totales['carreras'] ?? 0 }}
+                                carreras y
+                                {{ $totales['profesores'] ?? 0 }}
+                                profesores.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mt-10">
+
                         <h3 class="text-lg font-semibold text-gray-800">
                             Diagnóstico de la estructura académica
                         </h3>
 
                         <p class="mt-1 text-sm text-gray-500">
-                            Identificación de cursos, asignaturas y relaciones con carreras encontradas en el archivo.
+                            Información utilizada para comprobar cómo se interpretará la programación antes de almacenarla.
                         </p>
 
                         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
                                     Filas originales
                                 </p>
@@ -185,63 +355,98 @@
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
                                     {{ $diagnostico['filas_originales'] ?? 0 }}
                                 </p>
+
                             </div>
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
-                                    ID_CURSO únicos
+                                    Cursos únicos
                                 </p>
 
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
                                     {{ $diagnostico['id_cursos_unicos'] ?? 0 }}
                                 </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    ID_CURSO
+                                </p>
+
                             </div>
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
-                                    COD_RAMO únicos
+                                    Asignaturas
                                 </p>
 
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
                                     {{ $diagnostico['cod_ramos_unicos'] ?? 0 }}
                                 </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    COD_RAMO
+                                </p>
+
                             </div>
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
-                                    ID_CURSO + SECC
+                                    Secciones
                                 </p>
 
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
                                     {{ $diagnostico['id_curso_seccion_unicos'] ?? 0 }}
                                 </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Secciones reales detectadas
+                                </p>
+
                             </div>
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
-                                    ID_CURSO + Carrera
+                                    Relaciones sección-carrera
                                 </p>
 
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['id_curso_carrera_unicos'] ?? 0 }}
+                                    {{ $diagnostico['relaciones_seccion_carrera'] ?? 0 }}
                                 </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Asociaciones detectadas
+                                </p>
+
                             </div>
 
                             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
                                 <p class="text-sm text-gray-500">
-                                    RAMO + SECC + Carrera
+                                    Grupos
                                 </p>
 
                                 <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['ramo_seccion_carrera_unicos'] ?? 0 }}
+                                    {{ $diagnostico['grupos_unicos'] ?? 0 }}
                                 </p>
+
+                                <p class="mt-1 text-xs text-gray-500">
+                                    Grupos detectados en horarios
+                                </p>
+
                             </div>
 
                         </div>
 
-                        @if(($diagnostico['cursos_compartidos'] ?? 0) > 0)
+                    </div>
 
-                            <div class="mt-5 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+                    @if(($diagnostico['cursos_compartidos'] ?? 0) > 0)
+
+                        <div class="mt-8">
+
+                            <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
 
                                 <p class="font-medium text-yellow-800">
                                     Cursos asociados a más de una carrera:
@@ -249,7 +454,7 @@
                                 </p>
 
                                 <p class="mt-1 text-sm text-yellow-700">
-                                    Se detectaron cursos compartidos entre distintas carreras. Se revisará su relación con los profesores antes de definir la estructura definitiva.
+                                    Estos cursos se mantendrán como una misma sección con relaciones hacia las carreras correspondientes.
                                 </p>
 
                             </div>
@@ -359,6 +564,7 @@
                                                         @forelse($curso['profesores'] ?? [] as $profesor)
 
                                                             <div>
+
                                                                 {{ $profesor['nombre'] ?: 'Profesor sin nombre' }}
 
                                                                 @if(!empty($profesor['identificador']))
@@ -368,6 +574,7 @@
                                                                     </span>
 
                                                                 @endif
+
                                                             </div>
 
                                                         @empty
@@ -440,117 +647,83 @@
 
                             </div>
 
-                        @else
+                        </div>
 
-                            <div class="mt-5 rounded-lg border border-green-200 bg-green-50 p-4">
+                    @else
 
-                                <p class="font-medium text-green-800">
-                                    No se detectaron cursos asociados a múltiples carreras.
+                        <div class="mt-8 rounded-lg border border-green-200 bg-green-50 p-4">
+
+                            <p class="font-medium text-green-800">
+                                No se detectaron cursos asociados a múltiples carreras.
+                            </p>
+
+                        </div>
+
+                    @endif
+
+                    <div class="mt-10">
+
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            Estado de los datos
+                        </h3>
+
+                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+
+                                <p class="text-sm text-gray-500">
+                                    Periodos nuevos
+                                </p>
+
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $resultado['comparacion']['periodos']['nuevos'] ?? 0 }}
                                 </p>
 
                             </div>
 
-                        @endif
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 
-                    </div>
+                                <p class="text-sm text-gray-500">
+                                    Carreras nuevas
+                                </p>
 
-                    <div class="mt-8">
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $resultado['comparacion']['carreras']['nuevas'] ?? 0 }}
+                                </p>
 
-                        <h3 class="text-lg font-semibold text-gray-800">
-                            Comparación con la base de datos
-                        </h3>
+                            </div>
 
-                        <p class="mt-1 text-sm text-gray-500">
-                            Elementos detectados en el archivo y su estado actual en PROSEC.
-                        </p>
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 
-                    </div>
+                                <p class="text-sm text-gray-500">
+                                    Asignaturas nuevas
+                                </p>
 
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $resultado['comparacion']['asignaturas']['nuevas'] ?? 0 }}
+                                </p>
 
-                        <div class="rounded-xl border border-gray-200 bg-white p-4">
-                            <p class="text-sm text-gray-500">
-                                Periodos
-                            </p>
+                            </div>
 
-                            <p class="mt-2 text-2xl font-semibold text-gray-800">
-                                {{ $totales['periodos'] ?? 0 }}
-                            </p>
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 
-                            <p class="mt-1 text-xs text-gray-500">
-                                {{ $resultado['comparacion']['periodos']['nuevos'] ?? 0 }} nuevos
-                                ·
-                                {{ $resultado['comparacion']['periodos']['existentes'] ?? 0 }} existentes
-                            </p>
-                        </div>
+                                <p class="text-sm text-gray-500">
+                                    Profesores nuevos
+                                </p>
 
-                        <div class="rounded-xl border border-gray-200 bg-white p-4">
-                            <p class="text-sm text-gray-500">
-                                Carreras
-                            </p>
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $resultado['comparacion']['profesores']['nuevos'] ?? 0 }}
+                                </p>
 
-                            <p class="mt-2 text-2xl font-semibold text-gray-800">
-                                {{ $totales['carreras'] ?? 0 }}
-                            </p>
+                            </div>
 
-                            <p class="mt-1 text-xs text-gray-500">
-                                {{ $resultado['comparacion']['carreras']['nuevas'] ?? 0 }} nuevas
-                                ·
-                                {{ $resultado['comparacion']['carreras']['existentes'] ?? 0 }} existentes
-                            </p>
-                        </div>
-
-                        <div class="rounded-xl border border-gray-200 bg-white p-4">
-                            <p class="text-sm text-gray-500">
-                                Asignaturas
-                            </p>
-
-                            <p class="mt-2 text-2xl font-semibold text-gray-800">
-                                {{ $totales['asignaturas'] ?? 0 }}
-                            </p>
-
-                            <p class="mt-1 text-xs text-gray-500">
-                                {{ $resultado['comparacion']['asignaturas']['nuevas'] ?? 0 }} nuevas
-                                ·
-                                {{ $resultado['comparacion']['asignaturas']['existentes'] ?? 0 }} existentes
-                            </p>
-                        </div>
-
-                        <div class="rounded-xl border border-gray-200 bg-white p-4">
-                            <p class="text-sm text-gray-500">
-                                Profesores
-                            </p>
-
-                            <p class="mt-2 text-2xl font-semibold text-gray-800">
-                                {{ $totales['profesores'] ?? 0 }}
-                            </p>
-
-                            <p class="mt-1 text-xs text-gray-500">
-                                {{ $resultado['comparacion']['profesores']['nuevos'] ?? 0 }} nuevos
-                                ·
-                                {{ $resultado['comparacion']['profesores']['existentes'] ?? 0 }} existentes
-                            </p>
-                        </div>
-
-                        <div class="rounded-xl border border-gray-200 bg-white p-4">
-                            <p class="text-sm text-gray-500">
-                                Secciones preliminares
-                            </p>
-
-                            <p class="mt-2 text-2xl font-semibold text-gray-800">
-                                {{ $totales['secciones'] ?? 0 }}
-                            </p>
-
-                            <p class="mt-1 text-xs text-gray-500">
-                                Este valor aún no define la estructura final.
-                            </p>
                         </div>
 
                     </div>
 
                     @if(($totales['errores'] ?? 0) > 0)
 
-                        <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                        <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
 
                             <p class="font-medium text-red-800">
                                 Se encontraron
@@ -562,7 +735,7 @@
 
                     @else
 
-                        <div class="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
+                        <div class="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
 
                             <p class="font-medium text-green-800">
                                 No se encontraron errores en los registros analizados.
@@ -572,9 +745,25 @@
 
                     @endif
 
+                    <div class="mt-8 flex justify-end">
+
+                        <button
+                            type="button"
+                            disabled
+                            class="cursor-not-allowed rounded-lg bg-gray-300 px-5 py-2.5 text-sm font-medium text-gray-600"
+                        >
+                            Confirmar carga
+                        </button>
+
+                    </div>
+
+                    <p class="mt-2 text-right text-xs text-gray-400">
+                        La confirmación de carga se habilitará cuando finalicemos la persistencia de los datos.
+                    </p>
+
                 @endif
 
-                <div class="mt-8">
+                <div class="mt-10">
 
                     <h3 class="text-sm font-semibold text-gray-800">
                         Primeras filas normalizadas

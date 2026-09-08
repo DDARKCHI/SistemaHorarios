@@ -7,12 +7,15 @@ use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
 // Login
-Route::get('/login', [LoginController::class, 'mostrarLogin'])->name('login');
+Route::get('/login', [LoginController::class, 'mostrarLogin'])
+    ->name('login');
 
-Route::post('/login', [LoginController::class, 'iniciarSesion'])->name('login.procesar');
+Route::post('/login', [LoginController::class, 'iniciarSesion'])
+    ->name('login.procesar');
 
 // Cerrar sesión
-Route::post('/logout', [LoginController::class, 'cerrarSesion'])->name('logout');
+Route::post('/logout', [LoginController::class, 'cerrarSesion'])
+    ->name('logout');
 
 // Inicio
 Route::get('/', function () {
@@ -21,11 +24,26 @@ Route::get('/', function () {
 
 // Cargar programación anterior
 Route::middleware('auth')->group(function () {
-    Route::get('/programacion/importar', [ImportacionProgramacionController::class, 'index'])
-        ->name('programacion.importar');
 
-    Route::post('/programacion/importar/analizar', [ImportacionProgramacionController::class, 'analizar'])
-        ->name('programacion.importar.analizar');
+    Route::get(
+        '/programacion/importar',
+        [ImportacionProgramacionController::class, 'index']
+    )->name('programacion.importar');
+
+    Route::post(
+        '/programacion/importar/analizar',
+        [ImportacionProgramacionController::class, 'analizar']
+    )->name('programacion.importar.analizar');
+
+    Route::post(
+        '/programacion/importar/confirmar',
+        [ImportacionProgramacionController::class, 'confirmar']
+    )->name('programacion.importar.confirmar');
+
+    Route::post(
+        '/programacion/importar/cancelar',
+        [ImportacionProgramacionController::class, 'cancelar']
+    )->name('programacion.importar.cancelar');
 });
 
 // Prueba temporal de Laravel Excel

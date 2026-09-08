@@ -10,10 +10,10 @@ class Horario extends Model
 
     protected $fillable = [
         'actividad_seccion_id',
+        'grupo_seccion_id',
         'version_planificacion_id',
         'dia_id',
         'bloque_horario_id',
-        'grupo',
         'observaciones',
         'estado',
     ];
@@ -21,6 +21,11 @@ class Horario extends Model
     public function actividadSeccion()
     {
         return $this->belongsTo(ActividadSeccion::class);
+    }
+
+    public function grupoSeccion()
+    {
+        return $this->belongsTo(GrupoSeccion::class);
     }
 
     public function versionPlanificacion()

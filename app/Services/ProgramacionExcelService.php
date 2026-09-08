@@ -6,9 +6,9 @@ class ProgramacionExcelService
 {
     public function analizar(array $hojas): array
     {
-        $filas = $hojas[0] ?? [];
+        $registros = $hojas[0] ?? [];
 
-        if (empty($filas)) {
+        if (empty($registros)) {
             return [
                 'valido' => false,
                 'error' => 'El archivo no contiene información.',
@@ -21,55 +21,38 @@ class ProgramacionExcelService
             ];
         }
 
-        $encabezadosOriginales = $filas[0];
+        $encabezados = array_keys($registros[0] ?? []);
 
-        $encabezados = array_map(
-            fn ($encabezado) => $this->normalizarEncabezado($encabezado),
-            $encabezadosOriginales
-        );
-
-        $registros = [];
         $filasVacias = 0;
+        $registrosNormalizados = [];
 
-        foreach (array_slice($filas, 1) as $fila) {
-            $fila = array_values($fila);
-
+        foreach ($registros as $fila) {
             if ($this->filaEstaVacia($fila)) {
                 $filasVacias++;
                 continue;
             }
 
-            $registro = [];
-
-            foreach ($encabezados as $indice => $encabezado) {
-                if ($encabezado === '') {
-                    continue;
-                }
-
-                $registro[$encabezado] = $fila[$indice] ?? null;
-            }
-
-            $registros[] = $registro;
+            $registrosNormalizados[] = $fila;
         }
 
         $columnasRequeridas = [
-            'ID_CURSO',
-            'COD_RAMO',
-            'RAMO_NOMBRE',
-            'SECC',
-            'SEMESTRE',
-            'SEDE',
-            'PROF_RESP',
-            'NOM_PROF_RESP',
-            'UA',
-            'NOM_CARR',
-            'CUPO',
-            'MODALIDAD',
-            'CATEGORIA',
-            'TIPO_DICTACION',
-            'COD_SEDE',
-            'ESTADO_CURSO',
-            'ID_RAMO',
+            'id_curso',
+            'cod_ramo',
+            'ramo_nombre',
+            'secc',
+            'semestre',
+            'sede',
+            'prof_resp',
+            'nom_prof_resp',
+            'ua',
+            'nom_carr',
+            'cupo',
+            'modalidad',
+            'categoria',
+            'tipo_dictacion',
+            'cod_sede',
+            'estado_curso',
+            'id_ramo',
         ];
 
         $faltantes = array_values(
@@ -78,31 +61,16 @@ class ProgramacionExcelService
 
         return [
             'valido' => empty($faltantes),
-            'error' => null,
+            'error' => empty($faltantes)
+                ? null
+                : 'El archivo no contiene todas las columnas requeridas.',
             'encabezados' => $encabezados,
-            'registros' => $registros,
-            'total_registros' => count($registros),
+            'registros' => $registrosNormalizados,
+            'total_registros' => count($registrosNormalizados),
             'filas_vacias' => $filasVacias,
             'total_columnas' => count($encabezados),
             'faltantes' => $faltantes,
         ];
-    }
-
-    private function normalizarEncabezado($encabezado): string
-    {
-        $encabezado = trim((string) $encabezado);
-
-        $equivalencias = [
-            'DURACIÃ“N_RAMO' => 'DURACION_RAMO',
-            'DURACIÓN_RAMO' => 'DURACION_RAMO',
-            'DURACION_RAMO' => 'DURACION_RAMO',
-        ];
-
-        if (isset($equivalencias[$encabezado])) {
-            return $equivalencias[$encabezado];
-        }
-
-        return $encabezado;
     }
 
     private function filaEstaVacia(array $fila): bool

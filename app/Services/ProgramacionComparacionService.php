@@ -50,8 +50,10 @@ class ProgramacionComparacionService
                 $carreras[$this->claveCarrera($registro)] = $registro;
                 $asignaturas[$this->claveAsignatura($registro)] = $registro;
 
-                if (!empty($registro['PROF_RESP'])) {
-                    $profesores[(string) $registro['PROF_RESP']] = $registro;
+                $claveProfesor = $this->claveProfesor($registro);
+
+                if ($claveProfesor !== null) {
+                    $profesores[$claveProfesor] = $registro;
                 }
 
                 $claveSeccion = $this->claveSeccion($registro);
@@ -96,6 +98,10 @@ class ProgramacionComparacionService
             'asignaturas' => count($asignaturas),
             'profesores' => count($profesores),
             'secciones' => count($secciones),
+            'relaciones_seccion_carrera' =>
+                $resultado['diagnostico']['relaciones_seccion_carrera'] ?? 0,
+            'grupos' =>
+                $resultado['diagnostico']['grupos_unicos'] ?? 0,
             'errores' => count($resultado['errores']),
         ];
 
@@ -109,6 +115,8 @@ class ProgramacionComparacionService
         $idCursoSeccion = [];
         $idCursoCarrera = [];
         $ramoSeccionCarrera = [];
+        $relacionesSeccionCarrera = [];
+        $grupos = [];
         $datosCursos = [];
 
         foreach ($registros as $registro) {
@@ -119,6 +127,7 @@ class ProgramacionComparacionService
             $semestre = trim((string) ($registro['SEMESTRE'] ?? ''));
             $profesorRut = trim((string) ($registro['PROF_RESP'] ?? ''));
             $profesorNombre = trim((string) ($registro['NOM_PROF_RESP'] ?? ''));
+            $sede = trim((string) ($registro['SEDE'] ?? ''));
 
             if ($idCurso === '') {
                 continue;
@@ -132,6 +141,7 @@ class ProgramacionComparacionService
                     'cod_ramo' => $codRamo,
                     'secc' => $secc,
                     'semestre' => $semestre,
+                    'sede' => $sede,
                     'carreras' => [],
                     'profesores' => [],
                     'carrera_profesores' => [],
@@ -147,7 +157,9 @@ class ProgramacionComparacionService
 
                 $datosCursos[$idCurso]['carreras'][$claveCarrera] = $carrera;
 
-                if (!isset($datosCursos[$idCurso]['carrera_profesores'][$claveCarrera])) {
+                if (!isset(
+                    $datosCursos[$idCurso]['carrera_profesores'][$claveCarrera]
+                )) {
                     $datosCursos[$idCurso]['carrera_profesores'][$claveCarrera] = [
                         'carrera' => $carrera,
                         'profesores' => [],
@@ -208,6 +220,17 @@ class ProgramacionComparacionService
                 $idCursoCarrera[$clave] = true;
             }
 
+            if ($idCurso !== '' && $secc !== '' && $carrera !== '') {
+                $claveRelacion = implode('|', [
+                    $idCurso,
+                    $secc,
+                    mb_strtoupper($carrera),
+                    $semestre,
+                ]);
+
+                $relacionesSeccionCarrera[$claveRelacion] = true;
+            }
+
             if ($codRamo !== '' && $secc !== '' && $carrera !== '') {
                 $clave = implode('|', [
                     $codRamo,
@@ -217,6 +240,18 @@ class ProgramacionComparacionService
                 ]);
 
                 $ramoSeccionCarrera[$clave] = true;
+            }
+
+            $horario = trim((string) ($registro['HORARIO'] ?? ''));
+
+            foreach ($this->extraerGrupos($horario) as $grupo) {
+                $claveGrupo = implode('|', [
+                    $idCurso,
+                    $secc,
+                    $grupo,
+                ]);
+
+                $grupos[$claveGrupo] = true;
             }
         }
 
@@ -235,7 +270,9 @@ class ProgramacionComparacionService
             foreach ($curso['carrera_profesores'] as $relacion) {
                 $carreraProfesores[] = [
                     'carrera' => $relacion['carrera'],
-                    'profesores' => array_values($relacion['profesores']),
+                    'profesores' => array_values(
+                        $relacion['profesores']
+                    ),
                 ];
             }
 
@@ -244,6 +281,7 @@ class ProgramacionComparacionService
                 'cod_ramo' => $curso['cod_ramo'],
                 'secc' => $curso['secc'],
                 'semestre' => $curso['semestre'],
+                'sede' => $curso['sede'],
                 'cantidad_carreras' => count($carreras),
                 'cantidad_profesores' => count($profesores),
                 'carreras' => $carreras,
@@ -280,6 +318,8 @@ class ProgramacionComparacionService
             'id_curso_seccion_unicos' => count($idCursoSeccion),
             'id_curso_carrera_unicos' => count($idCursoCarrera),
             'ramo_seccion_carrera_unicos' => count($ramoSeccionCarrera),
+            'relaciones_seccion_carrera' => count($relacionesSeccionCarrera),
+            'grupos_unicos' => count($grupos),
             'cursos_compartidos' => count($cursosCompartidos),
             'cursos_compartidos_un_profesor' => $distribucionProfesores['un_profesor'],
             'cursos_compartidos_varios_profesores' => $distribucionProfesores['varios_profesores'],
@@ -289,6 +329,32 @@ class ProgramacionComparacionService
                 10
             ),
         ];
+    }
+
+    private function extraerGrupos(string $horario): array
+    {
+        if ($horario === '') {
+            return [];
+        }
+
+        preg_match_all(
+            '/G\s*:\s*(\d+)/i',
+            $horario,
+            $coincidencias
+        );
+
+        if (empty($coincidencias[1])) {
+            return [];
+        }
+
+        return array_values(
+            array_unique(
+                array_map(
+                    fn ($grupo) => 'G:' . $grupo,
+                    $coincidencias[1]
+                )
+            )
+        );
     }
 
     private function validarRegistroMinimo(array $registro): void
@@ -345,16 +411,16 @@ class ProgramacionComparacionService
     private function claveSeccion(array $registro): ?string
     {
         if (
-            empty($registro['COD_RAMO']) ||
-            empty($registro['SECC'])
+            empty($registro['ID_CURSO']) ||
+            empty($registro['SECC']) ||
+            empty($registro['SEMESTRE'])
         ) {
             return null;
         }
 
         return implode('|', [
-            trim((string) $registro['COD_RAMO']),
+            trim((string) $registro['ID_CURSO']),
             trim((string) $registro['SECC']),
-            trim((string) ($registro['NOM_CARR'] ?? '')),
             trim((string) $registro['SEMESTRE']),
         ]);
     }
@@ -478,23 +544,18 @@ class ProgramacionComparacionService
                 trim((string) $registro['COD_RAMO'])
             )->first();
 
-            $carrera = Carrera::where(
-                'nombre',
-                trim((string) $registro['NOM_CARR'])
-            )->first();
-
-            if (!$periodo || !$asignatura || !$carrera) {
+            if (!$periodo || !$asignatura) {
                 $nuevas++;
                 continue;
             }
 
             $existe = Seccion::where(
-                    'asignatura_id',
-                    $asignatura->id
+                    'identificador_externo',
+                    trim((string) $registro['ID_CURSO'])
                 )
                 ->where(
-                    'carrera_id',
-                    $carrera->id
+                    'asignatura_id',
+                    $asignatura->id
                 )
                 ->where(
                     'periodo_academico_id',
