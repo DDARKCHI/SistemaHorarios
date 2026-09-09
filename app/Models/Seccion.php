@@ -14,6 +14,7 @@ class Seccion extends Model
         'periodo_academico_id',
         'codigo',
         'nombre',
+        'semestre',
         'cupos',
         'inscritos',
         'modalidad',
@@ -24,6 +25,7 @@ class Seccion extends Model
     ];
 
     protected $casts = [
+        'semestre' => 'integer',
         'estado_activo' => 'boolean',
     ];
 

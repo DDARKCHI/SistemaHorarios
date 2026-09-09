@@ -43,6 +43,11 @@ class Horario extends Model
         return $this->belongsTo(BloqueHorario::class);
     }
 
+    public function profesores()
+    {
+        return $this->hasMany(HorarioProfesor::class);
+    }
+
     public function asignacionesSalas()
     {
         return $this->hasMany(AsignacionSala::class);

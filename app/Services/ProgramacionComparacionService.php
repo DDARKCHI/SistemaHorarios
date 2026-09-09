@@ -12,6 +12,8 @@ class ProgramacionComparacionService
 {
     public function comparar(array $registros): array
     {
+        $registros = $this->normalizarRegistros($registros);
+
         $resultado = [
             'periodos' => [
                 'nuevos' => 0,
@@ -108,6 +110,29 @@ class ProgramacionComparacionService
         return $resultado;
     }
 
+    private function normalizarRegistros(array $registros): array
+    {
+        return array_map(function ($registro) {
+            $normalizado = [];
+
+            foreach ($registro as $clave => $valor) {
+                $claveNormalizada = mb_strtoupper(
+                    trim((string) $clave)
+                );
+
+                $claveNormalizada = str_replace(
+                    ['Ã', 'Â'],
+                    ['Ñ', 'N'],
+                    $claveNormalizada
+                );
+
+                $normalizado[$claveNormalizada] = $valor;
+            }
+
+            return $normalizado;
+        }, $registros);
+    }
+
     private function diagnosticarEstructura(array $registros): array
     {
         $idCursos = [];
@@ -157,33 +182,20 @@ class ProgramacionComparacionService
 
                 $datosCursos[$idCurso]['carreras'][$claveCarrera] = $carrera;
 
-                if (!isset(
-                    $datosCursos[$idCurso]['carrera_profesores'][$claveCarrera]
-                )) {
+                if (!isset($datosCursos[$idCurso]['carrera_profesores'][$claveCarrera])) {
                     $datosCursos[$idCurso]['carrera_profesores'][$claveCarrera] = [
                         'carrera' => $carrera,
                         'profesores' => [],
                     ];
                 }
 
-                if ($profesorRut !== '') {
-                    $claveProfesor = 'RUT:' . $profesorRut;
+                $profesor = $this->datosProfesor($profesorRut, $profesorNombre);
 
-                    $profesor = [
-                        'identificador' => $profesorRut,
-                        'nombre' => $profesorNombre,
-                    ];
-
-                    $datosCursos[$idCurso]['profesores'][$claveProfesor] = $profesor;
-
-                    $datosCursos[$idCurso]['carrera_profesores'][$claveCarrera]['profesores'][$claveProfesor] = $profesor;
-                } elseif ($profesorNombre !== '') {
-                    $claveProfesor = 'NOMBRE:' . mb_strtoupper($profesorNombre);
-
-                    $profesor = [
-                        'identificador' => null,
-                        'nombre' => $profesorNombre,
-                    ];
+                if ($profesor !== null) {
+                    $claveProfesor = $this->claveProfesorDesdeDatos(
+                        $profesorRut,
+                        $profesorNombre
+                    );
 
                     $datosCursos[$idCurso]['profesores'][$claveProfesor] = $profesor;
 
@@ -191,13 +203,15 @@ class ProgramacionComparacionService
                 }
             }
 
-            if ($profesorRut !== '') {
-                $claveProfesor = 'RUT:' . $profesorRut;
+            $profesor = $this->datosProfesor($profesorRut, $profesorNombre);
 
-                $datosCursos[$idCurso]['profesores'][$claveProfesor] = [
-                    'identificador' => $profesorRut,
-                    'nombre' => $profesorNombre,
-                ];
+            if ($profesor !== null) {
+                $claveProfesor = $this->claveProfesorDesdeDatos(
+                    $profesorRut,
+                    $profesorNombre
+                );
+
+                $datosCursos[$idCurso]['profesores'][$claveProfesor] = $profesor;
             }
 
             if ($idCurso !== '' && $secc !== '') {
@@ -338,7 +352,7 @@ class ProgramacionComparacionService
         }
 
         preg_match_all(
-            '/G\s*:\s*(\d+)/i',
+            '/\bG\s*:\s*(\d+)/i',
             $horario,
             $coincidencias
         );
@@ -402,6 +416,12 @@ class ProgramacionComparacionService
         if (!empty($registro['CORREO_INST'])) {
             return 'CORREO:' . mb_strtolower(
                 trim((string) $registro['CORREO_INST'])
+            );
+        }
+
+        if (!empty($registro['NOM_PROF_RESP'])) {
+            return 'NOMBRE:' . mb_strtoupper(
+                trim((string) $registro['NOM_PROF_RESP'])
             );
         }
 
@@ -511,11 +531,13 @@ class ProgramacionComparacionService
 
             if (str_starts_with($clave, 'RUT:')) {
                 $consulta->where('rut', $valor);
-            } else {
+            } elseif (str_starts_with($clave, 'CORREO:')) {
                 $consulta->where(
                     'correo_institucional',
                     $valor
                 );
+            } else {
+                $consulta->where('nombre', $valor);
             }
 
             if ($consulta->exists()) {
@@ -575,5 +597,37 @@ class ProgramacionComparacionService
         }
 
         return compact('nuevas', 'existentes');
+    }
+
+    private function datosProfesor(
+        string $rut,
+        string $nombre
+    ): ?array {
+        if ($rut !== '') {
+            return [
+                'identificador' => $rut,
+                'nombre' => $nombre,
+            ];
+        }
+
+        if ($nombre !== '') {
+            return [
+                'identificador' => null,
+                'nombre' => $nombre,
+            ];
+        }
+
+        return null;
+    }
+
+    private function claveProfesorDesdeDatos(
+        string $rut,
+        string $nombre
+    ): string {
+        if ($rut !== '') {
+            return 'RUT:' . $rut;
+        }
+
+        return 'NOMBRE:' . mb_strtoupper($nombre);
     }
 }

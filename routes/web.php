@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ImportacionProgramacionController;
+use App\Http\Controllers\VisualizacionProgramacionController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -22,9 +23,22 @@ Route::get('/', function () {
     return view('inicio');
 })->middleware('auth')->name('inicio');
 
-// Cargar programación anterior
+// Programación
 Route::middleware('auth')->group(function () {
 
+    // Visualización de programación
+    Route::get(
+        '/programacion',
+        [VisualizacionProgramacionController::class, 'index']
+    )->name('programacion.index');
+
+    // Actualización dinámica de filtros
+    Route::get(
+        '/programacion/filtros',
+        [VisualizacionProgramacionController::class, 'filtros']
+    )->name('programacion.filtros');
+
+    // Cargar programación anterior
     Route::get(
         '/programacion/importar',
         [ImportacionProgramacionController::class, 'index']

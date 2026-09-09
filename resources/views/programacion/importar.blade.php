@@ -3,7 +3,19 @@
 @section('content')
 <div class="space-y-6">
 
-    <div>
+    @if(session('success'))
+    <div class="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm">
+        <p class="font-medium text-green-800">{{ session('success') }}</p>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+        <p class="font-medium text-red-800">{{ session('error') }}</p>
+    </div>
+@endif
+
+<div>
         <h1 class="text-2xl font-semibold text-gray-800">
             Cargar programación anterior
         </h1>
@@ -745,20 +757,59 @@
 
                     @endif
 
-                    <div class="mt-8 flex justify-end">
+                    <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 
-                        <button
-                            type="button"
-                            disabled
-                            class="cursor-not-allowed rounded-lg bg-gray-300 px-5 py-2.5 text-sm font-medium text-gray-600"
+                        <form
+                            action="{{ route('programacion.importar.cancelar') }}"
+                            method="POST"
                         >
-                            Confirmar carga
-                        </button>
+                            @csrf
+
+                            <input
+                                type="hidden"
+                                name="ruta_temporal"
+                                value="{{ $resultado['ruta_temporal'] ?? '' }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:w-auto"
+                            >
+                                Cancelar
+                            </button>
+                        </form>
+
+                        <form
+                            action="{{ route('programacion.importar.confirmar') }}"
+                            method="POST"
+                            onsubmit="const boton = this.querySelector('button[type=submit]'); boton.disabled = true; boton.textContent = 'Cargando programación...';"
+                        >
+                            @csrf
+
+                            <input
+                                type="hidden"
+                                name="ruta_temporal"
+                                value="{{ $resultado['ruta_temporal'] ?? '' }}"
+                            >
+
+                            <input
+                                type="hidden"
+                                name="nombre_archivo"
+                                value="{{ $resultado['nombre_archivo'] ?? '' }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="w-full rounded-lg bg-red-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                            >
+                                Confirmar carga
+                            </button>
+                        </form>
 
                     </div>
 
                     <p class="mt-2 text-right text-xs text-gray-400">
-                        La confirmación de carga se habilitará cuando finalicemos la persistencia de los datos.
+                        Al confirmar, los datos del archivo se incorporarán como una nueva versión de programación.
                     </p>
 
                 @endif

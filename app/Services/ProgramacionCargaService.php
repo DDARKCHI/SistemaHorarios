@@ -10,6 +10,7 @@ use App\Models\Dia;
 use App\Models\FacultadInstituto;
 use App\Models\GrupoSeccion;
 use App\Models\Horario;
+use App\Models\HorarioProfesor;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\Sede;
@@ -74,6 +75,8 @@ class ProgramacionCargaService
                 'bloques' => [],
                 'sedes' => [],
                 'facultades' => [],
+                'salas' => [],
+                'tipos_sala' => [],
             ];
 
             foreach ($registros as $registro) {
@@ -146,16 +149,20 @@ class ProgramacionCargaService
         }
 
         if ($profesor) {
-            SeccionProfesor::firstOrCreate(
+            $tipoParticipacion = $this->texto(
+                $registro['TIPO_PROFESOR'] ?? null
+            ) ?: 'Profesor responsable';
+
+            SeccionProfesor::updateOrCreate(
                 [
                     'seccion_id' => $seccion->id,
                     'profesor_id' => $profesor->id,
                 ],
                 [
-                    'tipo_participacion' => $this->texto(
-                        $registro['TIPO_PROFESOR'] ?? null
-                    ) ?: 'Profesor responsable',
-                    'es_principal' => true,
+                    'tipo_participacion' => $tipoParticipacion,
+                    'es_principal' => $this->esProfesorPrincipal(
+                        $tipoParticipacion
+                    ),
                     'estado' => true,
                 ]
             );
@@ -165,6 +172,8 @@ class ProgramacionCargaService
             $registro,
             $seccion,
             $version,
+            $profesor,
+            $universidad,
             $cache
         );
     }
@@ -200,7 +209,7 @@ class ProgramacionCargaService
         $numeroSemestre = null;
 
         if (preg_match(
-            '/^(\d{4})[-\/](\d+)$/',
+            '/^([0-9]{4})[-\/](\d+)$/',
             $semestre,
             $coincidencia
         )) {
@@ -537,6 +546,10 @@ class ProgramacionCargaService
             $registro['SECC'] ?? null
         );
 
+        $semestre = $this->entero(
+            $registro['NIVEL_UA'] ?? null
+        );
+
         $clave = implode('|', [
             $idCurso,
             $codigo,
@@ -544,7 +557,18 @@ class ProgramacionCargaService
         ]);
 
         if (isset($cache['secciones'][$clave])) {
-            return $cache['secciones'][$clave];
+            $seccion = $cache['secciones'][$clave];
+
+            if (
+                $semestre !== null &&
+                $seccion->semestre !== $semestre
+            ) {
+                $seccion->update([
+                    'semestre' => $semestre,
+                ]);
+            }
+
+            return $seccion;
         }
 
         $seccion = Seccion::firstOrCreate(
@@ -580,6 +604,15 @@ class ProgramacionCargaService
             ]
         );
 
+        if (
+            $semestre !== null &&
+            $seccion->semestre !== $semestre
+        ) {
+            $seccion->update([
+                'semestre' => $semestre,
+            ]);
+        }
+
         $cache['secciones'][$clave] = $seccion;
 
         return $seccion;
@@ -589,6 +622,8 @@ class ProgramacionCargaService
         array $registro,
         Seccion $seccion,
         VersionPlanificacion $version,
+        ?Profesor $profesor,
+        Universidad $universidad,
         array &$cache
     ): void {
         $horario = $this->texto(
@@ -598,6 +633,14 @@ class ProgramacionCargaService
         if ($horario === '') {
             return;
         }
+
+        $horariosProfesor = $profesor
+            ? $this->parsearHorarios(
+                $this->texto(
+                    $registro['HORARIO_PROFESOR'] ?? null
+                )
+            )
+            : [];
 
         foreach ($this->parsearHorarios($horario) as $dato) {
             $actividad = $this->obtenerActividad(
@@ -632,7 +675,7 @@ class ProgramacionCargaService
                 continue;
             }
 
-            Horario::firstOrCreate(
+            $horarioModelo = Horario::firstOrCreate(
                 [
                     'actividad_seccion_id' => $actividad->id,
                     'grupo_seccion_id' => $grupo?->id,
@@ -647,7 +690,194 @@ class ProgramacionCargaService
                     'estado' => true,
                 ]
             );
+
+            if ($dato['sala'] !== null) {
+                $this->asignarRecurso(
+                    $dato['sala'],
+                    $registro,
+                    $horarioModelo->id,
+                    $universidad->id,
+                    $cache
+                );
+            }
+
+            if (!$profesor) {
+                continue;
+            }
+
+            if (!$this->horarioPerteneceAProfesor(
+                $dato,
+                $horariosProfesor
+            )) {
+                continue;
+            }
+
+            $tipoParticipacion = $this->texto(
+                $registro['TIPO_PROFESOR'] ?? null
+            ) ?: 'Profesor responsable';
+
+            HorarioProfesor::updateOrCreate(
+                [
+                    'horario_id' => $horarioModelo->id,
+                    'profesor_id' => $profesor->id,
+                ],
+                [
+                    'tipo_participacion' => $tipoParticipacion,
+                    'es_principal' => $this->esProfesorPrincipal(
+                        $tipoParticipacion
+                    ),
+                    'estado' => true,
+                ]
+            );
         }
+    }
+
+    private function asignarRecurso(
+        string $codigoRecurso,
+        array $registro,
+        int $horarioId,
+        int $universidadId,
+        array &$cache
+    ): void {
+        $codigoRecurso = trim($codigoRecurso);
+
+        if ($codigoRecurso === '') {
+            return;
+        }
+
+        $codigoSede = $this->texto(
+            $registro['COD_SEDE'] ?? null
+        );
+
+        $nombreSede = $this->texto(
+            $registro['SEDE'] ?? null
+        );
+
+        $sede = $this->obtenerSede(
+            $universidadId,
+            $codigoSede,
+            $nombreSede,
+            $cache
+        );
+
+        if (!$sede) {
+            return;
+        }
+
+        $clave = $sede->id . '|' . mb_strtoupper($codigoRecurso);
+
+        if (!isset($cache['salas'][$clave])) {
+            $tipoSalaId = $this->obtenerTipoSalaRecurso($cache);
+
+            $sala = DB::table('salas')
+                ->where('universidad_id', $universidadId)
+                ->where('sede_id', $sede->id)
+                ->where('codigo', $codigoRecurso)
+                ->first();
+
+            if (!$sala) {
+                $salaId = DB::table('salas')->insertGetId([
+                    'universidad_id' => $universidadId,
+                    'sede_id' => $sede->id,
+                    'tipo_sala_id' => $tipoSalaId,
+                    'codigo' => $codigoRecurso,
+                    'nombre' => $codigoRecurso,
+                    'capacidad' => $this->entero(
+                        $registro['CUPO'] ?? null
+                    ) ?? 0,
+                    'edificio' => null,
+                    'piso' => null,
+                    'descripcion' => 'Recurso importado desde programación Excel.',
+                    'disponible' => true,
+                    'estado' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                $salaId = $sala->id;
+
+                if (!$sala->tipo_sala_id) {
+                    DB::table('salas')
+                        ->where('id', $salaId)
+                        ->update([
+                            'tipo_sala_id' => $tipoSalaId,
+                            'updated_at' => now(),
+                        ]);
+                }
+            }
+
+            $cache['salas'][$clave] = $salaId;
+        }
+
+        $salaId = $cache['salas'][$clave];
+
+        $existe = DB::table('asignaciones_salas')
+            ->where('horario_id', $horarioId)
+            ->where('sala_id', $salaId)
+            ->exists();
+
+        if (!$existe) {
+            DB::table('asignaciones_salas')->insert([
+                'horario_id' => $horarioId,
+                'sala_id' => $salaId,
+                'capacidad_asignada' => $this->entero(
+                    $registro['CUPO'] ?? null
+                ),
+                'observaciones' => 'Recurso indicado en archivo Excel.',
+                'es_principal' => false,
+                'estado' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function obtenerTipoSalaRecurso(array &$cache): int
+    {
+        $clave = 'RECURSO_IMPORTADO';
+
+        if (isset($cache['tipos_sala'][$clave])) {
+            return $cache['tipos_sala'][$clave];
+        }
+
+        $tipo = DB::table('tipos_sala')
+            ->where('nombre', 'Recurso importado')
+            ->first();
+
+        if (!$tipo) {
+            $tipoId = DB::table('tipos_sala')->insertGetId([
+                'nombre' => 'Recurso importado',
+                'descripcion' => 'Tipo genérico para recursos físicos obtenidos desde la programación Excel.',
+                'requiere_equipamiento' => false,
+                'estado' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $tipoId = $tipo->id;
+        }
+
+        $cache['tipos_sala'][$clave] = $tipoId;
+
+        return $tipoId;
+    }
+
+    private function horarioPerteneceAProfesor(
+        array $horario,
+        array $horariosProfesor
+    ): bool {
+        foreach ($horariosProfesor as $horarioProfesor) {
+            if (
+                $horarioProfesor['tipo'] === $horario['tipo']
+                && $horarioProfesor['grupo'] === $horario['grupo']
+                && $horarioProfesor['dia'] === $horario['dia']
+                && $horarioProfesor['bloque'] === $horario['bloque']
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function parsearHorarios(
@@ -914,6 +1144,14 @@ class ProgramacionCargaService
         $apellido = implode(' ', $partes);
 
         return [$nombre, $apellido];
+    }
+
+    private function esProfesorPrincipal(
+        string $tipoParticipacion
+    ): bool {
+        return mb_strtoupper(
+            trim($tipoParticipacion)
+        ) === 'PROFESOR RESPONSABLE';
     }
 
     private function texto($valor): string

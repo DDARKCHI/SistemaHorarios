@@ -34,6 +34,14 @@ class Carrera extends Model
         return $this->belongsTo(Sede::class);
     }
 
+    public function sedes()
+    {
+        return $this->belongsToMany(
+            Sede::class,
+            'carreras_sedes'
+        );
+    }
+
     public function planesEstudio()
     {
         return $this->hasMany(PlanEstudio::class);
@@ -46,6 +54,9 @@ class Carrera extends Model
 
     public function secciones()
     {
-        return $this->hasMany(Seccion::class);
+        return $this->belongsToMany(
+            Seccion::class,
+            'secciones_carreras'
+        );
     }
 }
