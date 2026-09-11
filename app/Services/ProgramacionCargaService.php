@@ -245,10 +245,6 @@ class ProgramacionCargaService
 
         $clave = mb_strtoupper($nombre);
 
-        if (isset($cache['carreras'][$clave])) {
-            return $cache['carreras'][$clave];
-        }
-
         $codigo = $this->texto(
             $registro['COD_CARR'] ?? null
         );
@@ -283,26 +279,36 @@ class ProgramacionCargaService
             $cache
         );
 
-        $carrera = Carrera::firstOrCreate(
-            [
-                'universidad_id' => $universidadId,
-                'nombre' => $nombre,
-            ],
-            [
-                'facultad_instituto_id' => $facultad?->id,
-                'sede_id' => $sede?->id,
-                'codigo' => $codigo ?: null,
-                'regimen' => $this->texto(
-                    $registro['REGIMEN'] ?? null
-                ) ?: null,
-                'tipo_estudio' => $this->texto(
-                    $registro['TIPO_ESTUDIO'] ?? null
-                ) ?: null,
-                'estado' => true,
-            ]
-        );
+        if (isset($cache['carreras'][$clave])) {
+            $carrera = $cache['carreras'][$clave];
+        } else {
+            $carrera = Carrera::firstOrCreate(
+                [
+                    'universidad_id' => $universidadId,
+                    'nombre' => $nombre,
+                ],
+                [
+                    'facultad_instituto_id' => $facultad?->id,
+                    'sede_id' => $sede?->id,
+                    'codigo' => $codigo ?: null,
+                    'regimen' => $this->texto(
+                        $registro['REGIMEN'] ?? null
+                    ) ?: null,
+                    'tipo_estudio' => $this->texto(
+                        $registro['TIPO_ESTUDIO'] ?? null
+                    ) ?: null,
+                    'estado' => true,
+                ]
+            );
 
-        $cache['carreras'][$clave] = $carrera;
+            $cache['carreras'][$clave] = $carrera;
+        }
+
+        if ($sede) {
+            $carrera->sedes()->syncWithoutDetaching([
+                $sede->id,
+            ]);
+        }
 
         return $carrera;
     }
