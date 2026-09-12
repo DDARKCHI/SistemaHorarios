@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
+use App\Http\Controllers\IntercambioDocenteController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -58,6 +59,12 @@ Route::middleware('auth')->group(function () {
         '/programacion/importar/cancelar',
         [ImportacionProgramacionController::class, 'cancelar']
     )->name('programacion.importar.cancelar');
+
+    // Intercambio Docente
+    Route::get(
+        '/programacion/intercambio',
+        [IntercambioDocenteController::class, 'index']
+    )->name('programacion.intercambio');
 });
 
 // Prueba temporal de Laravel Excel
