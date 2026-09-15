@@ -346,6 +346,20 @@
 
                     </div>
 
+                    @php
+                        $esNuevaProgramacion = $resultado['comparacion']['es_nueva_programacion'] ?? false;
+                        $hayCambios = $resultado['comparacion']['hay_cambios'] ?? false;
+                        $resumenCambios = $resultado['comparacion']['resumen_cambios'] ?? [];
+
+                        $totalCambios = collect($resumenCambios)
+                            ->filter(fn ($valor) => is_numeric($valor) && $valor > 0)
+                            ->sum();
+
+                        $mostrarDetalle = $esNuevaProgramacion || ($hayCambios && $totalCambios > 0);
+                    @endphp
+
+                    @if($mostrarDetalle)
+
                     <div class="mt-10">
 
                         <h3 class="text-lg font-semibold text-gray-800">
@@ -673,6 +687,8 @@
 
                     @endif
 
+                    @endif
+
                     <div class="mt-10">
 
                         <h3 class="text-lg font-semibold text-gray-800">
@@ -813,58 +829,6 @@
                     </p>
 
                 @endif
-
-                <div class="mt-10">
-
-                    <h3 class="text-sm font-semibold text-gray-800">
-                        Primeras filas normalizadas
-                    </h3>
-
-                    <div class="mt-3 overflow-x-auto rounded-lg border border-gray-200">
-
-                        <table class="min-w-full text-left text-sm">
-
-                            <thead class="bg-gray-50">
-
-                                <tr>
-
-                                    @foreach($resultado['encabezados'] as $encabezado)
-
-                                        <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                            {{ $encabezado }}
-                                        </th>
-
-                                    @endforeach
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                @foreach($resultado['primeras_filas'] as $fila)
-
-                                    <tr class="border-b border-gray-100 last:border-0">
-
-                                        @foreach($resultado['encabezados'] as $encabezado)
-
-                                            <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                                {{ $fila[$encabezado] ?? '' }}
-                                            </td>
-
-                                        @endforeach
-
-                                    </tr>
-
-                                @endforeach
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
 
             @endif
 
