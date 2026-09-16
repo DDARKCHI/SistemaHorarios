@@ -351,14 +351,11 @@
                         $hayCambios = $resultado['comparacion']['hay_cambios'] ?? false;
                         $resumenCambios = $resultado['comparacion']['resumen_cambios'] ?? [];
 
-                        $totalCambios = collect($resumenCambios)
-                            ->filter(fn ($valor) => is_numeric($valor) && $valor > 0)
-                            ->sum();
-
-                        $mostrarDetalle = $esNuevaProgramacion || ($hayCambios && $totalCambios > 0);
+                        $mostrarCambios = $hayCambios && count($resumenCambios) > 0;
+                        $mostrarDiagnostico = $esNuevaProgramacion;
                     @endphp
 
-                    @if($mostrarDetalle)
+                    @if($mostrarDiagnostico)
 
                     <div class="mt-10">
 
@@ -686,6 +683,89 @@
                         </div>
 
                     @endif
+
+                    @endif
+
+                    @if($mostrarCambios)
+
+                        <div class="mt-10">
+
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    Cambios detectados
+                                </h3>
+
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Cambios encontrados respecto de la versión actual de la programación.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 space-y-3">
+
+                                @foreach($resumenCambios as $cambio)
+
+                                    <div class="flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+
+                                        <div>
+                                            <p class="font-medium text-blue-800">
+                                                {{ ucfirst($cambio['descripcion'] ?? 'Cambio detectado') }}
+                                            </p>
+
+                                            <p class="mt-1 text-sm text-blue-700">
+                                                @switch($cambio['tipo'] ?? '')
+                                                    @case('profesores_modificados')
+                                                        Se modificaron datos de profesores existentes.
+                                                        @break
+
+                                                    @case('profesores')
+                                                        Se detectaron nuevos profesores.
+                                                        @break
+
+                                                    @case('secciones_nuevas')
+                                                        Se detectaron nuevas secciones.
+                                                        @break
+
+                                                    @case('secciones_modificadas')
+                                                        Se detectaron modificaciones en secciones existentes.
+                                                        @break
+
+                                                    @case('relaciones_nuevas')
+                                                        Se detectaron nuevas relaciones entre secciones y carreras.
+                                                        @break
+
+                                                    @case('relaciones_modificadas')
+                                                        Se detectaron modificaciones en relaciones entre secciones y carreras.
+                                                        @break
+
+                                                    @case('grupos_nuevos')
+                                                        Se detectaron nuevos grupos.
+                                                        @break
+
+                                                    @case('horarios_nuevos')
+                                                        Se detectaron nuevos horarios.
+                                                        @break
+
+                                                    @case('horarios_modificados')
+                                                        Se detectaron modificaciones de horarios.
+                                                        @break
+
+                                                    @default
+                                                        Se detectaron cambios en la programación.
+                                                @endswitch
+                                            </p>
+                                        </div>
+
+                                        <span class="shrink-0 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
+                                            {{ $cambio['cantidad'] ?? 0 }}
+                                        </span>
+
+                                    </div>
+
+                                @endforeach
+
+                            </div>
+
+                        </div>
 
                     @endif
 
