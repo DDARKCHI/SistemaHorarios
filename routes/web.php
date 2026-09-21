@@ -8,38 +8,35 @@ use App\Http\Controllers\IntercambioDocenteController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
-// Login
 Route::get('/login', [LoginController::class, 'mostrarLogin'])
     ->name('login');
 
 Route::post('/login', [LoginController::class, 'iniciarSesion'])
     ->name('login.procesar');
 
-// Cerrar sesión
 Route::post('/logout', [LoginController::class, 'cerrarSesion'])
     ->name('logout');
 
-// Inicio
 Route::get('/', function () {
     return view('inicio');
 })->middleware('auth')->name('inicio');
 
-// Programación
 Route::middleware('auth')->group(function () {
 
-    // Visualización de programación
+    Route::get('/programacion/semestral', function () {
+        return view('programacion.semestral.index');
+    })->name('programacion.semestral');
+
     Route::get(
         '/programacion',
         [VisualizacionProgramacionController::class, 'index']
     )->name('programacion.index');
 
-    // Actualización dinámica de filtros
     Route::get(
         '/programacion/filtros',
         [VisualizacionProgramacionController::class, 'filtros']
     )->name('programacion.filtros');
 
-    // Cargar programación anterior
     Route::get(
         '/programacion/importar',
         [ImportacionProgramacionController::class, 'index']
@@ -60,14 +57,24 @@ Route::middleware('auth')->group(function () {
         [ImportacionProgramacionController::class, 'cancelar']
     )->name('programacion.importar.cancelar');
 
-    // Intercambio Docente
     Route::get(
         '/programacion/intercambio',
         [IntercambioDocenteController::class, 'index']
     )->name('programacion.intercambio');
+
+    Route::get('/salas', function () {
+        return view('salas.index');
+    })->name('salas.index');
+
+    Route::get('/administracion', function () {
+        return view('administracion.index');
+    })->name('administracion.index');
+
+    Route::get('/configuracion', function () {
+        return view('configuracion.index');
+    })->name('configuracion.index');
 });
 
-// Prueba temporal de Laravel Excel
 Route::get('/prueba-excel', function () {
     $archivo = storage_path('app/prueba.xlsx');
 
