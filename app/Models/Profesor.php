@@ -51,6 +51,11 @@ class Profesor extends Model
         return $this->hasMany(HorarioProfesor::class);
     }
 
+    public function versiones()
+    {
+        return $this->hasMany(ProfesorVersion::class);
+    }
+
     public function candidatosReemplazo()
     {
         return $this->hasMany(CandidatoReemplazo::class);

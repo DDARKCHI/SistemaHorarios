@@ -9,6 +9,7 @@ use App\Models\Dia;
 use App\Models\Horario;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
+use App\Models\ProfesorVersion;
 use App\Models\Sede;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
@@ -31,13 +32,18 @@ class VisualizacionProgramacionController extends Controller
             'periodo_academico_id',
             $periodoId
         )
+            ->where('tipo', 'anterior')
             ->orderByDesc('id')
             ->get();
 
-        $versionId = $request->input(
-            'version_id',
-            $versiones->first()?->id
-        );
+        $versionIdSolicitada = $request->input('version_id');
+
+        $versionId = $versiones
+            ->firstWhere(
+                'id',
+                (int) $versionIdSolicitada
+            )?->id
+            ?? $versiones->first()?->id;
 
         $sedeId = $request->input('sede_id');
         $carreraId = $request->input('carrera_id');
@@ -85,7 +91,7 @@ class VisualizacionProgramacionController extends Controller
         );
 
         $profesores = $this->obtenerProfesores(
-            $periodoId,
+            $versionId,
             $sedeId,
             $carreraId,
             $semestre,
@@ -201,6 +207,11 @@ class VisualizacionProgramacionController extends Controller
                 ->orderBy('dia_id')
                 ->orderBy('bloque_horario_id')
                 ->get();
+
+            $this->aplicarDatosProfesoresVersion(
+                $horarios,
+                $versionId
+            );
         }
 
         $horariosPorBloque = $horarios->groupBy(function ($horario) {
@@ -255,11 +266,22 @@ class VisualizacionProgramacionController extends Controller
     public function filtros(Request $request)
     {
         $periodoId = $request->input('periodo_id');
+        $versionId = $request->input('version_id');
         $sedeId = $request->input('sede_id');
         $carreraId = $request->input('carrera_id');
         $semestre = $request->input('semestre');
         $seccionNumero = $request->input('seccion_numero');
         $asignaturaId = $request->input('asignatura_id');
+
+        if (!$versionId && $periodoId) {
+            $versionId = VersionPlanificacion::where(
+                'periodo_academico_id',
+                $periodoId
+            )
+                ->where('tipo', 'anterior')
+                ->orderByDesc('id')
+                ->value('id');
+        }
 
         $carreras = $this->obtenerCarreras(
             $periodoId,
@@ -288,7 +310,7 @@ class VisualizacionProgramacionController extends Controller
         );
 
         $profesores = $this->obtenerProfesores(
-            $periodoId,
+            $versionId,
             $sedeId,
             $carreraId,
             $semestre,
@@ -521,92 +543,253 @@ class VisualizacionProgramacionController extends Controller
     }
 
     private function obtenerProfesores(
-        $periodoId,
+        $versionId,
         $sedeId = null,
         $carreraId = null,
         $semestre = null,
         $seccionNumero = null,
         $asignaturaId = null
     ) {
+        if (!$versionId) {
+            return collect();
+        }
+
         $query = Profesor::query()
-            ->where('estado', true)
-            ->orderBy('apellido')
-            ->orderBy('nombre');
+            ->where('estado', true);
 
         $query->whereHas(
-            'secciones',
-            function ($query) use (
-                $periodoId,
+            'horarios',
+            function ($horarioProfesorQuery) use (
+                $versionId,
                 $sedeId,
                 $carreraId,
                 $semestre,
                 $seccionNumero,
                 $asignaturaId
             ) {
-                $query->whereHas(
-                    'seccion',
-                    function ($seccionQuery) use (
-                        $periodoId,
+                $horarioProfesorQuery->whereHas(
+                    'horario',
+                    function ($horarioQuery) use (
+                        $versionId,
                         $sedeId,
                         $carreraId,
                         $semestre,
                         $seccionNumero,
                         $asignaturaId
                     ) {
-                        $seccionQuery->where(
-                            'periodo_academico_id',
-                            $periodoId
+                        $horarioQuery->where(
+                            'version_planificacion_id',
+                            $versionId
                         );
 
-                        if ($seccionNumero) {
-                            $seccionQuery->where(
-                                'secciones.codigo',
-                                $seccionNumero
-                            );
-                        }
-
-                        if ($semestre !== null && $semestre !== '') {
-                            $seccionQuery->where(
-                                'secciones.semestre',
-                                $semestre
-                            );
-                        }
-
-                        if ($asignaturaId) {
-                            $seccionQuery->where(
-                                'asignatura_id',
+                        $horarioQuery->whereHas(
+                            'actividadSeccion.seccion',
+                            function ($seccionQuery) use (
+                                $sedeId,
+                                $carreraId,
+                                $semestre,
+                                $seccionNumero,
                                 $asignaturaId
-                            );
-                        }
-
-                        if ($sedeId) {
-                            $seccionQuery->whereHas(
-                                'carreras.sedes',
-                                function ($careerQuery) use ($sedeId) {
-                                    $careerQuery->where(
-                                        'sedes.id',
-                                        $sedeId
+                            ) {
+                                if ($seccionNumero) {
+                                    $seccionQuery->where(
+                                        'secciones.codigo',
+                                        $seccionNumero
                                     );
                                 }
-                            );
-                        }
 
-                        if ($carreraId) {
-                            $seccionQuery->whereHas(
-                                'carreras',
-                                function ($careerQuery) use ($carreraId) {
-                                    $careerQuery->where(
-                                        'carreras.id',
-                                        $carreraId
+                                if ($semestre !== null && $semestre !== '') {
+                                    $seccionQuery->where(
+                                        'secciones.semestre',
+                                        $semestre
                                     );
                                 }
-                            );
-                        }
+
+                                if ($asignaturaId) {
+                                    $seccionQuery->where(
+                                        'secciones.asignatura_id',
+                                        $asignaturaId
+                                    );
+                                }
+
+                                if ($sedeId) {
+                                    $seccionQuery->whereHas(
+                                        'carreras.sedes',
+                                        function ($careerQuery) use ($sedeId) {
+                                            $careerQuery->where(
+                                                'sedes.id',
+                                                $sedeId
+                                            );
+                                        }
+                                    );
+                                }
+
+                                if ($carreraId) {
+                                    $seccionQuery->whereHas(
+                                        'carreras',
+                                        function ($careerQuery) use ($carreraId) {
+                                            $careerQuery->where(
+                                                'carreras.id',
+                                                $carreraId
+                                            );
+                                        }
+                                    );
+                                }
+                            }
+                        );
                     }
                 );
             }
         );
 
-        return $query->get();
+        $profesores = $query->get();
+
+        $datosVersion = ProfesorVersion::where(
+            'version_planificacion_id',
+            $versionId
+        )
+            ->whereIn(
+                'profesor_id',
+                $profesores->pluck('id')
+            )
+            ->get()
+            ->keyBy('profesor_id');
+
+        foreach ($profesores as $profesor) {
+            $datos = $datosVersion->get($profesor->id);
+
+            if ($datos) {
+                $this->aplicarDatosProfesor(
+                    $profesor,
+                    $datos
+                );
+            }
+        }
+
+        return $profesores
+            ->sortBy(function ($profesor) {
+                return mb_strtoupper(
+                    trim(
+                        $profesor->apellido . ' ' . $profesor->nombre
+                    )
+                );
+            })
+            ->values();
+    }
+
+    private function aplicarDatosProfesoresVersion(
+        $horarios,
+        $versionId
+    ): void {
+        if (!$versionId || $horarios->isEmpty()) {
+            return;
+        }
+
+        $profesorIds = collect();
+
+        foreach ($horarios as $horario) {
+            foreach ($horario->profesores as $horarioProfesor) {
+                if ($horarioProfesor->profesor_id) {
+                    $profesorIds->push(
+                        $horarioProfesor->profesor_id
+                    );
+                }
+            }
+
+            $seccion = $horario
+                ->actividadSeccion
+                ?->seccion;
+
+            if ($seccion) {
+                foreach ($seccion->profesores as $seccionProfesor) {
+                    if ($seccionProfesor->profesor_id) {
+                        $profesorIds->push(
+                            $seccionProfesor->profesor_id
+                        );
+                    }
+                }
+            }
+        }
+
+        $profesorIds = $profesorIds
+            ->unique()
+            ->values();
+
+        if ($profesorIds->isEmpty()) {
+            return;
+        }
+
+        $datosVersion = ProfesorVersion::where(
+            'version_planificacion_id',
+            $versionId
+        )
+            ->whereIn(
+                'profesor_id',
+                $profesorIds
+            )
+            ->get()
+            ->keyBy('profesor_id');
+
+        foreach ($horarios as $horario) {
+            foreach ($horario->profesores as $horarioProfesor) {
+                $profesor = $horarioProfesor->profesor;
+
+                if (!$profesor) {
+                    continue;
+                }
+
+                $datos = $datosVersion->get(
+                    $horarioProfesor->profesor_id
+                );
+
+                if ($datos) {
+                    $this->aplicarDatosProfesor(
+                        $profesor,
+                        $datos
+                    );
+                }
+            }
+
+            $seccion = $horario
+                ->actividadSeccion
+                ?->seccion;
+
+            if (!$seccion) {
+                continue;
+            }
+
+            foreach ($seccion->profesores as $seccionProfesor) {
+                $profesor = $seccionProfesor->profesor;
+
+                if (!$profesor) {
+                    continue;
+                }
+
+                $datos = $datosVersion->get(
+                    $seccionProfesor->profesor_id
+                );
+
+                if ($datos) {
+                    $this->aplicarDatosProfesor(
+                        $profesor,
+                        $datos
+                    );
+                }
+            }
+        }
+    }
+
+    private function aplicarDatosProfesor(
+        Profesor $profesor,
+        ProfesorVersion $datos
+    ): void {
+        $profesor->nombre = $datos->nombre;
+        $profesor->apellido = $datos->apellido;
+        $profesor->rut = $datos->rut;
+        $profesor->correo_institucional = $datos->correo_institucional;
+        $profesor->correo_personal = $datos->correo_personal;
+        $profesor->tipo_contrato = $datos->tipo_contrato;
+        $profesor->tipo_profesor = $datos->tipo_profesor;
+        $profesor->unidad_academica = $datos->unidad_academica;
     }
 }

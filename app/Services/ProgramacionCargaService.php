@@ -13,6 +13,7 @@ use App\Models\Horario;
 use App\Models\HorarioProfesor;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
+use App\Models\ProfesorVersion;
 use App\Models\Sede;
 use App\Models\Seccion;
 use App\Models\SeccionProfesor;
@@ -49,6 +50,7 @@ class ProgramacionCargaService
                 'periodo_academico_id' => $periodo->id,
                 'nombre' => 'Programación importada - ' . $nombreArchivo,
                 'version' => $this->siguienteVersion($periodo->id),
+                'tipo' => 'anterior',
                 'descripcion' => 'Carga de programación desde archivo Excel.',
                 'estado' => 'Borrador',
                 'usuario_id' => $usuarioId,
@@ -59,6 +61,7 @@ class ProgramacionCargaService
                 'periodo_academico_id',
                 $periodo->id
             )
+                ->where('tipo', 'anterior')
                 ->where('id', '!=', $version->id)
                 ->update([
                     'es_actual' => false,
@@ -134,6 +137,14 @@ class ProgramacionCargaService
             $universidad->id,
             $cache
         );
+
+        if ($profesor) {
+            $this->guardarProfesorVersion(
+                $registro,
+                $profesor,
+                $version
+            );
+        }
 
         $seccion = $this->obtenerSeccion(
             $registro,
@@ -538,6 +549,49 @@ class ProgramacionCargaService
         return $profesor;
     }
 
+    private function guardarProfesorVersion(
+        array $registro,
+        Profesor $profesor,
+        VersionPlanificacion $version
+    ): void {
+        $nombreCompleto = $this->texto(
+            $registro['NOM_PROF_RESP'] ?? null
+        );
+
+        [$nombre, $apellido] = $this->separarNombre(
+            $nombreCompleto
+        );
+
+        ProfesorVersion::updateOrCreate(
+            [
+                'version_planificacion_id' => $version->id,
+                'profesor_id' => $profesor->id,
+            ],
+            [
+                'rut' => $this->texto(
+                    $registro['PROF_RESP'] ?? null
+                ) ?: null,
+                'nombre' => $nombre ?: null,
+                'apellido' => $apellido ?: null,
+                'correo_institucional' => $this->texto(
+                    $registro['CORREO_INST'] ?? null
+                ) ?: null,
+                'correo_personal' => $this->texto(
+                    $registro['CORREO_PERS'] ?? null
+                ) ?: null,
+                'tipo_contrato' => $this->texto(
+                    $registro['TIPO_CONTRATO'] ?? null
+                ) ?: null,
+                'tipo_profesor' => $this->texto(
+                    $registro['TIPO_PROFESOR'] ?? null
+                ) ?: null,
+                'unidad_academica' => $this->texto(
+                    $registro['UA'] ?? null
+                ) ?: null,
+            ]
+        );
+    }
+
     private function obtenerSeccion(
         array $registro,
         Asignatura $asignatura,
@@ -566,8 +620,8 @@ class ProgramacionCargaService
             $seccion = $cache['secciones'][$clave];
 
             if (
-                $semestre !== null &&
-                $seccion->semestre !== $semestre
+                $semestre !== null
+                && $seccion->semestre !== $semestre
             ) {
                 $seccion->update([
                     'semestre' => $semestre,
@@ -611,8 +665,8 @@ class ProgramacionCargaService
         );
 
         if (
-            $semestre !== null &&
-            $seccion->semestre !== $semestre
+            $semestre !== null
+            && $seccion->semestre !== $semestre
         ) {
             $seccion->update([
                 'semestre' => $semestre,
@@ -838,8 +892,9 @@ class ProgramacionCargaService
         }
     }
 
-    private function obtenerTipoSalaRecurso(array &$cache): int
-    {
+    private function obtenerTipoSalaRecurso(
+        array &$cache
+    ): int {
         $clave = 'RECURSO_IMPORTADO';
 
         if (isset($cache['tipos_sala'][$clave])) {
@@ -1122,12 +1177,15 @@ class ProgramacionCargaService
             'periodo_academico_id',
             $periodoId
         )
+            ->where('tipo', 'anterior')
             ->orderByDesc('version')
             ->value('version');
 
-        return $ultima
-            ? ((float) $ultima + 1)
-            : 1.0;
+        if ($ultima === null) {
+            return 0.1;
+        }
+
+        return (round((float) $ultima * 10) + 1) / 10;
     }
 
     private function separarNombre(

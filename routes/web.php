@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
+use App\Http\Controllers\ProgramacionSemestralController;
 use App\Http\Controllers\IntercambioDocenteController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -23,9 +24,15 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/programacion/semestral', function () {
-        return view('programacion.semestral.index');
-    })->name('programacion.semestral');
+    Route::get(
+        '/programacion/semestral',
+        [ProgramacionSemestralController::class, 'index']
+    )->name('programacion.semestral');
+
+    Route::get(
+        '/programacion/semestral/filtros',
+        [ProgramacionSemestralController::class, 'filtros']
+    )->name('programacion.semestral.filtros');
 
     Route::get(
         '/programacion',

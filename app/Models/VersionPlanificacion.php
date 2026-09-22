@@ -12,6 +12,7 @@ class VersionPlanificacion extends Model
         'periodo_academico_id',
         'nombre',
         'version',
+        'tipo',
         'descripcion',
         'estado',
         'usuario_id',

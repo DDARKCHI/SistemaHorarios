@@ -1,21 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="space-y-6">
 
     @if(session('success'))
-    <div class="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm">
-        <p class="font-medium text-green-800">{{ session('success') }}</p>
-    </div>
-@endif
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm">
+            <p class="font-medium text-green-800">
+                {{ session('success') }}
+            </p>
+        </div>
+    @endif
 
-@if(session('error'))
-    <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
-        <p class="font-medium text-red-800">{{ session('error') }}</p>
-    </div>
-@endif
+    @if(session('error'))
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+            <p class="font-medium text-red-800">
+                {{ session('error') }}
+            </p>
+        </div>
+    @endif
 
-<div>
+    <div>
         <h1 class="text-2xl font-semibold text-gray-800">
             Cargar programación anterior
         </h1>
@@ -107,17 +112,7 @@
 
             </div>
 
-            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-                <div class="rounded-lg bg-gray-50 p-4">
-                    <p class="text-sm text-gray-500">
-                        Registros
-                    </p>
-
-                    <p class="mt-1 text-2xl font-semibold text-gray-800">
-                        {{ $resultado['total_registros'] ?? 0 }}
-                    </p>
-                </div>
+            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                 <div class="rounded-lg bg-gray-50 p-4">
                     <p class="text-sm text-gray-500">
@@ -152,15 +147,11 @@
                     @if(!empty($resultado['faltantes']))
 
                         <ul class="mt-2 list-disc pl-5 text-sm text-red-700">
-
                             @foreach($resultado['faltantes'] as $faltante)
-
                                 <li>
                                     {{ $faltante }}
                                 </li>
-
                             @endforeach
-
                         </ul>
 
                     @else
@@ -178,42 +169,47 @@
                 @if(isset($resultado['comparacion']))
 
                     @php
-                        $diagnostico = $resultado['comparacion']['diagnostico'] ?? [];
-                        $totales = $resultado['comparacion']['totales'] ?? [];
+                        $comparacion = $resultado['comparacion'];
+                        $diagnostico = $comparacion['diagnostico'] ?? [];
+                        $totales = $comparacion['totales'] ?? [];
+
+                        $esNuevaProgramacion = $comparacion['es_nueva_programacion'] ?? false;
+                        $hayCambios = $comparacion['hay_cambios'] ?? false;
+                        $resumenCambios = $comparacion['resumen_cambios'] ?? [];
+
+                        $mostrarCambios =
+                            !$esNuevaProgramacion
+                            && $hayCambios
+                            && count($resumenCambios) > 0;
+
+                        $puedeConfirmar =
+                            $esNuevaProgramacion
+                            || $hayCambios;
                     @endphp
 
                     <div class="mt-8">
 
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-800">
-                                Resumen de la programación
-                            </h3>
+                        <h3 class="text-lg font-semibold text-gray-800">
+                            Resumen de la programación
+                        </h3>
 
-                            <p class="mt-1 text-sm text-gray-500">
-                                Resumen general de los datos que contiene el archivo antes de incorporarlos al sistema.
-                            </p>
-                        </div>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Datos generales detectados en el archivo.
+                        </p>
 
                         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
-                                    Periodos académicos
+                                    Períodos académicos
                                 </p>
 
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
                                     {{ $totales['periodos'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Periodos detectados
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Carreras
                                 </p>
@@ -221,15 +217,9 @@
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
                                     {{ $totales['carreras'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Carreras asociadas
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Asignaturas
                                 </p>
@@ -237,15 +227,9 @@
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
                                     {{ $totales['asignaturas'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Asignaturas detectadas
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Secciones
                                 </p>
@@ -253,15 +237,9 @@
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
                                     {{ $totales['secciones'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Secciones reales
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Profesores
                                 </p>
@@ -269,93 +247,41 @@
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
                                     {{ $totales['profesores'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Profesores detectados
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Grupos
                                 </p>
 
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $diagnostico['grupos_unicos'] ?? 0 }}
+                                    {{ $totales['grupos'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Grupos detectados
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Relaciones sección-carrera
                                 </p>
 
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $diagnostico['relaciones_seccion_carrera'] ?? 0 }}
+                                    {{ $totales['relaciones_seccion_carrera'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Asociaciones detectadas
-                                </p>
-
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-5">
-
                                 <p class="text-sm text-gray-500">
                                     Registros procesados
                                 </p>
 
                                 <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $resultado['total_registros'] ?? 0 }}
+                                    {{ $totales['registros_excel'] ?? 0 }}
                                 </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Filas del archivo
-                                </p>
-
                             </div>
 
                         </div>
 
-                        <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-
-                            <p class="font-medium text-blue-800">
-                                Programación detectada correctamente
-                            </p>
-
-                            <p class="mt-1 text-sm text-blue-700">
-                                El archivo contiene
-                                {{ $totales['secciones'] ?? 0 }}
-                                secciones distribuidas entre
-                                {{ $totales['carreras'] ?? 0 }}
-                                carreras y
-                                {{ $totales['profesores'] ?? 0 }}
-                                profesores.
-                            </p>
-
-                        </div>
-
                     </div>
-
-                    @php
-                        $esNuevaProgramacion = $resultado['comparacion']['es_nueva_programacion'] ?? false;
-                        $hayCambios = $resultado['comparacion']['hay_cambios'] ?? false;
-                        $resumenCambios = $resultado['comparacion']['resumen_cambios'] ?? [];
-
-                        $mostrarCambios = $hayCambios && count($resumenCambios) > 0;
-                        $mostrarDiagnostico = $esNuevaProgramacion;
-                    @endphp
-
-                    @if($mostrarDiagnostico)
 
                     <div class="mt-10">
 
@@ -364,341 +290,88 @@
                         </h3>
 
                         <p class="mt-1 text-sm text-gray-500">
-                            Información utilizada para comprobar cómo se interpretará la programación antes de almacenarla.
+                            Información especial detectada en la programación.
                         </p>
 
-                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Filas originales
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['filas_originales'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Cursos únicos
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['id_cursos_unicos'] ?? 0 }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    ID_CURSO
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Asignaturas
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['cod_ramos_unicos'] ?? 0 }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    COD_RAMO
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Secciones
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['id_curso_seccion_unicos'] ?? 0 }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Secciones reales detectadas
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Relaciones sección-carrera
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['relaciones_seccion_carrera'] ?? 0 }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Asociaciones detectadas
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Grupos
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['grupos_unicos'] ?? 0 }}
-                                </p>
-
-                                <p class="mt-1 text-xs text-gray-500">
-                                    Grupos detectados en horarios
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    @if(($diagnostico['cursos_compartidos'] ?? 0) > 0)
-
-                        <div class="mt-8">
+                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
 
                             <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
 
-                                <p class="font-medium text-yellow-800">
-                                    Cursos asociados a más de una carrera:
-                                    {{ $diagnostico['cursos_compartidos'] }}
+                                <p class="text-sm text-yellow-700">
+                                    Cursos asociados a más de una carrera
                                 </p>
 
-                                <p class="mt-1 text-sm text-yellow-700">
-                                    Estos cursos se mantendrán como una misma sección con relaciones hacia las carreras correspondientes.
+                                <p class="mt-1 text-2xl font-semibold text-yellow-800">
+                                    {{ $diagnostico['cursos_compartidos'] ?? 0 }}
                                 </p>
 
                             </div>
 
-                            <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 
-                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="text-sm text-gray-500">
+                                    Cursos compartidos con un profesor
+                                </p>
 
-                                    <p class="text-sm text-gray-500">
-                                        Cursos compartidos con un profesor
-                                    </p>
-
-                                    <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                        {{ $diagnostico['cursos_compartidos_un_profesor'] ?? 0 }}
-                                    </p>
-
-                                </div>
-
-                                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                    <p class="text-sm text-gray-500">
-                                        Cursos compartidos con varios profesores
-                                    </p>
-
-                                    <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                        {{ $diagnostico['cursos_compartidos_varios_profesores'] ?? 0 }}
-                                    </p>
-
-                                </div>
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $diagnostico['cursos_compartidos_un_profesor'] ?? 0 }}
+                                </p>
 
                             </div>
 
-                            <div class="mt-4 overflow-x-auto rounded-lg border border-gray-200">
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
 
-                                <table class="min-w-full text-left text-sm">
+                                <p class="text-sm text-gray-500">
+                                    Cursos compartidos con varios profesores
+                                </p>
 
-                                    <thead class="bg-gray-50">
-
-                                        <tr>
-
-                                            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                ID_CURSO
-                                            </th>
-
-                                            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                COD_RAMO
-                                            </th>
-
-                                            <th class="whitespace-nowrap border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                SECC
-                                            </th>
-
-                                            <th class="border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                Carreras
-                                            </th>
-
-                                            <th class="border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                Profesores
-                                            </th>
-
-                                            <th class="border-b border-gray-200 px-4 py-3 font-medium text-gray-700">
-                                                Carrera / profesor
-                                            </th>
-
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>
-
-                                        @foreach($diagnostico['ejemplos_cursos_compartidos'] ?? [] as $curso)
-
-                                            <tr class="border-b border-gray-100 align-top last:border-0">
-
-                                                <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-800">
-                                                    {{ $curso['id_curso'] }}
-                                                </td>
-
-                                                <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                                    {{ $curso['cod_ramo'] }}
-                                                </td>
-
-                                                <td class="whitespace-nowrap px-4 py-3 text-gray-600">
-                                                    {{ $curso['secc'] }}
-                                                </td>
-
-                                                <td class="px-4 py-3 text-gray-600">
-
-                                                    <div class="max-w-xl space-y-1">
-
-                                                        @foreach($curso['carreras'] ?? [] as $carrera)
-
-                                                            <div>
-                                                                {{ $carrera }}
-                                                            </div>
-
-                                                        @endforeach
-
-                                                    </div>
-
-                                                </td>
-
-                                                <td class="px-4 py-3 text-gray-600">
-
-                                                    <div class="max-w-md space-y-1">
-
-                                                        @forelse($curso['profesores'] ?? [] as $profesor)
-
-                                                            <div>
-
-                                                                {{ $profesor['nombre'] ?: 'Profesor sin nombre' }}
-
-                                                                @if(!empty($profesor['identificador']))
-
-                                                                    <span class="text-xs text-gray-400">
-                                                                        ({{ $profesor['identificador'] }})
-                                                                    </span>
-
-                                                                @endif
-
-                                                            </div>
-
-                                                        @empty
-
-                                                            <span class="text-gray-400">
-                                                                Sin profesor informado
-                                                            </span>
-
-                                                        @endforelse
-
-                                                    </div>
-
-                                                </td>
-
-                                                <td class="px-4 py-3 text-gray-600">
-
-                                                    <div class="max-w-2xl space-y-3">
-
-                                                        @foreach($curso['carrera_profesores'] ?? [] as $relacion)
-
-                                                            <div class="rounded-lg bg-gray-50 p-3">
-
-                                                                <p class="font-medium text-gray-800">
-                                                                    {{ $relacion['carrera'] }}
-                                                                </p>
-
-                                                                <div class="mt-1 space-y-1">
-
-                                                                    @forelse($relacion['profesores'] ?? [] as $profesor)
-
-                                                                        <p class="text-sm text-gray-600">
-
-                                                                            {{ $profesor['nombre'] ?: 'Profesor sin nombre' }}
-
-                                                                            @if(!empty($profesor['identificador']))
-
-                                                                                <span class="text-xs text-gray-400">
-                                                                                    ({{ $profesor['identificador'] }})
-                                                                                </span>
-
-                                                                            @endif
-
-                                                                        </p>
-
-                                                                    @empty
-
-                                                                        <p class="text-sm text-gray-400">
-                                                                            Sin profesor informado
-                                                                        </p>
-
-                                                                    @endforelse
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        @endforeach
-
-                                                    </div>
-
-                                                </td>
-
-                                            </tr>
-
-                                        @endforeach
-
-                                    </tbody>
-
-                                </table>
+                                <p class="mt-1 text-2xl font-semibold text-gray-800">
+                                    {{ $diagnostico['cursos_compartidos_varios_profesores'] ?? 0 }}
+                                </p>
 
                             </div>
 
                         </div>
 
-                    @else
+                        @if(($diagnostico['cursos_compartidos'] ?? 0) > 0)
 
-                        <div class="mt-8 rounded-lg border border-green-200 bg-green-50 p-4">
+                            <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
 
-                            <p class="font-medium text-green-800">
-                                No se detectaron cursos asociados a múltiples carreras.
+                                <p class="text-sm text-yellow-700">
+                                    Los cursos compartidos se mantendrán como una misma sección y quedarán relacionados con las carreras correspondientes.
+                                </p>
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                    @if($esNuevaProgramacion)
+
+                        <div class="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-4">
+
+                            <p class="font-medium text-blue-800">
+                                Primera versión de programación
+                            </p>
+
+                            <p class="mt-1 text-sm text-blue-700">
+                                Todos los datos detectados en el archivo serán incorporados como la versión inicial de la programación anterior.
                             </p>
 
                         </div>
 
-                    @endif
-
-                    @endif
-
-                    @if($mostrarCambios)
+                    @elseif($mostrarCambios)
 
                         <div class="mt-10">
 
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-800">
-                                    Cambios detectados
-                                </h3>
+                            <h3 class="text-lg font-semibold text-gray-800">
+                                Cambios detectados
+                            </h3>
 
-                                <p class="mt-1 text-sm text-gray-500">
-                                    Cambios encontrados respecto de la versión actual de la programación.
-                                </p>
-                            </div>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Cambios encontrados respecto de la versión actual de la programación.
+                            </p>
 
                             <div class="mt-4 space-y-3">
 
@@ -707,18 +380,33 @@
                                     <div class="flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
 
                                         <div>
+
                                             <p class="font-medium text-blue-800">
                                                 {{ ucfirst($cambio['descripcion'] ?? 'Cambio detectado') }}
                                             </p>
 
                                             <p class="mt-1 text-sm text-blue-700">
+
                                                 @switch($cambio['tipo'] ?? '')
-                                                    @case('profesores_modificados')
-                                                        Se modificaron datos de profesores existentes.
+
+                                                    @case('periodos')
+                                                        Se detectaron nuevos períodos académicos.
+                                                        @break
+
+                                                    @case('carreras')
+                                                        Se detectaron nuevas carreras.
+                                                        @break
+
+                                                    @case('asignaturas')
+                                                        Se detectaron nuevas asignaturas.
                                                         @break
 
                                                     @case('profesores')
                                                         Se detectaron nuevos profesores.
+                                                        @break
+
+                                                    @case('profesores_modificados')
+                                                        Se modificaron datos de profesores existentes.
                                                         @break
 
                                                     @case('secciones_nuevas')
@@ -751,8 +439,11 @@
 
                                                     @default
                                                         Se detectaron cambios en la programación.
+
                                                 @endswitch
+
                                             </p>
+
                                         </div>
 
                                         <span class="shrink-0 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
@@ -767,67 +458,21 @@
 
                         </div>
 
-                    @endif
+                    @elseif(!$hayCambios)
 
-                    <div class="mt-10">
+                        <div class="mt-10 rounded-lg border border-green-200 bg-green-50 p-4">
 
-                        <h3 class="text-lg font-semibold text-gray-800">
-                            Estado de los datos
-                        </h3>
+                            <p class="font-medium text-green-800">
+                                No se detectaron cambios
+                            </p>
 
-                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Periodos nuevos
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $resultado['comparacion']['periodos']['nuevos'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Carreras nuevas
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $resultado['comparacion']['carreras']['nuevas'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Asignaturas nuevas
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $resultado['comparacion']['asignaturas']['nuevas'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Profesores nuevos
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $resultado['comparacion']['profesores']['nuevos'] ?? 0 }}
-                                </p>
-
-                            </div>
+                            <p class="mt-1 text-sm text-green-700">
+                                El archivo contiene la misma información que la versión actual de la programación.
+                            </p>
 
                         </div>
 
-                    </div>
+                    @endif
 
                     @if(($totales['errores'] ?? 0) > 0)
 
@@ -871,42 +516,50 @@
                                 type="submit"
                                 class="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:w-auto"
                             >
-                                Cancelar
+                                {{ $puedeConfirmar ? 'Cancelar' : 'Volver' }}
                             </button>
                         </form>
 
-                        <form
-                            action="{{ route('programacion.importar.confirmar') }}"
-                            method="POST"
-                            onsubmit="const boton = this.querySelector('button[type=submit]'); boton.disabled = true; boton.textContent = 'Cargando programación...';"
-                        >
-                            @csrf
+                        @if($puedeConfirmar)
 
-                            <input
-                                type="hidden"
-                                name="ruta_temporal"
-                                value="{{ $resultado['ruta_temporal'] ?? '' }}"
+                            <form
+                                action="{{ route('programacion.importar.confirmar') }}"
+                                method="POST"
+                                onsubmit="const boton = this.querySelector('button[type=submit]'); boton.disabled = true; boton.textContent = 'Cargando programación...';"
                             >
+                                @csrf
 
-                            <input
-                                type="hidden"
-                                name="nombre_archivo"
-                                value="{{ $resultado['nombre_archivo'] ?? '' }}"
-                            >
+                                <input
+                                    type="hidden"
+                                    name="ruta_temporal"
+                                    value="{{ $resultado['ruta_temporal'] ?? '' }}"
+                                >
 
-                            <button
-                                type="submit"
-                                class="w-full rounded-lg bg-red-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                            >
-                                Confirmar carga
-                            </button>
-                        </form>
+                                <input
+                                    type="hidden"
+                                    name="nombre_archivo"
+                                    value="{{ $resultado['nombre_archivo'] ?? '' }}"
+                                >
+
+                                <button
+                                    type="submit"
+                                    class="w-full rounded-lg bg-red-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                                >
+                                    Confirmar carga
+                                </button>
+                            </form>
+
+                        @endif
 
                     </div>
 
-                    <p class="mt-2 text-right text-xs text-gray-400">
-                        Al confirmar, los datos del archivo se incorporarán como una nueva versión de programación.
-                    </p>
+                    @if($puedeConfirmar)
+
+                        <p class="mt-2 text-right text-xs text-gray-400">
+                            Al confirmar, los datos del archivo se incorporarán como una nueva versión de la programación anterior.
+                        </p>
+
+                    @endif
 
                 @endif
 
@@ -917,4 +570,5 @@
     @endisset
 
 </div>
+
 @endsection
