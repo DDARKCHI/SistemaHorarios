@@ -10,8 +10,84 @@
         </h1>
 
         <p class="mt-0.5 text-xs text-gray-500">
-            Consulta la nueva programación semestral generada y gestionada por PROSEC.
+            Consulta y gestiona la nueva programación semestral generada por PROSEC.
         </p>
+    </div>
+
+    @if (session('success'))
+        <div class="mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs font-medium text-green-700">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            {{ $errors->first() }}
+        </div>
+    @endif
+
+    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+
+            <div>
+                <div class="text-sm font-semibold text-gray-800">
+                    Generar programación semestral
+                </div>
+
+                <div class="mt-0.5 text-xs text-gray-500">
+                    Selecciona una versión de la programación anterior para utilizarla como base.
+                </div>
+            </div>
+
+            @if ($versionesAnteriores->isNotEmpty())
+                <form
+                    method="POST"
+                    action="{{ route('programacion.semestral.generar') }}"
+                    class="flex flex-col gap-2 sm:flex-row sm:items-end"
+                    onsubmit="return confirmarGeneracion()"
+                >
+                    @csrf
+
+                    <div class="min-w-[190px]">
+                        <label
+                            for="version_anterior_id"
+                            class="mb-1 block text-[11px] font-semibold text-gray-600"
+                        >
+                            Programación anterior
+                        </label>
+
+                        <select
+                            id="version_anterior_id"
+                            name="version_anterior_id"
+                            required
+                            class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                        >
+                            @foreach ($versionesAnteriores as $versionAnterior)
+                                <option value="{{ $versionAnterior->id }}">
+                                    V{{ number_format((float) $versionAnterior->version, 1) }}
+
+                                    @if ($versionAnterior->es_actual)
+                                        — Actual
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                    >
+                        Generar programación
+                    </button>
+                </form>
+            @else
+                <div class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
+                    No existe una programación anterior disponible para este período.
+                </div>
+            @endif
+
+        </div>
     </div>
 
     <form
@@ -302,7 +378,7 @@
             </div>
 
             <div class="mx-auto mt-1 max-w-xl text-xs leading-relaxed text-gray-400">
-                La programación anterior ya puede utilizarse como base, pero todavía no se ha generado una nueva programación semestral en PROSEC.
+                Selecciona una versión de la programación anterior y utiliza el botón Generar programación.
             </div>
 
         </div>
@@ -427,11 +503,9 @@
                                                             </div>
 
                                                             @if ($grupo)
-
                                                                 <span class="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[8px] font-semibold text-gray-600">
                                                                     {{ $grupo->codigo }}
                                                                 </span>
-
                                                             @endif
 
                                                         </div>
@@ -600,6 +674,22 @@
     const asignaturaSeleccionada = @json($asignaturaId);
     const profesorSeleccionado = @json($profesorId);
 
+    function confirmarGeneracion() {
+        const select = document.getElementById('version_anterior_id');
+
+        if (!select || !select.value) {
+            return false;
+        }
+
+        const texto = select.options[select.selectedIndex].text.trim();
+
+        return confirm(
+            'Se generará una nueva programación semestral utilizando '
+            + texto
+            + ' como base. ¿Deseas continuar?'
+        );
+    }
+
     function limpiarSelect(select, texto) {
         select.innerHTML = '';
 
@@ -722,6 +812,17 @@
             );
         }
 
+        if (
+            versionSelect
+            && !versionSelect.disabled
+            && versionSelect.value
+        ) {
+            parametros.set(
+                'version_id',
+                versionSelect.value
+            );
+        }
+
         if (sedeSelect.value) {
             parametros.set(
                 'sede_id',
@@ -741,6 +842,11 @@
                 'semestre',
                 opciones.semestre
             );
+        } else if (semestreSelect.value) {
+            parametros.set(
+                'semestre',
+                semestreSelect.value
+            );
         }
 
         if (opciones.seccionNumero) {
@@ -748,12 +854,22 @@
                 'seccion_numero',
                 opciones.seccionNumero
             );
+        } else if (seccionSelect.value) {
+            parametros.set(
+                'seccion_numero',
+                seccionSelect.value
+            );
         }
 
         if (opciones.asignaturaId) {
             parametros.set(
                 'asignatura_id',
                 opciones.asignaturaId
+            );
+        } else if (asignaturaSelect.value) {
+            parametros.set(
+                'asignatura_id',
+                asignaturaSelect.value
             );
         }
 
@@ -880,8 +996,6 @@
     });
 
     semestreSelect.addEventListener('change', async function () {
-        const semestre = semestreSelect.value;
-
         limpiarSelect(
             seccionSelect,
             'Cargando secciones...'
@@ -898,7 +1012,7 @@
         );
 
         await actualizarFiltros({
-            semestre: semestre,
+            semestre: semestreSelect.value,
             actualizarSecciones: true,
             actualizarAsignaturas: true,
             actualizarProfesores: true
@@ -906,18 +1020,6 @@
     });
 
     seccionSelect.addEventListener('change', async function () {
-        const seccionNumero = seccionSelect.value;
-
-        if (!seccionNumero) {
-            await actualizarFiltros({
-                semestre: semestreSelect.value,
-                actualizarAsignaturas: true,
-                actualizarProfesores: true
-            });
-
-            return;
-        }
-
         limpiarSelect(
             asignaturaSelect,
             'Cargando ramos...'
@@ -930,25 +1032,13 @@
 
         await actualizarFiltros({
             semestre: semestreSelect.value,
-            seccionNumero: seccionNumero,
+            seccionNumero: seccionSelect.value,
             actualizarAsignaturas: true,
             actualizarProfesores: true
         });
     });
 
     asignaturaSelect.addEventListener('change', async function () {
-        const asignaturaId = asignaturaSelect.value;
-
-        if (!asignaturaId) {
-            await actualizarFiltros({
-                semestre: semestreSelect.value,
-                seccionNumero: seccionSelect.value,
-                actualizarProfesores: true
-            });
-
-            return;
-        }
-
         limpiarSelect(
             profesorSelect,
             'Cargando profesores...'
@@ -957,7 +1047,7 @@
         await actualizarFiltros({
             semestre: semestreSelect.value,
             seccionNumero: seccionSelect.value,
-            asignaturaId: asignaturaId,
+            asignaturaId: asignaturaSelect.value,
             actualizarProfesores: true
         });
     });

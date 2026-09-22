@@ -29,6 +29,11 @@ Route::middleware('auth')->group(function () {
         [ProgramacionSemestralController::class, 'index']
     )->name('programacion.semestral');
 
+    Route::post(
+        '/programacion/semestral/generar',
+        [ProgramacionSemestralController::class, 'generar']
+    )->name('programacion.semestral.generar');
+
     Route::get(
         '/programacion/semestral/filtros',
         [ProgramacionSemestralController::class, 'filtros']
