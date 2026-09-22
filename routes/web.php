@@ -98,3 +98,7 @@ Route::get('/prueba-excel', function () {
         'primeras_filas' => array_slice($datos[0] ?? [], 0, 5),
     ]);
 });
+
+Route::fallback(function () {
+    return redirect()->route('login');
+});
