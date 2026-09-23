@@ -6,6 +6,7 @@ use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
 use App\Http\Controllers\ProgramacionSemestralController;
 use App\Http\Controllers\IntercambioDocenteController;
+use App\Http\Controllers\UsuarioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -20,71 +21,135 @@ Route::post('/logout', [LoginController::class, 'cerrarSesion'])
 
 Route::get('/', function () {
     return view('inicio');
-})->middleware('auth')->name('inicio');
+})
+    ->middleware(['auth', 'permission.redirect:ver panel inicio'])
+    ->name('inicio');
 
 Route::middleware('auth')->group(function () {
 
     Route::get(
         '/programacion/semestral',
         [ProgramacionSemestralController::class, 'index']
-    )->name('programacion.semestral');
+    )
+        ->middleware('permission.redirect:ver programacion semestral')
+        ->name('programacion.semestral');
 
     Route::post(
         '/programacion/semestral/generar',
         [ProgramacionSemestralController::class, 'generar']
-    )->name('programacion.semestral.generar');
+    )
+        ->middleware('permission.redirect:generar programacion semestral')
+        ->name('programacion.semestral.generar');
 
     Route::get(
         '/programacion/semestral/filtros',
         [ProgramacionSemestralController::class, 'filtros']
-    )->name('programacion.semestral.filtros');
+    )
+        ->middleware('permission.redirect:ver programacion semestral')
+        ->name('programacion.semestral.filtros');
 
     Route::get(
         '/programacion',
         [VisualizacionProgramacionController::class, 'index']
-    )->name('programacion.index');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.index');
 
     Route::get(
         '/programacion/filtros',
         [VisualizacionProgramacionController::class, 'filtros']
-    )->name('programacion.filtros');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.filtros');
 
     Route::get(
         '/programacion/importar',
         [ImportacionProgramacionController::class, 'index']
-    )->name('programacion.importar');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.importar');
 
     Route::post(
         '/programacion/importar/analizar',
         [ImportacionProgramacionController::class, 'analizar']
-    )->name('programacion.importar.analizar');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.importar.analizar');
 
     Route::post(
         '/programacion/importar/confirmar',
         [ImportacionProgramacionController::class, 'confirmar']
-    )->name('programacion.importar.confirmar');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.importar.confirmar');
 
     Route::post(
         '/programacion/importar/cancelar',
         [ImportacionProgramacionController::class, 'cancelar']
-    )->name('programacion.importar.cancelar');
+    )
+        ->middleware('permission.redirect:ver programacion anterior')
+        ->name('programacion.importar.cancelar');
 
     Route::get(
         '/programacion/intercambio',
         [IntercambioDocenteController::class, 'index']
-    )->name('programacion.intercambio');
+    )
+        ->middleware('permission.redirect:ver intercambio docente')
+        ->name('programacion.intercambio');
 
     Route::get('/salas', function () {
         return view('salas.index');
-    })->name('salas.index');
+    })
+        ->middleware('permission.redirect:gestionar salas y recursos')
+        ->name('salas.index');
 
-    Route::get('/administracion', function () {
-        return view('administracion.index');
-    })->name('administracion.index');
+    Route::get(
+        '/administracion',
+        [UsuarioController::class, 'index']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('administracion.index');
+
+    Route::get(
+        '/administracion/usuarios/crear',
+        [UsuarioController::class, 'create']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('usuarios.create');
+
+    Route::post(
+        '/administracion/usuarios',
+        [UsuarioController::class, 'store']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('usuarios.store');
+
+    Route::get(
+        '/administracion/usuarios/{usuario}/editar',
+        [UsuarioController::class, 'edit']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('usuarios.edit');
+
+    Route::put(
+        '/administracion/usuarios/{usuario}',
+        [UsuarioController::class, 'update']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('usuarios.update');
+
+    Route::delete(
+        '/administracion/usuarios/{usuario}',
+        [UsuarioController::class, 'destroy']
+    )
+        ->middleware('permission.redirect:administrar usuarios')
+        ->name('usuarios.destroy');
 
     Route::get('/configuracion', function () {
         return view('configuracion.index');
-    })->name('configuracion.index');
+    })
+        ->middleware('permission.redirect:ver configuracion')
+        ->name('configuracion.index');
 });
 
 Route::get('/prueba-excel', function () {
@@ -97,7 +162,8 @@ Route::get('/prueba-excel', function () {
         'filas_primera_hoja' => count($datos[0] ?? []),
         'primeras_filas' => array_slice($datos[0] ?? [], 0, 5),
     ]);
-});
+})
+    ->middleware(['auth', 'permission.redirect:ver panel inicio']);
 
 Route::fallback(function () {
     return redirect()->route('login');

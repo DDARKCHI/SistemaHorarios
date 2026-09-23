@@ -1,3 +1,14 @@
+@php
+    $usuarioActual = auth()->user();
+
+    $nombreUsuario = $usuarioActual?->name ?? 'Usuario';
+    $rolUsuario = $usuarioActual?->getRoleNames()->first() ?? 'Sin rol';
+
+    $inicialUsuario = strtoupper(
+        mb_substr($nombreUsuario, 0, 1)
+    );
+@endphp
+
 <header class="sticky top-0 z-30 border-b border-borde bg-superficie">
 
     <div class="relative flex h-20 items-center justify-between px-6">
@@ -70,17 +81,17 @@
                 <div class="hidden text-right sm:block">
 
                     <p class="text-sm font-semibold text-texto">
-                        Usuario
+                        {{ $nombreUsuario }}
                     </p>
 
                     <p class="text-xs text-texto-secundario">
-                        Administrador
+                        {{ $rolUsuario }}
                     </p>
 
                 </div>
 
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-institucional text-base font-semibold text-white">
-                    U
+                    {{ $inicialUsuario }}
                 </div>
 
                 <svg
@@ -104,19 +115,6 @@
                 id="menu-usuario"
                 class="absolute right-0 top-full z-50 mt-2 hidden w-44 overflow-hidden rounded-lg border border-borde bg-superficie shadow-lg"
             >
-
-                <div class="border-b border-borde px-4 py-3 sm:hidden">
-
-                    <p class="text-sm font-semibold text-texto">
-                        Usuario
-                    </p>
-
-                    <p class="text-xs text-texto-secundario">
-                        Administrador
-                    </p>
-
-                </div>
-
                 <form
                     method="POST"
                     action="{{ route('logout') }}"
@@ -127,7 +125,6 @@
                         type="submit"
                         class="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-texto transition-colors hover:bg-fondo"
                     >
-
                         <svg
                             class="h-4 w-4 text-texto-secundario"
                             fill="none"

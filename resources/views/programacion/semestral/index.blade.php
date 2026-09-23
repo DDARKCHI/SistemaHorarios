@@ -26,69 +26,71 @@
         </div>
     @endif
 
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    @can('generar programacion semestral')
+        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
-            <div>
-                <div class="text-sm font-semibold text-gray-800">
-                    Generar programación semestral
-                </div>
-
-                <div class="mt-0.5 text-xs text-gray-500">
-                    Selecciona una versión de la programación anterior para utilizarla como base.
-                </div>
-            </div>
-
-            @if ($versionesAnteriores->isNotEmpty())
-                <form
-                    method="POST"
-                    action="{{ route('programacion.semestral.generar') }}"
-                    class="flex flex-col gap-2 sm:flex-row sm:items-end"
-                    onsubmit="return confirmarGeneracion()"
-                >
-                    @csrf
-
-                    <div class="min-w-[190px]">
-                        <label
-                            for="version_anterior_id"
-                            class="mb-1 block text-[11px] font-semibold text-gray-600"
-                        >
-                            Programación anterior
-                        </label>
-
-                        <select
-                            id="version_anterior_id"
-                            name="version_anterior_id"
-                            required
-                            class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                        >
-                            @foreach ($versionesAnteriores as $versionAnterior)
-                                <option value="{{ $versionAnterior->id }}">
-                                    V{{ number_format((float) $versionAnterior->version, 1) }}
-
-                                    @if ($versionAnterior->es_actual)
-                                        — Actual
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
+                <div>
+                    <div class="text-sm font-semibold text-gray-800">
+                        Generar programación semestral
                     </div>
 
-                    <button
-                        type="submit"
-                        class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
-                    >
-                        Generar programación
-                    </button>
-                </form>
-            @else
-                <div class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
-                    No existe una programación anterior disponible para este período.
+                    <div class="mt-0.5 text-xs text-gray-500">
+                        Selecciona una versión de la programación anterior para utilizarla como base.
+                    </div>
                 </div>
-            @endif
 
+                @if ($versionesAnteriores->isNotEmpty())
+                    <form
+                        method="POST"
+                        action="{{ route('programacion.semestral.generar') }}"
+                        class="flex flex-col gap-2 sm:flex-row sm:items-end"
+                        onsubmit="return confirmarGeneracion()"
+                    >
+                        @csrf
+
+                        <div class="min-w-[190px]">
+                            <label
+                                for="version_anterior_id"
+                                class="mb-1 block text-[11px] font-semibold text-gray-600"
+                            >
+                                Programación anterior
+                            </label>
+
+                            <select
+                                id="version_anterior_id"
+                                name="version_anterior_id"
+                                required
+                                class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                            >
+                                @foreach ($versionesAnteriores as $versionAnterior)
+                                    <option value="{{ $versionAnterior->id }}">
+                                        V{{ number_format((float) $versionAnterior->version, 1) }}
+
+                                        @if ($versionAnterior->es_actual)
+                                            — Actual
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                        >
+                            Generar programación
+                        </button>
+                    </form>
+                @else
+                    <div class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
+                        No existe una programación anterior disponible para este período.
+                    </div>
+                @endif
+
+            </div>
         </div>
-    </div>
+    @endcan
 
     <form
         id="filtros-form"
