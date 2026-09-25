@@ -35,4 +35,9 @@ class GrupoSeccion extends Model
     {
         return $this->hasMany(Horario::class);
     }
+
+    public function profesores()
+    {
+        return $this->hasMany(GrupoProfesor::class);
+    }
 }

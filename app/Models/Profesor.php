@@ -46,6 +46,11 @@ class Profesor extends Model
         return $this->hasMany(SeccionProfesor::class);
     }
 
+    public function grupos()
+    {
+        return $this->hasMany(GrupoProfesor::class);
+    }
+
     public function horarios()
     {
         return $this->hasMany(HorarioProfesor::class);
