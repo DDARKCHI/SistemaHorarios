@@ -6,6 +6,7 @@ use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
 use App\Http\Controllers\ProgramacionSemestralController;
 use App\Http\Controllers\IntercambioDocenteController;
+use App\Http\Controllers\PropuestaHorarioController;
 use App\Http\Controllers\UsuarioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -47,6 +48,20 @@ Route::middleware('auth')->group(function () {
     )
         ->middleware('permission.redirect:ver programacion semestral')
         ->name('programacion.semestral.filtros');
+
+    Route::get(
+        '/programacion/propuesta-horario',
+        [PropuestaHorarioController::class, 'index']
+    )
+        ->middleware('permission.redirect:enviar propuesta horario')
+        ->name('programacion.propuesta');
+
+    Route::post(
+        '/programacion/propuesta-horario',
+        [PropuestaHorarioController::class, 'guardar']
+    )
+        ->middleware('permission.redirect:enviar propuesta horario')
+        ->name('programacion.propuesta.guardar');
 
     Route::get(
         '/programacion',

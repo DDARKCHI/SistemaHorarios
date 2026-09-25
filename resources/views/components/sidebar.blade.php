@@ -14,7 +14,8 @@
 
         || request()->routeIs('programacion.conflictos*')
 
-        || request()->routeIs('programacion.visualizar*');
+        || request()->routeIs('programacion.visualizar*')
+        || request()->routeIs('programacion.propuesta*');
 
 
 
@@ -440,15 +441,22 @@
 
                     @can('enviar propuesta horario')
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
+                    <a
+                        href="{{ route('programacion.propuesta') }}"
+                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+                            {{ request()->routeIs('programacion.propuesta*')
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
+                    >
+                        <span
+                            class="h-1.5 w-1.5 rounded-full
+                                {{ request()->routeIs('programacion.propuesta*')
+                                    ? 'bg-institucional'
+                                    : 'bg-gray-300' }}"
+                        ></span>
 
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Propuesta de horario</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                        <span>Propuesta de horario</span>
+                    </a>
 
                     @endcan
 
@@ -1624,11 +1632,15 @@
 
                         @can('enviar propuesta horario')
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
+                        <a
+                            href="{{ route('programacion.propuesta') }}"
+                            class="block rounded-lg px-3 py-2 text-sm font-medium
+                                {{ request()->routeIs('programacion.propuesta*')
+                                    ? 'bg-gray-100 text-gray-800'
+                                    : 'text-texto hover:bg-gray-50' }}"
+                        >
                             Propuesta de horario
-
-                        </div>
+                        </a>
 
                         @endcan
 
