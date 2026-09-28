@@ -202,8 +202,16 @@ class AsignacionHorarioController extends Controller
                 'exists:dias,id',
             ],
 
-            'bloque_horario_id' => [
+            'bloques_horarios' => [
                 'required',
+                'array',
+                'min:1',
+            ],
+
+            'bloques_horarios.*' => [
+                'required',
+                'integer',
+                'distinct',
                 'exists:bloques_horarios,id',
             ],
 
@@ -225,11 +233,20 @@ class AsignacionHorarioController extends Controller
             'dia_id.exists'
                 => 'El día seleccionado no es válido.',
 
-            'bloque_horario_id.required'
-                => 'Debes seleccionar un bloque horario.',
+            'bloques_horarios.required'
+                => 'Debes seleccionar al menos un bloque horario.',
 
-            'bloque_horario_id.exists'
-                => 'El bloque horario seleccionado no es válido.',
+            'bloques_horarios.array'
+                => 'Los bloques seleccionados no son válidos.',
+
+            'bloques_horarios.min'
+                => 'Debes seleccionar al menos un bloque horario.',
+
+            'bloques_horarios.*.exists'
+                => 'Uno de los bloques seleccionados no es válido.',
+
+            'bloques_horarios.*.distinct'
+                => 'No puedes seleccionar el mismo bloque más de una vez.',
 
             'observaciones.max'
                 => 'Las observaciones no pueden superar los 255 caracteres.',
@@ -237,9 +254,11 @@ class AsignacionHorarioController extends Controller
 
         $grupo = GrupoSeccion::with([
             'actividadSeccion.seccion',
+
             'profesores' => function ($query) {
                 $query->where('estado', true);
             },
+
             'profesores.profesor',
         ])->findOrFail(
             $datos['grupo_seccion_id']
@@ -269,30 +288,59 @@ class AsignacionHorarioController extends Controller
             ]);
         }
 
-        $horarioDuplicado = Horario::where(
-            'grupo_seccion_id',
-            $grupo->id
+        $bloquesIds = collect(
+            $datos['bloques_horarios']
         )
-            ->where(
-                'version_planificacion_id',
-                $version->id
-            )
-            ->where(
-                'dia_id',
-                $datos['dia_id']
-            )
-            ->where(
-                'bloque_horario_id',
-                $datos['bloque_horario_id']
-            )
-            ->where('estado', true)
-            ->exists();
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
 
-        if ($horarioDuplicado) {
-            throw ValidationException::withMessages([
-                'horario'
-                    => 'El grupo ya tiene asignado ese día y bloque.',
-            ]);
+        $bloquesSeleccionados = BloqueHorario::whereIn(
+            'id',
+            $bloquesIds
+        )
+            ->orderBy('numero')
+            ->get()
+            ->keyBy('id');
+
+        $dia = Dia::findOrFail(
+            $datos['dia_id']
+        );
+
+        foreach ($bloquesIds as $bloqueId) {
+            $bloque = $bloquesSeleccionados->get(
+                $bloqueId
+            );
+
+            $horarioDuplicado = Horario::where(
+                'grupo_seccion_id',
+                $grupo->id
+            )
+                ->where(
+                    'version_planificacion_id',
+                    $version->id
+                )
+                ->where(
+                    'dia_id',
+                    $datos['dia_id']
+                )
+                ->where(
+                    'bloque_horario_id',
+                    $bloqueId
+                )
+                ->where('estado', true)
+                ->exists();
+
+            if ($horarioDuplicado) {
+                throw ValidationException::withMessages([
+                    'horario'
+                        => 'El grupo ya tiene asignado '
+                        . $dia->nombre
+                        . ', bloque '
+                        . ($bloque?->numero ?? $bloqueId)
+                        . '.',
+                ]);
+            }
         }
 
         foreach ($grupo->profesores as $grupoProfesor) {
@@ -313,27 +361,84 @@ class AsignacionHorarioController extends Controller
                 ->where('estado', true)
                 ->count();
 
-            if ($cantidadDisponibilidades > 0) {
-                $estaDisponible = DisponibilidadProfesor::where(
+            foreach ($bloquesIds as $bloqueId) {
+                $bloque = $bloquesSeleccionados->get(
+                    $bloqueId
+                );
+
+                if ($cantidadDisponibilidades > 0) {
+                    $estaDisponible = DisponibilidadProfesor::where(
+                        'profesor_id',
+                        $profesor->id
+                    )
+                        ->where(
+                            'periodo_academico_id',
+                            $periodoId
+                        )
+                        ->where(
+                            'dia_id',
+                            $datos['dia_id']
+                        )
+                        ->where(
+                            'bloque_horario_id',
+                            $bloqueId
+                        )
+                        ->where(
+                            'tipo_disponibilidad',
+                            'Disponible'
+                        )
+                        ->where('estado', true)
+                        ->exists();
+
+                    if (!$estaDisponible) {
+                        throw ValidationException::withMessages([
+                            'horario'
+                                => 'El profesor '
+                                . trim(
+                                    $profesor->nombre
+                                    . ' '
+                                    . $profesor->apellido
+                                )
+                                . ' no tiene disponibilidad para '
+                                . $dia->nombre
+                                . ', bloque '
+                                . ($bloque?->numero ?? $bloqueId)
+                                . '.',
+                        ]);
+                    }
+                }
+
+                $conflictoProfesor = HorarioProfesor::where(
                     'profesor_id',
                     $profesor->id
                 )
-                    ->where(
-                        'periodo_academico_id',
-                        $periodoId
-                    )
-                    ->where(
-                        'dia_id',
-                        $datos['dia_id']
-                    )
-                    ->where(
-                        'bloque_horario_id',
-                        $datos['bloque_horario_id']
-                    )
                     ->where('estado', true)
+                    ->whereHas(
+                        'horario',
+                        function ($query) use (
+                            $version,
+                            $datos,
+                            $bloqueId
+                        ) {
+                            $query
+                                ->where(
+                                    'version_planificacion_id',
+                                    $version->id
+                                )
+                                ->where(
+                                    'dia_id',
+                                    $datos['dia_id']
+                                )
+                                ->where(
+                                    'bloque_horario_id',
+                                    $bloqueId
+                                )
+                                ->where('estado', true);
+                        }
+                    )
                     ->exists();
 
-                if (!$estaDisponible) {
+                if ($conflictoProfesor) {
                     throw ValidationException::withMessages([
                         'horario'
                             => 'El profesor '
@@ -342,104 +447,71 @@ class AsignacionHorarioController extends Controller
                                 . ' '
                                 . $profesor->apellido
                             )
-                            . ' no tiene disponibilidad registrada para ese día y bloque.',
+                            . ' ya tiene otro horario asignado el '
+                            . $dia->nombre
+                            . ' en el bloque '
+                            . ($bloque?->numero ?? $bloqueId)
+                            . '.',
                     ]);
                 }
-            }
-
-            $conflictoProfesor = HorarioProfesor::where(
-                'profesor_id',
-                $profesor->id
-            )
-                ->where('estado', true)
-                ->whereHas(
-                    'horario',
-                    function ($query) use (
-                        $version,
-                        $datos
-                    ) {
-                        $query
-                            ->where(
-                                'version_planificacion_id',
-                                $version->id
-                            )
-                            ->where(
-                                'dia_id',
-                                $datos['dia_id']
-                            )
-                            ->where(
-                                'bloque_horario_id',
-                                $datos['bloque_horario_id']
-                            )
-                            ->where('estado', true);
-                    }
-                )
-                ->exists();
-
-            if ($conflictoProfesor) {
-                throw ValidationException::withMessages([
-                    'horario'
-                        => 'El profesor '
-                        . trim(
-                            $profesor->nombre
-                            . ' '
-                            . $profesor->apellido
-                        )
-                        . ' ya tiene otro horario asignado en ese bloque.',
-                ]);
             }
         }
 
         DB::transaction(function () use (
             $datos,
             $grupo,
-            $version
+            $version,
+            $bloquesIds
         ) {
-            $horario = Horario::create([
-                'actividad_seccion_id'
-                    => $grupo->actividad_seccion_id,
+            foreach ($bloquesIds as $bloqueId) {
+                $horario = Horario::create([
+                    'actividad_seccion_id'
+                        => $grupo->actividad_seccion_id,
 
-                'grupo_seccion_id'
-                    => $grupo->id,
+                    'grupo_seccion_id'
+                        => $grupo->id,
 
-                'version_planificacion_id'
-                    => $version->id,
+                    'version_planificacion_id'
+                        => $version->id,
 
-                'dia_id'
-                    => $datos['dia_id'],
+                    'dia_id'
+                        => $datos['dia_id'],
 
-                'bloque_horario_id'
-                    => $datos['bloque_horario_id'],
-
-                'observaciones'
-                    => $datos['observaciones'] ?? null,
-
-                'estado'
-                    => true,
-            ]);
-
-            foreach ($grupo->profesores as $grupoProfesor) {
-                HorarioProfesor::create([
-                    'horario_id'
-                        => $horario->id,
-
-                    'profesor_id'
-                        => $grupoProfesor->profesor_id,
-
-                    'tipo_participacion'
-                        => $grupoProfesor->tipo_participacion,
-
-                    'es_principal'
-                        => $grupoProfesor->es_principal,
+                    'bloque_horario_id'
+                        => $bloqueId,
 
                     'observaciones'
-                        => $grupoProfesor->observaciones,
+                        => $datos['observaciones'] ?? null,
 
                     'estado'
                         => true,
                 ]);
+
+                foreach ($grupo->profesores as $grupoProfesor) {
+                    HorarioProfesor::create([
+                        'horario_id'
+                            => $horario->id,
+
+                        'profesor_id'
+                            => $grupoProfesor->profesor_id,
+
+                        'tipo_participacion'
+                            => $grupoProfesor->tipo_participacion,
+
+                        'es_principal'
+                            => $grupoProfesor->es_principal,
+
+                        'observaciones'
+                            => $grupoProfesor->observaciones,
+
+                        'estado'
+                            => true,
+                    ]);
+                }
             }
         });
+
+        $cantidadBloques = $bloquesIds->count();
 
         return redirect()
             ->route(
@@ -460,7 +532,9 @@ class AsignacionHorarioController extends Controller
             )
             ->with(
                 'success',
-                'Horario asignado correctamente.'
+                $cantidadBloques === 1
+                    ? 'Horario asignado correctamente.'
+                    : $cantidadBloques . ' bloques horarios asignados correctamente.'
             );
     }
 

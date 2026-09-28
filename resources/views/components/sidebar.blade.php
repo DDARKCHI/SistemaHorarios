@@ -44,12 +44,8 @@
 
 
     $administracionActiva =
-
-        request()->routeIs('administracion*')
-
-        || request()->routeIs('usuarios*')
-
-        || request()->routeIs('roles*');
+    request()->routeIs('administracion*')
+    || request()->routeIs('usuarios*');
 
 
 
@@ -393,33 +389,47 @@
 
                     @can('asignar profesores')
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
+<a
+    href="{{ route('programacion.asignacion.profesores') }}"
+    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+        {{ request()->routeIs('programacion.asignacion.profesores*')
+            ? 'bg-gray-100 text-gray-800'
+            : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
+>
+    <span
+        class="h-1.5 w-1.5 rounded-full
+            {{ request()->routeIs('programacion.asignacion.profesores*')
+                ? 'bg-institucional'
+                : 'bg-gray-300' }}"
+    ></span>
 
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
+    <span>Asignación de profesores</span>
+</a>
 
-                        <span class="flex-1">Asignación de profesores</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
-
-                    @endcan
+@endcan
 
 
 
-                    @can('asignar horarios')
+                   @can('asignar horarios')
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
+<a
+    href="{{ route('programacion.asignacion.horarios') }}"
+    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+        {{ request()->routeIs('programacion.asignacion.horarios*')
+            ? 'bg-gray-100 text-gray-800'
+            : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
+>
+    <span
+        class="h-1.5 w-1.5 rounded-full
+            {{ request()->routeIs('programacion.asignacion.horarios*')
+                ? 'bg-institucional'
+                : 'bg-gray-300' }}"
+    ></span>
 
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
+    <span>Asignación de horarios</span>
+</a>
 
-                        <span class="flex-1">Asignación de horarios</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
-
-                    @endcan
+@endcan
 
 
 
@@ -1124,16 +1134,7 @@
 
 
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Roles y permisos</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
-
+                    
                 </div>
 
             </div>
@@ -1596,25 +1597,33 @@
 
                         @can('asignar profesores')
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
+<a
+    href="{{ route('programacion.asignacion.profesores') }}"
+    class="block rounded-lg px-3 py-2 text-sm font-medium
+        {{ request()->routeIs('programacion.asignacion.profesores*')
+            ? 'bg-gray-100 text-gray-800'
+            : 'text-texto hover:bg-gray-50' }}"
+>
+    Asignación de profesores
+</a>
 
-                            Asignación de profesores
-
-                        </div>
-
-                        @endcan
+@endcan
 
 
 
                         @can('asignar horarios')
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
+<a
+    href="{{ route('programacion.asignacion.horarios') }}"
+    class="block rounded-lg px-3 py-2 text-sm font-medium
+        {{ request()->routeIs('programacion.asignacion.horarios*')
+            ? 'bg-gray-100 text-gray-800'
+            : 'text-texto hover:bg-gray-50' }}"
+>
+    Asignación de horarios
+</a>
 
-                            Asignación de horarios
-
-                        </div>
-
-                        @endcan
+@endcan
 
 
 
@@ -2098,11 +2107,7 @@
 
 
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Roles y permisos
-
-                        </div>
+                        
 
                     </div>
 

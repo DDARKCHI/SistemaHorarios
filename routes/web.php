@@ -9,6 +9,7 @@ use App\Http\Controllers\IntercambioDocenteController;
 use App\Http\Controllers\PropuestaHorarioController;
 use App\Http\Controllers\AsignacionProfesorController;
 use App\Http\Controllers\AsignacionHorarioController;
+use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\UsuarioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -21,6 +22,26 @@ Route::post('/login', [LoginController::class, 'iniciarSesion'])
 
 Route::post('/logout', [LoginController::class, 'cerrarSesion'])
     ->name('logout');
+
+Route::get(
+    '/recuperar-contrasena',
+    [RecuperarContrasenaController::class, 'mostrarSolicitud']
+)->name('password.request');
+
+Route::post(
+    '/recuperar-contrasena',
+    [RecuperarContrasenaController::class, 'enviarEnlace']
+)->name('password.email');
+
+Route::get(
+    '/restablecer-contrasena/{token}',
+    [RecuperarContrasenaController::class, 'mostrarRestablecimiento']
+)->name('password.reset');
+
+Route::post(
+    '/restablecer-contrasena',
+    [RecuperarContrasenaController::class, 'restablecer']
+)->name('password.update');
 
 Route::get('/', function () {
     return view('inicio');

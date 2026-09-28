@@ -140,6 +140,7 @@
 
     @if ($version)
         <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
                 <div>
@@ -173,6 +174,7 @@
                 </div>
 
             </div>
+
         </div>
     @endif
 
@@ -191,6 +193,7 @@
 
                     <div class="mt-1 text-xs text-gray-500">
                         Sección {{ $seccion->codigo }}
+
                         @if ($seccion->semestre)
                             · Semestre {{ $seccion->semestre }}
                         @endif
@@ -210,22 +213,19 @@
             <div class="mb-3 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
                 <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
-                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
 
-                        <div>
-                            <h3 class="text-sm font-bold text-gray-800">
-                                {{ $actividad->tipo }}
-                            </h3>
+                    <h3 class="text-sm font-bold text-gray-800">
+                        {{ $actividad->tipo }}
+                    </h3>
 
-                            <p class="text-xs text-gray-500">
-                                {{ $actividad->cantidad_horas }} hora(s)
-                                @if ($actividad->cantidad_estudiantes)
-                                    · {{ $actividad->cantidad_estudiantes }} estudiante(s)
-                                @endif
-                            </p>
-                        </div>
+                    <p class="text-xs text-gray-500">
+                        {{ $actividad->cantidad_horas }} hora(s)
 
-                    </div>
+                        @if ($actividad->cantidad_estudiantes)
+                            · {{ $actividad->cantidad_estudiantes }} estudiante(s)
+                        @endif
+                    </p>
+
                 </div>
 
                 <div class="divide-y divide-gray-100">
@@ -264,13 +264,19 @@
                                         @if ($grupoProfesor->profesor)
 
                                             <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700">
-                                                {{ trim($grupoProfesor->profesor->nombre . ' ' . $grupoProfesor->profesor->apellido) }}
+
+                                                {{ trim(
+                                                    $grupoProfesor->profesor->nombre
+                                                    . ' '
+                                                    . $grupoProfesor->profesor->apellido
+                                                ) }}
 
                                                 @if ($grupoProfesor->es_principal)
                                                     <span class="ml-1 font-semibold text-institucional">
                                                         · Principal
                                                     </span>
                                                 @endif
+
                                             </span>
 
                                         @endif
@@ -311,12 +317,9 @@
                                                 {{ $horario->dia?->nombre }}
                                             </span>
 
-                                            ·
-
-                                            Bloque {{ $horario->bloqueHorario?->numero }}
+                                            · Bloque {{ $horario->bloqueHorario?->numero }}
 
                                             ·
-
                                             {{ substr($horario->bloqueHorario?->hora_inicio, 0, 5) }}
                                             -
                                             {{ substr($horario->bloqueHorario?->hora_fin, 0, 5) }}
@@ -396,11 +399,19 @@
                                         value="{{ $semestre }}"
                                     >
 
-                                    <div class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-                                        Agregar bloque
+                                    <div class="mb-3">
+
+                                        <div class="text-xs font-bold uppercase tracking-wide text-gray-500">
+                                            Agregar horario
+                                        </div>
+
+                                        <div class="mt-1 text-xs text-gray-400">
+                                            Selecciona un día y uno o más bloques horarios.
+                                        </div>
+
                                     </div>
 
-                                    <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
+                                    <div class="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
 
                                         <div>
                                             <label class="mb-1 block text-xs font-semibold text-gray-600">
@@ -426,36 +437,6 @@
 
                                         <div>
                                             <label class="mb-1 block text-xs font-semibold text-gray-600">
-                                                Bloque
-                                            </label>
-
-                                            <select
-                                                name="bloque_horario_id"
-                                                required
-                                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
-                                            >
-                                                <option value="">
-                                                    Seleccionar
-                                                </option>
-
-                                                @foreach ($bloques as $bloque)
-                                                    <option value="{{ $bloque->id }}">
-                                                        Bloque {{ $bloque->numero }}
-                                                        —
-                                                        {{ substr($bloque->hora_inicio, 0, 5) }}
-                                                        -
-                                                        {{ substr($bloque->hora_fin, 0, 5) }}
-
-                                                        @if ($bloque->es_almuerzo)
-                                                            — Almuerzo
-                                                        @endif
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
                                                 Observaciones
                                             </label>
 
@@ -468,14 +449,72 @@
                                             >
                                         </div>
 
-                                        <div class="flex items-end">
-                                            <button
-                                                type="submit"
-                                                class="w-full rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
-                                            >
-                                                Agregar horario
-                                            </button>
+                                    </div>
+
+                                    <div class="mb-3">
+
+                                        <div class="mb-2 flex items-center justify-between">
+
+                                            <label class="text-xs font-semibold text-gray-600">
+                                                Bloques horarios
+                                            </label>
+
+                                            <span class="text-[11px] text-gray-400">
+                                                Puedes seleccionar varios
+                                            </span>
+
                                         </div>
+
+                                        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+
+                                            @foreach ($bloques as $bloque)
+
+                                                <label
+                                                    class="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition hover:border-gray-300 hover:bg-white"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        name="bloques_horarios[]"
+                                                        value="{{ $bloque->id }}"
+                                                        class="mt-0.5 rounded border-gray-300 text-institucional focus:ring-institucional"
+                                                    >
+
+                                                    <span class="min-w-0">
+
+                                                        <span class="block text-xs font-semibold text-gray-700">
+                                                            Bloque {{ $bloque->numero }}
+                                                        </span>
+
+                                                        <span class="block text-[11px] text-gray-500">
+                                                            {{ substr($bloque->hora_inicio, 0, 5) }}
+                                                            -
+                                                            {{ substr($bloque->hora_fin, 0, 5) }}
+                                                        </span>
+
+                                                        @if ($bloque->es_almuerzo)
+                                                            <span class="mt-0.5 block text-[10px] font-semibold text-yellow-600">
+                                                                Almuerzo
+                                                            </span>
+                                                        @endif
+
+                                                    </span>
+
+                                                </label>
+
+                                            @endforeach
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="flex justify-end">
+
+                                        <button
+                                            type="submit"
+                                            class="rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                                        >
+                                            Agregar horario
+                                        </button>
 
                                     </div>
 
@@ -522,21 +561,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const semestre = document.getElementById('semestre');
     const seccion = document.getElementById('seccion_id');
 
-    const filtrosUrl = @json(route('programacion.asignacion.horarios.filtros'));
-    const indexUrl = @json(route('programacion.asignacion.horarios'));
+    const filtrosUrl = @json(
+        route('programacion.asignacion.horarios.filtros')
+    );
+
+    const indexUrl = @json(
+        route('programacion.asignacion.horarios')
+    );
 
     function limpiarSelect(select, texto) {
         select.innerHTML = '';
 
         const opcion = document.createElement('option');
+
         opcion.value = '';
         opcion.textContent = texto;
 
         select.appendChild(opcion);
     }
 
-    function agregarOpcion(select, valor, texto) {
+    function agregarOpcion(
+        select,
+        valor,
+        texto
+    ) {
         const opcion = document.createElement('option');
+
         opcion.value = valor;
         opcion.textContent = texto;
 
@@ -545,9 +595,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function cargarFiltros() {
         if (!periodo.value) {
-            limpiarSelect(carrera, 'Todas');
-            limpiarSelect(semestre, 'Todos');
-            limpiarSelect(seccion, 'Seleccionar');
+            limpiarSelect(
+                carrera,
+                'Todas'
+            );
+
+            limpiarSelect(
+                semestre,
+                'Todos'
+            );
+
+            limpiarSelect(
+                seccion,
+                'Seleccionar'
+            );
+
             return;
         }
 
@@ -575,7 +637,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const carreraActual = carrera.value;
         const semestreActual = semestre.value;
 
-        limpiarSelect(carrera, 'Todas');
+        limpiarSelect(
+            carrera,
+            'Todas'
+        );
 
         datos.carreras.forEach(function (item) {
             agregarOpcion(
@@ -587,14 +652,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (
             carreraActual
-            && Array.from(carrera.options).some(
-                opcion => opcion.value === carreraActual
+            && Array.from(
+                carrera.options
+            ).some(
+                opcion =>
+                    opcion.value === carreraActual
             )
         ) {
             carrera.value = carreraActual;
         }
 
-        limpiarSelect(semestre, 'Todos');
+        limpiarSelect(
+            semestre,
+            'Todos'
+        );
 
         datos.semestres.forEach(function (item) {
             agregarOpcion(
@@ -606,14 +677,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (
             semestreActual
-            && Array.from(semestre.options).some(
-                opcion => opcion.value === semestreActual
+            && Array.from(
+                semestre.options
+            ).some(
+                opcion =>
+                    opcion.value === semestreActual
             )
         ) {
             semestre.value = semestreActual;
         }
 
-        limpiarSelect(seccion, 'Seleccionar');
+        limpiarSelect(
+            seccion,
+            'Seleccionar'
+        );
 
         datos.secciones.forEach(function (item) {
             agregarOpcion(
@@ -637,27 +714,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         window.location.href =
-            indexUrl + '?' + parametros.toString();
+            indexUrl
+            + '?'
+            + parametros.toString();
     }
 
-    periodo.addEventListener('change', async function () {
-        carrera.value = '';
-        semestre.value = '';
+    periodo.addEventListener(
+        'change',
+        async function () {
+            carrera.value = '';
+            semestre.value = '';
 
-        await cargarFiltros();
-    });
+            await cargarFiltros();
+        }
+    );
 
-    carrera.addEventListener('change', async function () {
-        semestre.value = '';
+    carrera.addEventListener(
+        'change',
+        async function () {
+            semestre.value = '';
 
-        await cargarFiltros();
-    });
+            await cargarFiltros();
+        }
+    );
 
-    semestre.addEventListener('change', async function () {
-        await cargarFiltros();
-    });
+    semestre.addEventListener(
+        'change',
+        async function () {
+            await cargarFiltros();
+        }
+    );
 
-    seccion.addEventListener('change', navegar);
+    seccion.addEventListener(
+        'change',
+        navegar
+    );
 });
 </script>
 @endsection
