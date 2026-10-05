@@ -45,12 +45,20 @@ class VisualizacionProgramacionController extends Controller
             )?->id
             ?? $versiones->first()?->id;
 
-        $sedeId = $request->input('sede_id');
+                $sedeId = $request->input('sede_id');
         $carreraId = $request->input('carrera_id');
         $semestre = $request->input('semestre');
         $seccionNumero = $request->input('seccion_numero');
         $asignaturaId = $request->input('asignatura_id');
         $profesorId = $request->input('profesor_id');
+
+        $hayFiltroAplicado =
+            !empty($sedeId) ||
+            !empty($carreraId) ||
+            ($semestre !== null && $semestre !== '') ||
+            !empty($seccionNumero) ||
+            !empty($asignaturaId) ||
+            !empty($profesorId);
 
         $dias = Dia::where('estado', true)
             ->orderBy('numero')
@@ -101,7 +109,7 @@ class VisualizacionProgramacionController extends Controller
 
         $horarios = collect();
 
-        if ($versionId) {
+        if ($versionId && $hayFiltroAplicado) {
             $horariosQuery = Horario::with([
                 'actividadSeccion.seccion.asignatura',
                 'actividadSeccion.seccion.carreras',
@@ -260,6 +268,7 @@ class VisualizacionProgramacionController extends Controller
             'seccionNumero' => $seccionNumero,
             'asignaturaId' => $asignaturaId,
             'profesorId' => $profesorId,
+            'hayFiltroAplicado' => $hayFiltroAplicado,
         ]);
     }
 

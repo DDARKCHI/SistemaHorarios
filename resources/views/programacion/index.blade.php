@@ -224,33 +224,77 @@
             </a>
 
             <div class="flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
-                <span class="font-semibold text-gray-700">
-                    {{ number_format($horarios->count()) }}
-                </span>
 
-                <span class="ml-1">
-                    {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
-                </span>
-            </div>
+    @if ($hayFiltroAplicado)
+
+        <span class="font-semibold text-gray-700">
+            {{ number_format($horarios->count()) }}
+        </span>
+
+        <span class="ml-1">
+            {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
+        </span>
+
+    @else
+
+        <span class="text-gray-400">
+            Sin consulta
+        </span>
+
+    @endif
+
+</div>
 
         </div>
     </form>
 
-    @if ($horarios->isEmpty())
 
-        <div class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
+        @if (!$hayFiltroAplicado)
 
-            <div class="text-sm font-semibold text-gray-700">
-                No hay programación para los filtros seleccionados.
-            </div>
+    <div class="rounded-lg border border-gray-200 bg-white px-6 py-12 text-center shadow-sm">
 
-            <div class="mt-1 text-xs text-gray-400">
-                Prueba seleccionando otro período, versión, sede, carrera, semestre, sección, ramo o profesor.
-            </div>
-
+        <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+            <svg
+                class="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 14.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-6.586L3.293 10.707A1 1 0 013 10V4z"
+                />
+            </svg>
         </div>
 
-    @else
+        <div class="mt-3 text-sm font-semibold text-gray-700">
+            Selecciona al menos un filtro para visualizar la programación.
+        </div>
+
+        <div class="mt-1 text-xs text-gray-400">
+            Puedes filtrar por sede, carrera, semestre, sección, ramo o profesor.
+        </div>
+
+    </div>
+
+@elseif ($horarios->isEmpty())
+
+    <div class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
+
+        <div class="text-sm font-semibold text-gray-700">
+            No hay programación para los filtros seleccionados.
+        </div>
+
+        <div class="mt-1 text-xs text-gray-400">
+            Prueba seleccionando otros filtros para realizar una nueva búsqueda.
+        </div>
+
+    </div>
+
+@else
 
         <div class="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
@@ -270,7 +314,7 @@
                         <tr class="bg-gray-100">
 
                             <th class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-1.5 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                Bloque
+                                Módulo
                             </th>
 
                             @foreach ($diasVisualizacion as $dia)
@@ -286,9 +330,19 @@
 
                         @foreach ($bloques as $bloque)
 
-                            <tr>
+    @php
+        $bloqueTieneHorarios = $diasVisualizacion->contains(function ($dia) use ($bloque, $horariosPorBloque) {
+            $clave = $dia->id . '-' . $bloque->id;
 
-                                <td class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-1.5 py-1.5 align-top">
+            return $horariosPorBloque
+                ->get($clave, collect())
+                ->isNotEmpty();
+        });
+    @endphp
+
+    <tr>
+
+                                <td class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-1.5 {{ $bloqueTieneHorarios ? 'py-1.5' : 'py-0.5' }} align-top">
 
                                     <div class="text-xs font-bold text-gray-800">
                                         {{ $bloque->numero }}
@@ -302,11 +356,7 @@
                                         {{ \Carbon\Carbon::parse($bloque->hora_fin)->format('H:i') }}
                                     </div>
 
-                                    @if ($bloque->es_almuerzo)
-                                        <div class="mt-1 text-[8px] font-semibold text-gray-400">
-                                            Almuerzo
-                                        </div>
-                                    @endif
+                                    
 
                                 </td>
 
@@ -321,7 +371,7 @@
 
                                         @if ($horariosCelda->isEmpty())
 
-                                            <div class="min-h-[68px]"></div>
+                                            <div class="{{ $bloqueTieneHorarios ? 'min-h-[68px]' : 'min-h-[34px]' }}"></div>
 
                                         @else
 
@@ -542,11 +592,492 @@
     const asignaturaSeleccionada = @json($asignaturaId);
     const profesorSeleccionado = @json($profesorId);
 
+    const filtrosBuscables = new Map();
+
+    function normalizarTexto(texto) {
+
+        return String(texto ?? '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    function crearFiltroBuscable(select) {
+
+        if (!select || filtrosBuscables.has(select)) {
+            return;
+        }
+
+        const contenedor = document.createElement('div');
+        contenedor.className = 'relative w-full';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+
+        input.className =
+            'h-9 w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600';
+
+        const icono = document.createElement('div');
+
+        icono.className =
+            'pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400';
+
+        icono.innerHTML = `
+            <svg
+                class="h-3.5 w-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                />
+            </svg>
+        `;
+
+        const lista = document.createElement('div');
+
+        lista.className =
+    'absolute left-0 top-full z-50 mt-1 hidden w-max min-w-full max-w-[420px] max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
+        contenedor.appendChild(input);
+        contenedor.appendChild(icono);
+        contenedor.appendChild(lista);
+
+        select.insertAdjacentElement(
+            'afterend',
+            contenedor
+        );
+
+        select.classList.add('hidden');
+
+        const estado = {
+            contenedor,
+            input,
+            lista,
+            abierto: false,
+            indiceActivo: -1,
+        };
+
+        filtrosBuscables.set(
+            select,
+            estado
+        );
+
+        function obtenerOpciones() {
+
+            return Array.from(select.options);
+        }
+
+        function obtenerOpcionSeleccionada() {
+
+            return select.options[
+                select.selectedIndex
+            ] ?? null;
+        }
+
+        function actualizarTextoSeleccionado() {
+
+            const opcion = obtenerOpcionSeleccionada();
+
+            input.value = opcion
+                ? opcion.textContent.trim()
+                : '';
+        }
+
+        function cerrarLista() {
+
+            lista.classList.add('hidden');
+
+            estado.abierto = false;
+            estado.indiceActivo = -1;
+        }
+
+        function abrirLista() {
+
+            lista.classList.remove('hidden');
+
+            estado.abierto = true;
+        }
+
+        function seleccionarOpcion(option) {
+
+            if (!option || option.disabled) {
+                return;
+            }
+
+            select.value = option.value;
+
+            actualizarTextoSeleccionado();
+
+            cerrarLista();
+
+            select.dispatchEvent(
+                new Event(
+                    'change',
+                    {
+                        bubbles: true
+                    }
+                )
+            );
+
+            input.blur();
+        }
+
+        function renderizarOpciones(busqueda = '') {
+
+            lista.innerHTML = '';
+
+            const termino = normalizarTexto(busqueda);
+
+            const opciones = obtenerOpciones().filter(
+                function (option) {
+
+                    if (option.disabled) {
+                        return false;
+                    }
+
+                    if (!termino) {
+                        return true;
+                    }
+
+                    return normalizarTexto(
+                        option.textContent
+                    ).includes(termino);
+                }
+            );
+
+            if (opciones.length === 0) {
+
+                const vacio = document.createElement('div');
+
+                vacio.className =
+                    'px-3 py-2.5 text-xs text-gray-400';
+
+                vacio.textContent =
+                    'No se encontraron resultados';
+
+                lista.appendChild(vacio);
+
+                estado.indiceActivo = -1;
+
+                return;
+            }
+
+            opciones.forEach(
+                function (option, indice) {
+
+                    const item = document.createElement('button');
+
+                    item.type = 'button';
+
+                    item.dataset.indice = indice;
+
+                    item.className =
+                        'flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-50';
+
+                    if (
+                        String(option.value) ===
+                        String(select.value)
+                    ) {
+                        item.classList.add(
+                            'bg-red-50',
+                            'font-semibold',
+                            'text-red-700'
+                        );
+                    }
+
+                    const texto = document.createElement('span');
+
+                    texto.className =
+    'block whitespace-nowrap';
+
+                    texto.textContent =
+                        option.textContent.trim();
+
+                    item.appendChild(texto);
+
+                    if (
+                        String(option.value) ===
+                        String(select.value)
+                    ) {
+
+                        const check = document.createElement('span');
+
+                        check.className =
+                            'ml-2 shrink-0 text-red-700';
+
+                        check.innerHTML = `
+                            <svg
+                                class="h-3.5 w-3.5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M5 13l4 4L19 7"
+                                />
+                            </svg>
+                        `;
+
+                        item.appendChild(check);
+                    }
+
+                    item.addEventListener(
+                        'mousedown',
+                        function (event) {
+
+                            event.preventDefault();
+
+                            seleccionarOpcion(option);
+                        }
+                    );
+
+                    lista.appendChild(item);
+                }
+            );
+
+            estado.indiceActivo = -1;
+        }
+
+        function destacarOpcionActiva() {
+
+            const items = Array.from(
+                lista.querySelectorAll('button')
+            );
+
+            items.forEach(
+                function (item, indice) {
+
+                    item.classList.toggle(
+                        'bg-gray-100',
+                        indice === estado.indiceActivo
+                    );
+                }
+            );
+
+            const activo =
+                items[estado.indiceActivo];
+
+            if (activo) {
+                activo.scrollIntoView({
+                    block: 'nearest'
+                });
+            }
+        }
+
+        input.addEventListener(
+            'focus',
+            function () {
+
+                input.select();
+
+                renderizarOpciones('');
+
+                abrirLista();
+            }
+        );
+
+        input.addEventListener(
+            'click',
+            function () {
+
+                if (!estado.abierto) {
+
+                    renderizarOpciones('');
+
+                    abrirLista();
+                }
+            }
+        );
+
+        input.addEventListener(
+            'input',
+            function () {
+
+                renderizarOpciones(
+                    input.value
+                );
+
+                abrirLista();
+            }
+        );
+
+        input.addEventListener(
+            'keydown',
+            function (event) {
+
+                const items = Array.from(
+                    lista.querySelectorAll('button')
+                );
+
+                if (
+                    event.key === 'ArrowDown'
+                ) {
+
+                    event.preventDefault();
+
+                    if (!estado.abierto) {
+
+                        renderizarOpciones(
+                            input.value
+                        );
+
+                        abrirLista();
+                    }
+
+                    estado.indiceActivo =
+                        Math.min(
+                            estado.indiceActivo + 1,
+                            items.length - 1
+                        );
+
+                    destacarOpcionActiva();
+
+                    return;
+                }
+
+                if (
+                    event.key === 'ArrowUp'
+                ) {
+
+                    event.preventDefault();
+
+                    estado.indiceActivo =
+                        Math.max(
+                            estado.indiceActivo - 1,
+                            0
+                        );
+
+                    destacarOpcionActiva();
+
+                    return;
+                }
+
+                if (
+                    event.key === 'Enter'
+                ) {
+
+                    if (
+                        estado.abierto &&
+                        estado.indiceActivo >= 0 &&
+                        items[estado.indiceActivo]
+                    ) {
+
+                        event.preventDefault();
+
+                        items[
+                            estado.indiceActivo
+                        ].dispatchEvent(
+                            new MouseEvent(
+                                'mousedown',
+                                {
+                                    bubbles: true
+                                }
+                            )
+                        );
+                    }
+
+                    return;
+                }
+
+                if (
+                    event.key === 'Escape'
+                ) {
+
+                    cerrarLista();
+
+                    actualizarTextoSeleccionado();
+
+                    input.blur();
+                }
+            }
+        );
+
+        input.addEventListener(
+            'blur',
+            function () {
+
+                setTimeout(
+                    function () {
+
+                        cerrarLista();
+
+                        actualizarTextoSeleccionado();
+
+                    },
+                    100
+                );
+            }
+        );
+
+        select.addEventListener(
+            'change',
+            function () {
+
+                actualizarTextoSeleccionado();
+            }
+        );
+
+        const observador = new MutationObserver(
+            function () {
+
+                actualizarTextoSeleccionado();
+
+                if (estado.abierto) {
+
+                    renderizarOpciones(
+                        input.value
+                    );
+                }
+            }
+        );
+
+        observador.observe(
+            select,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
+
+        actualizarTextoSeleccionado();
+    }
+
+    function inicializarFiltrosBuscables() {
+
+        [
+            periodoSelect,
+            versionSelect,
+            sedeSelect,
+            carreraSelect,
+            semestreSelect,
+            seccionSelect,
+            asignaturaSelect,
+            profesorSelect,
+        ].forEach(
+            function (select) {
+
+                crearFiltroBuscable(select);
+            }
+        );
+    }
+
     function limpiarSelect(select, texto) {
 
         select.innerHTML = '';
 
-        const option = document.createElement('option');
+        const option =
+            document.createElement('option');
 
         option.value = '';
         option.textContent = texto;
@@ -554,130 +1085,190 @@
         select.appendChild(option);
     }
 
-    function cargarCarreras(carreras, valorSeleccionado = null) {
+    function cargarCarreras(
+        carreras,
+        valorSeleccionado = null
+    ) {
 
         limpiarSelect(
             carreraSelect,
             'Todas las carreras'
         );
 
-        carreras.forEach(function (carrera) {
+        carreras.forEach(
+            function (carrera) {
 
-            const option = document.createElement('option');
+                const option =
+                    document.createElement('option');
 
-            option.value = carrera.id;
-            option.textContent = carrera.nombre;
+                option.value = carrera.id;
+                option.textContent = carrera.nombre;
 
-            if (String(carrera.id) === String(valorSeleccionado)) {
-                option.selected = true;
+                if (
+                    String(carrera.id) ===
+                    String(valorSeleccionado)
+                ) {
+                    option.selected = true;
+                }
+
+                carreraSelect.appendChild(option);
             }
-
-            carreraSelect.appendChild(option);
-        });
+        );
     }
 
-    function cargarSemestres(semestres, valorSeleccionado = null) {
+    function cargarSemestres(
+        semestres,
+        valorSeleccionado = null
+    ) {
 
         limpiarSelect(
             semestreSelect,
             'Todos'
         );
 
-        semestres.forEach(function (semestre) {
+        semestres.forEach(
+            function (semestre) {
 
-            const option = document.createElement('option');
+                const option =
+                    document.createElement('option');
 
-            option.value = semestre;
-            option.textContent = semestre;
+                option.value = semestre;
+                option.textContent = semestre;
 
-            if (String(semestre) === String(valorSeleccionado)) {
-                option.selected = true;
+                if (
+                    String(semestre) ===
+                    String(valorSeleccionado)
+                ) {
+                    option.selected = true;
+                }
+
+                semestreSelect.appendChild(option);
             }
-
-            semestreSelect.appendChild(option);
-        });
+        );
     }
 
-    function cargarSecciones(secciones, valorSeleccionado = null) {
+    function cargarSecciones(
+        secciones,
+        valorSeleccionado = null
+    ) {
 
         limpiarSelect(
             seccionSelect,
             'Todas'
         );
 
-        secciones.forEach(function (seccion) {
+        secciones.forEach(
+            function (seccion) {
 
-            const option = document.createElement('option');
+                const option =
+                    document.createElement('option');
 
-            option.value = seccion;
-            option.textContent = seccion;
+                option.value = seccion;
+                option.textContent = seccion;
 
-            if (String(seccion) === String(valorSeleccionado)) {
-                option.selected = true;
+                if (
+                    String(seccion) ===
+                    String(valorSeleccionado)
+                ) {
+                    option.selected = true;
+                }
+
+                seccionSelect.appendChild(option);
             }
-
-            seccionSelect.appendChild(option);
-        });
+        );
     }
 
-    function cargarAsignaturas(asignaturas, valorSeleccionado = null) {
+    function cargarAsignaturas(
+        asignaturas,
+        valorSeleccionado = null
+    ) {
 
         limpiarSelect(
             asignaturaSelect,
             'Todos los ramos'
         );
 
-        asignaturas.forEach(function (asignatura) {
+        asignaturas.forEach(
+            function (asignatura) {
 
-            const option = document.createElement('option');
+                const option =
+                    document.createElement('option');
 
-            option.value = asignatura.id;
+                option.value = asignatura.id;
 
-            option.textContent =
-                asignatura.codigo + ' — ' + asignatura.nombre;
+                option.textContent =
+                    asignatura.codigo +
+                    ' — ' +
+                    asignatura.nombre;
 
-            if (String(asignatura.id) === String(valorSeleccionado)) {
-                option.selected = true;
+                if (
+                    String(asignatura.id) ===
+                    String(valorSeleccionado)
+                ) {
+                    option.selected = true;
+                }
+
+                asignaturaSelect.appendChild(option);
             }
-
-            asignaturaSelect.appendChild(option);
-        });
+        );
     }
 
-    function cargarProfesores(profesores, valorSeleccionado = null) {
+    function cargarProfesores(
+        profesores,
+        valorSeleccionado = null
+    ) {
 
         limpiarSelect(
             profesorSelect,
             'Todos los profesores'
         );
 
-        profesores.forEach(function (profesor) {
+        profesores.forEach(
+            function (profesor) {
 
-            const option = document.createElement('option');
+                const option =
+                    document.createElement('option');
 
-            option.value = profesor.id;
-            option.textContent = profesor.nombre;
+                option.value = profesor.id;
+                option.textContent = profesor.nombre;
 
-            if (String(profesor.id) === String(valorSeleccionado)) {
-                option.selected = true;
+                if (
+                    String(profesor.id) ===
+                    String(valorSeleccionado)
+                ) {
+                    option.selected = true;
+                }
+
+                profesorSelect.appendChild(option);
             }
-
-            profesorSelect.appendChild(option);
-        });
+        );
     }
 
-    async function actualizarFiltros(opciones = {}) {
+    async function actualizarFiltros(
+        opciones = {}
+    ) {
 
-        const parametros = new URLSearchParams();
+        const parametros =
+            new URLSearchParams();
 
         if (periodoSelect.value) {
+
             parametros.set(
                 'periodo_id',
                 periodoSelect.value
             );
         }
 
+        if (versionSelect.value) {
+
+            parametros.set(
+                'version_id',
+                versionSelect.value
+            );
+        }
+
         if (sedeSelect.value) {
+
             parametros.set(
                 'sede_id',
                 sedeSelect.value
@@ -685,13 +1276,18 @@
         }
 
         if (carreraSelect.value) {
+
             parametros.set(
                 'carrera_id',
                 carreraSelect.value
             );
         }
 
-        if (opciones.semestre !== undefined) {
+        if (
+            opciones.semestre !== undefined &&
+            opciones.semestre !== ''
+        ) {
+
             parametros.set(
                 'semestre',
                 opciones.semestre
@@ -699,6 +1295,7 @@
         }
 
         if (opciones.seccionNumero) {
+
             parametros.set(
                 'seccion_numero',
                 opciones.seccionNumero
@@ -706,6 +1303,7 @@
         }
 
         if (opciones.asignaturaId) {
+
             parametros.set(
                 'asignatura_id',
                 opciones.asignaturaId
@@ -715,7 +1313,9 @@
         try {
 
             const respuesta = await fetch(
-                filtrosUrl + '?' + parametros.toString(),
+                filtrosUrl +
+                '?' +
+                parametros.toString(),
                 {
                     headers: {
                         'Accept': 'application/json'
@@ -724,45 +1324,67 @@
             );
 
             if (!respuesta.ok) {
+
                 throw new Error(
                     'No fue posible actualizar los filtros.'
                 );
             }
 
-            const datos = await respuesta.json();
+            const datos =
+                await respuesta.json();
 
-            if (opciones.actualizarCarreras) {
+            if (
+                opciones.actualizarCarreras
+            ) {
+
                 cargarCarreras(
                     datos.carreras,
-                    opciones.carreraSeleccionada ?? null
+                    opciones.carreraSeleccionada
+                        ?? null
                 );
             }
 
-            if (opciones.actualizarSemestres) {
+            if (
+                opciones.actualizarSemestres
+            ) {
+
                 cargarSemestres(
                     datos.semestres,
-                    opciones.semestreSeleccionado ?? null
+                    opciones.semestreSeleccionado
+                        ?? null
                 );
             }
 
-            if (opciones.actualizarSecciones) {
+            if (
+                opciones.actualizarSecciones
+            ) {
+
                 cargarSecciones(
                     datos.secciones,
-                    opciones.seccionSeleccionada ?? null
+                    opciones.seccionSeleccionada
+                        ?? null
                 );
             }
 
-            if (opciones.actualizarAsignaturas) {
+            if (
+                opciones.actualizarAsignaturas
+            ) {
+
                 cargarAsignaturas(
                     datos.asignaturas,
-                    opciones.asignaturaSeleccionada ?? null
+                    opciones.asignaturaSeleccionada
+                        ?? null
                 );
             }
 
-            if (opciones.actualizarProfesores) {
+            if (
+                opciones.actualizarProfesores
+            ) {
+
                 cargarProfesores(
                     datos.profesores,
-                    opciones.profesorSeleccionado ?? null
+                    opciones.profesorSeleccionado
+                        ?? null
                 );
             }
 
@@ -772,200 +1394,292 @@
         }
     }
 
-    sedeSelect.addEventListener('change', async function () {
+    sedeSelect.addEventListener(
+        'change',
+        async function () {
 
-        limpiarSelect(
-            carreraSelect,
-            'Cargando carreras...'
-        );
+            limpiarSelect(
+                carreraSelect,
+                'Cargando carreras...'
+            );
 
-        limpiarSelect(
-            semestreSelect,
-            'Cargando semestres...'
-        );
+            limpiarSelect(
+                semestreSelect,
+                'Cargando semestres...'
+            );
 
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
+            limpiarSelect(
+                seccionSelect,
+                'Cargando secciones...'
+            );
 
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
+            limpiarSelect(
+                asignaturaSelect,
+                'Cargando ramos...'
+            );
 
-        limpiarSelect(
-            profesorSelect,
-            'Cargando profesores...'
-        );
-
-        await actualizarFiltros({
-
-            actualizarCarreras: true,
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-
-        });
-    });
-
-    carreraSelect.addEventListener('change', async function () {
-
-        limpiarSelect(
-            semestreSelect,
-            'Cargando semestres...'
-        );
-
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
-
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando profesores...'
-        );
-
-        await actualizarFiltros({
-
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-
-        });
-    });
-
-    semestreSelect.addEventListener('change', async function () {
-
-        const semestre = semestreSelect.value;
-
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
-
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando profesores...'
-        );
-
-        await actualizarFiltros({
-
-            semestre: semestre,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-
-        });
-    });
-
-    seccionSelect.addEventListener('change', async function () {
-
-        const seccionNumero = seccionSelect.value;
-
-        if (!seccionNumero) {
+            limpiarSelect(
+                profesorSelect,
+                'Cargando profesores...'
+            );
 
             await actualizarFiltros({
 
-                semestre: semestreSelect.value,
+                actualizarCarreras: true,
+                actualizarSemestres: true,
+                actualizarSecciones: true,
                 actualizarAsignaturas: true,
                 actualizarProfesores: true
 
             });
-
-            return;
         }
+    );
 
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
+    carreraSelect.addEventListener(
+        'change',
+        async function () {
 
-        limpiarSelect(
-            profesorSelect,
-            'Cargando profesores...'
-        );
+            limpiarSelect(
+                semestreSelect,
+                'Cargando semestres...'
+            );
 
-        await actualizarFiltros({
+            limpiarSelect(
+                seccionSelect,
+                'Cargando secciones...'
+            );
 
-            semestre: semestreSelect.value,
-            seccionNumero: seccionNumero,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
+            limpiarSelect(
+                asignaturaSelect,
+                'Cargando ramos...'
+            );
 
-        });
-    });
-
-    asignaturaSelect.addEventListener('change', async function () {
-
-        const asignaturaId = asignaturaSelect.value;
-
-        if (!asignaturaId) {
+            limpiarSelect(
+                profesorSelect,
+                'Cargando profesores...'
+            );
 
             await actualizarFiltros({
 
-                semestre: semestreSelect.value,
-                seccionNumero: seccionSelect.value,
+                actualizarSemestres: true,
+                actualizarSecciones: true,
+                actualizarAsignaturas: true,
                 actualizarProfesores: true
 
             });
-
-            return;
         }
+    );
 
-        limpiarSelect(
-            profesorSelect,
-            'Cargando profesores...'
-        );
+    semestreSelect.addEventListener(
+        'change',
+        async function () {
 
-        await actualizarFiltros({
+            const semestre =
+                semestreSelect.value;
 
-            semestre: semestreSelect.value,
-            seccionNumero: seccionSelect.value,
-            asignaturaId: asignaturaId,
-            actualizarProfesores: true
+            limpiarSelect(
+                seccionSelect,
+                'Cargando secciones...'
+            );
 
-        });
-    });
+            limpiarSelect(
+                asignaturaSelect,
+                'Cargando ramos...'
+            );
 
-    periodoSelect.addEventListener('change', function () {
-        document.getElementById('filtros-form').submit();
-    });
+            limpiarSelect(
+                profesorSelect,
+                'Cargando profesores...'
+            );
 
-    versionSelect.addEventListener('change', function () {
-        document.getElementById('filtros-form').submit();
-    });
+            await actualizarFiltros({
 
-    document.addEventListener('DOMContentLoaded', async function () {
+                semestre: semestre,
+                actualizarSecciones: true,
+                actualizarAsignaturas: true,
+                actualizarProfesores: true
 
-        await actualizarFiltros({
+            });
+        }
+    );
 
-            actualizarCarreras: true,
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true,
+    seccionSelect.addEventListener(
+        'change',
+        async function () {
 
-            carreraSeleccionada: carreraSeleccionada,
-            semestreSeleccionado: semestreSeleccionado,
-            seccionSeleccionada: seccionSeleccionada,
-            asignaturaSeleccionada: asignaturaSeleccionada,
-            profesorSeleccionado: profesorSeleccionado
+            const seccionNumero =
+                seccionSelect.value;
 
-        });
-    });
+            if (!seccionNumero) {
+
+                await actualizarFiltros({
+
+                    semestre:
+                        semestreSelect.value,
+
+                    actualizarAsignaturas:
+                        true,
+
+                    actualizarProfesores:
+                        true
+
+                });
+
+                return;
+            }
+
+            limpiarSelect(
+                asignaturaSelect,
+                'Cargando ramos...'
+            );
+
+            limpiarSelect(
+                profesorSelect,
+                'Cargando profesores...'
+            );
+
+            await actualizarFiltros({
+
+                semestre:
+                    semestreSelect.value,
+
+                seccionNumero:
+                    seccionNumero,
+
+                actualizarAsignaturas:
+                    true,
+
+                actualizarProfesores:
+                    true
+
+            });
+        }
+    );
+
+    asignaturaSelect.addEventListener(
+        'change',
+        async function () {
+
+            const asignaturaId =
+                asignaturaSelect.value;
+
+            if (!asignaturaId) {
+
+                await actualizarFiltros({
+
+                    semestre:
+                        semestreSelect.value,
+
+                    seccionNumero:
+                        seccionSelect.value,
+
+                    actualizarProfesores:
+                        true
+
+                });
+
+                return;
+            }
+
+            limpiarSelect(
+                profesorSelect,
+                'Cargando profesores...'
+            );
+
+            await actualizarFiltros({
+
+                semestre:
+                    semestreSelect.value,
+
+                seccionNumero:
+                    seccionSelect.value,
+
+                asignaturaId:
+                    asignaturaId,
+
+                actualizarProfesores:
+                    true
+
+            });
+        }
+    );
+
+    periodoSelect.addEventListener(
+        'change',
+        function () {
+
+            document
+                .getElementById('filtros-form')
+                .submit();
+        }
+    );
+
+    versionSelect.addEventListener(
+        'change',
+        function () {
+
+            document
+                .getElementById('filtros-form')
+                .submit();
+        }
+    );
+
+    document.addEventListener(
+        'click',
+        function (event) {
+
+            filtrosBuscables.forEach(
+                function (estado) {
+
+                    if (
+                        !estado.contenedor.contains(
+                            event.target
+                        )
+                    ) {
+
+                        estado.lista.classList.add(
+                            'hidden'
+                        );
+
+                        estado.abierto = false;
+                    }
+                }
+            );
+        }
+    );
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        async function () {
+
+            inicializarFiltrosBuscables();
+
+            await actualizarFiltros({
+
+                actualizarCarreras: true,
+                actualizarSemestres: true,
+                actualizarSecciones: true,
+                actualizarAsignaturas: true,
+                actualizarProfesores: true,
+
+                carreraSeleccionada:
+                    carreraSeleccionada,
+
+                semestreSeleccionado:
+                    semestreSeleccionado,
+
+                seccionSeleccionada:
+                    seccionSeleccionada,
+
+                asignaturaSeleccionada:
+                    asignaturaSeleccionada,
+
+                profesorSeleccionado:
+                    profesorSeleccionado
+
+            });
+        }
+    );
 
 </script>
 
