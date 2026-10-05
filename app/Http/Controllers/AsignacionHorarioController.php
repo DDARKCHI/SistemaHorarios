@@ -198,15 +198,28 @@ class AsignacionHorarioController extends Controller
             ],
 
             'dia_id' => [
-                'required',
-                'exists:dias,id',
-            ],
+    'required',
+    'exists:dias,id',
+],
 
-            'bloques_horarios' => [
-                'required',
-                'array',
-                'min:1',
-            ],
+'profesores_ids' => [
+    'required',
+    'array',
+    'min:1',
+],
+
+'profesores_ids.*' => [
+    'required',
+    'integer',
+    'distinct',
+    'exists:profesores,id',
+],
+
+'bloques_horarios' => [
+    'required',
+    'array',
+    'min:1',
+],
 
             'bloques_horarios.*' => [
                 'required',
@@ -232,6 +245,21 @@ class AsignacionHorarioController extends Controller
 
             'dia_id.exists'
                 => 'El día seleccionado no es válido.',
+            
+            'profesores_ids.required'
+    => 'Debes seleccionar al menos un profesor.',
+
+'profesores_ids.array'
+    => 'Los profesores seleccionados no son válidos.',
+
+'profesores_ids.min'
+    => 'Debes seleccionar al menos un profesor.',
+
+'profesores_ids.*.exists'
+    => 'Uno de los profesores seleccionados no es válido.',
+
+'profesores_ids.*.distinct'
+    => 'No puedes seleccionar el mismo profesor más de una vez.',    
 
             'bloques_horarios.required'
                 => 'Debes seleccionar al menos un bloque horario.',
@@ -288,12 +316,87 @@ class AsignacionHorarioController extends Controller
             ]);
         }
 
+        $profesoresIds = collect(
+    $datos['profesores_ids']
+)
+    ->map(fn ($id) => (int) $id)
+    ->unique()
+    ->values();
+
+$profesoresGrupoSeleccionados = $grupo->profesores
+    ->filter(function ($grupoProfesor) use ($profesoresIds) {
+
+        return $grupoProfesor->profesor
+            && $profesoresIds->contains(
+                (int) $grupoProfesor->profesor_id
+            );
+    })
+    ->values();
+
+if (
+    $profesoresGrupoSeleccionados->count()
+    !== $profesoresIds->count()
+) {
+    throw ValidationException::withMessages([
+        'profesores_ids'
+            => 'Uno de los profesores seleccionados no pertenece a este grupo.',
+    ]);
+}
+
         $bloquesIds = collect(
             $datos['bloques_horarios']
         )
             ->map(fn ($id) => (int) $id)
             ->unique()
             ->values();
+        
+        $cantidadMaximaModulos = (int) (
+    $grupo->actividadSeccion?->cantidad_horas ?? 0
+);
+
+$cantidadModulosActuales = Horario::where(
+    'grupo_seccion_id',
+    $grupo->id
+)
+    ->where(
+        'version_planificacion_id',
+        $version->id
+    )
+    ->where('estado', true)
+    ->count();
+
+$cantidadModulosNuevos = $bloquesIds->count();
+
+if ($cantidadMaximaModulos <= 0) {
+    throw ValidationException::withMessages([
+        'horario'
+            => 'La actividad no tiene una cantidad de módulos válida.',
+    ]);
+}
+
+if (
+    $cantidadModulosActuales + $cantidadModulosNuevos
+    > $cantidadMaximaModulos
+) {
+    $modulosDisponibles = max(
+        0,
+        $cantidadMaximaModulos - $cantidadModulosActuales
+    );
+
+    throw ValidationException::withMessages([
+        'horario'
+            => 'Esta actividad permite un máximo de '
+            . $cantidadMaximaModulos
+            . ($cantidadMaximaModulos === 1
+                ? ' módulo.'
+                : ' módulos.')
+            . ' Actualmente tiene '
+            . $cantidadModulosActuales
+            . ' asignado(s) y solo puedes agregar '
+            . $modulosDisponibles
+            . ' más.',
+    ]);
+}    
 
         $bloquesSeleccionados = BloqueHorario::whereIn(
             'id',
@@ -336,14 +439,14 @@ class AsignacionHorarioController extends Controller
                     'horario'
                         => 'El grupo ya tiene asignado '
                         . $dia->nombre
-                        . ', bloque '
+                        . ', módulo '
                         . ($bloque?->numero ?? $bloqueId)
                         . '.',
                 ]);
             }
         }
 
-        foreach ($grupo->profesores as $grupoProfesor) {
+        foreach ($profesoresGrupoSeleccionados as $grupoProfesor) {
             $profesor = $grupoProfesor->profesor;
 
             if (!$profesor) {
@@ -401,7 +504,7 @@ class AsignacionHorarioController extends Controller
                                 )
                                 . ' no tiene disponibilidad para '
                                 . $dia->nombre
-                                . ', bloque '
+                                . ', módulo '
                                 . ($bloque?->numero ?? $bloqueId)
                                 . '.',
                         ]);
@@ -449,7 +552,7 @@ class AsignacionHorarioController extends Controller
                             )
                             . ' ya tiene otro horario asignado el '
                             . $dia->nombre
-                            . ' en el bloque '
+                            . ' en el módulo '
                             . ($bloque?->numero ?? $bloqueId)
                             . '.',
                     ]);
@@ -457,12 +560,13 @@ class AsignacionHorarioController extends Controller
             }
         }
 
-        DB::transaction(function () use (
-            $datos,
-            $grupo,
-            $version,
-            $bloquesIds
-        ) {
+       DB::transaction(function () use (
+    $datos,
+    $grupo,
+    $version,
+    $bloquesIds,
+    $profesoresGrupoSeleccionados
+) {
             foreach ($bloquesIds as $bloqueId) {
                 $horario = Horario::create([
                     'actividad_seccion_id'
@@ -487,7 +591,7 @@ class AsignacionHorarioController extends Controller
                         => true,
                 ]);
 
-                foreach ($grupo->profesores as $grupoProfesor) {
+                foreach ($profesoresGrupoSeleccionados as $grupoProfesor) {
                     HorarioProfesor::create([
                         'horario_id'
                             => $horario->id,
@@ -534,7 +638,7 @@ class AsignacionHorarioController extends Controller
                 'success',
                 $cantidadBloques === 1
                     ? 'Horario asignado correctamente.'
-                    : $cantidadBloques . ' bloques horarios asignados correctamente.'
+                    : $cantidadBloques . ' módulos horarios asignados correctamente.'
             );
     }
 
