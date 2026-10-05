@@ -59,29 +59,61 @@
                     Ramo
                 </label>
 
-                <select
-                    id="asignatura_id"
-                    name="asignatura_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                >
+                <div class="relative w-full">
 
-                    <option value="">
-                        Selecciona una asignatura
-                    </option>
+    <select
+        id="asignatura_id"
+        name="asignatura_id"
+        class="hidden"
+    >
+        <option value="">
+            Selecciona una asignatura
+        </option>
 
-                    @foreach ($asignaturas as $item)
+        @foreach ($asignaturas as $item)
 
-                        <option
-                            value="{{ $item->id }}"
-                            @selected($asignatura?->id == $item->id)
-                        >
-                            {{ $item->codigo }} — {{ $item->nombre }}
-                        </option>
+            <option
+                value="{{ $item->id }}"
+                @selected($asignatura?->id == $item->id)
+            >
+                {{ $item->codigo }} — {{ $item->nombre }}
+            </option>
 
-                    @endforeach
+        @endforeach
+    </select>
 
-                </select>
+    <input
+        type="text"
+        id="asignatura_busqueda"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Buscar por código o nombre..."
+        class="h-9 w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+    >
 
+    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+        <svg
+            class="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+            />
+        </svg>
+    </div>
+
+    <div
+        id="asignatura_lista"
+        class="absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-64 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+    ></div>
+
+</div>
             </div>
 
 
@@ -321,7 +353,7 @@
                                         </div>
 
                                         <div class="text-[9px] text-gray-500">
-                                            bloques semanales
+                                            módulos semanales
                                         </div>
 
                                         <div class="mt-2 text-[9px] text-gray-500">
@@ -385,7 +417,7 @@
 
                                                                 <span class="text-[8px] font-semibold text-gray-400">
                                                                     {{ $carga['cantidad_horarios'] }}
-                                                                    {{ $carga['cantidad_horarios'] == 1 ? 'bloque' : 'bloques' }}
+                                                                    {{ $carga['cantidad_horarios'] == 1 ? 'módulo' : 'módulos' }}
                                                                 </span>
 
                                                             </div>
@@ -820,7 +852,7 @@
                                             bloque
                                             ? `
                                                 <span class="rounded-full bg-white px-2 py-1 text-[8px] font-bold text-gray-500">
-                                                    B${escaparHTML(bloque)}
+                                                    M${escaparHTML(bloque)}
                                                 </span>
                                             `
                                             : ''
@@ -876,7 +908,211 @@
 
         </script>
 
-    @endif
+@endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const select =
+            document.getElementById('asignatura_id');
+
+        const input =
+            document.getElementById('asignatura_busqueda');
+
+        const lista =
+            document.getElementById('asignatura_lista');
+
+        if (!select || !input || !lista) {
+            return;
+        }
+
+        function normalizar(texto) {
+            return String(texto ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+        }
+
+        function opcionSeleccionada() {
+            return select.options[
+                select.selectedIndex
+            ] ?? null;
+        }
+
+        function actualizarInput() {
+            const opcion =
+                opcionSeleccionada();
+
+            if (opcion && opcion.value) {
+                input.value =
+                    opcion.textContent.trim();
+            }
+        }
+
+        function cerrarLista() {
+            lista.classList.add('hidden');
+        }
+
+        function abrirLista() {
+            lista.classList.remove('hidden');
+        }
+
+        function seleccionarOpcion(option) {
+            select.value = option.value;
+
+            input.value =
+                option.textContent.trim();
+
+            cerrarLista();
+        }
+
+        function renderizar(busqueda = '') {
+            lista.innerHTML = '';
+
+            const termino =
+                normalizar(busqueda);
+
+            const opciones =
+                Array.from(select.options)
+                    .filter(function (option) {
+
+                        if (!option.value) {
+                            return false;
+                        }
+
+                        if (!termino) {
+                            return true;
+                        }
+
+                        return normalizar(
+                            option.textContent
+                        ).includes(termino);
+                    });
+
+            if (opciones.length === 0) {
+                const vacio =
+                    document.createElement('div');
+
+                vacio.className =
+                    'px-3 py-2.5 text-xs text-gray-400';
+
+                vacio.textContent =
+                    'No se encontraron asignaturas';
+
+                lista.appendChild(vacio);
+
+                return;
+            }
+
+            opciones.forEach(function (option) {
+
+                const boton =
+                    document.createElement('button');
+
+                boton.type = 'button';
+
+                boton.className =
+                    'flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-50';
+
+                if (
+                    String(option.value) ===
+                    String(select.value)
+                ) {
+                    boton.classList.add(
+                        'bg-red-50',
+                        'font-semibold',
+                        'text-red-700'
+                    );
+                }
+
+                const texto =
+                    document.createElement('span');
+
+                texto.className =
+                    'block whitespace-nowrap';
+
+                texto.textContent =
+                    option.textContent.trim();
+
+                boton.appendChild(texto);
+
+                boton.addEventListener(
+                    'mousedown',
+                    function (event) {
+                        event.preventDefault();
+                        seleccionarOpcion(option);
+                    }
+                );
+
+                lista.appendChild(boton);
+            });
+        }
+
+        input.addEventListener(
+            'focus',
+            function () {
+                input.select();
+                renderizar('');
+                abrirLista();
+            }
+        );
+
+        input.addEventListener(
+            'input',
+            function () {
+                select.value = '';
+
+                renderizar(
+                    input.value
+                );
+
+                abrirLista();
+            }
+        );
+
+        input.addEventListener(
+            'click',
+            function () {
+                renderizar(
+                    input.value
+                );
+
+                abrirLista();
+            }
+        );
+
+        input.addEventListener(
+            'blur',
+            function () {
+                setTimeout(
+                    function () {
+                        cerrarLista();
+
+                        if (!select.value) {
+                            input.value = '';
+                        }
+                    },
+                    100
+                );
+            }
+        );
+
+        document.addEventListener(
+            'click',
+            function (event) {
+                if (
+                    !input.contains(event.target) &&
+                    !lista.contains(event.target)
+                ) {
+                    cerrarLista();
+                }
+            }
+        );
+
+        actualizarInput();
+    });
+</script>
 
 </div>
 

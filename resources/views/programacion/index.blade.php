@@ -11,7 +11,7 @@
         class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
 
-        <div class="grid grid-cols-[0.7fr_0.8fr_1.1fr_1.45fr_0.75fr_0.8fr_1.45fr_1.45fr_auto_auto_auto] items-end gap-3">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[0.7fr_0.8fr_1.1fr_1.45fr_0.75fr_0.8fr_1.45fr_1.45fr_auto_auto_auto] xl:items-end">
 
             <div class="min-w-0">
                 <label for="periodo_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
@@ -211,19 +211,19 @@
             <button
                 type="submit"
                 id="aplicar-filtros"
-                class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                class="h-9 w-full whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800 xl:w-auto"
             >
                 Aplicar
             </button>
 
             <a
                 href="{{ route('programacion.index') }}"
-                class="flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+               class="flex h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50 xl:w-auto"
             >
                 Limpiar
             </a>
 
-            <div class="flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
+            <div class="flex h-9 items-center justify-start whitespace-nowrap px-1 text-xs text-gray-500 xl:justify-end">
 
     @if ($hayFiltroAplicado)
 
