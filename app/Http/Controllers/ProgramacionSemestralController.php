@@ -62,6 +62,14 @@ class ProgramacionSemestralController extends Controller
         $asignaturaId = $request->input('asignatura_id');
         $profesorId = $request->input('profesor_id');
 
+        $hayFiltroAplicado =
+            !empty($sedeId) ||
+            !empty($carreraId) ||
+            ($semestre !== null && $semestre !== '') ||
+            !empty($seccionNumero) ||
+            !empty($asignaturaId) ||
+            !empty($profesorId);
+
         $dias = Dia::where('estado', true)
             ->orderBy('numero')
             ->get();
@@ -111,7 +119,7 @@ class ProgramacionSemestralController extends Controller
 
         $horarios = collect();
 
-        if ($versionId) {
+        if ($versionId && $hayFiltroAplicado) {
             $horariosQuery = Horario::with([
                 'actividadSeccion.seccion.asignatura',
                 'actividadSeccion.seccion.carreras',
@@ -248,6 +256,7 @@ class ProgramacionSemestralController extends Controller
             'diasVisualizacion' => $diasVisualizacion,
             'bloques' => $bloques,
             'horarios' => $horarios,
+            'hayFiltroAplicado' => $hayFiltroAplicado,
             'horariosPorBloque' => $horariosPorBloque,
             'periodoId' => $periodoId,
             'versionId' => $versionId,

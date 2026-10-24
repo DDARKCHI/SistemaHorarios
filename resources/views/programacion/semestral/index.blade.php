@@ -343,13 +343,17 @@
             </a>
 
             <div class="flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
-                <span class="font-semibold text-gray-700">
-                    {{ number_format($horarios->count()) }}
-                </span>
+                @if ($hayFiltroAplicado)
+                    <span class="font-semibold text-gray-700">
+                        {{ number_format($horarios->count()) }}
+                    </span>
 
-                <span class="ml-1">
-                    {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
-                </span>
+                    <span class="ml-1">
+                        {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
+                    </span>
+                @else
+                    <span>Sin consulta</span>
+                @endif
             </div>
 
         </div>
@@ -383,6 +387,18 @@
                 Selecciona una versión de la programación anterior y utiliza el botón Generar programación.
             </div>
 
+        </div>
+
+    @elseif (!$hayFiltroAplicado)
+
+        <div role="status" class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
+            <div class="text-sm font-semibold text-gray-700">
+                Selecciona un filtro para consultar los horarios.
+            </div>
+
+            <div class="mt-1 text-xs text-gray-500">
+                Elige una sede, carrera, semestre, sección, ramo o profesor y pulsa Aplicar.
+            </div>
         </div>
 
     @elseif ($horarios->isEmpty())
