@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asignatura;
+use App\Models\PeriodoAcademico;
 use App\Models\VersionPlanificacion;
 use Illuminate\Http\Request;
 
@@ -11,12 +12,22 @@ class IntercambioDocenteController extends Controller
     public function index(Request $request)
     {
         /*
-         * Obtenemos únicamente la versión de planificación
-         * marcada actualmente como vigente.
+         * Consultamos el borrador semestral actual del periodo activo más reciente.
+         * No usamos una importación ni un periodo anterior como alternativa.
          */
-        $versionActual = VersionPlanificacion::where('es_actual', true)
-            ->latest('id')
+        $periodoActual = PeriodoAcademico::where('estado', true)
+            ->orderByDesc('anio')
+            ->orderByDesc('numero_semestre')
+            ->orderByDesc('id')
             ->first();
+
+        $versionActual = $periodoActual
+            ? VersionPlanificacion::where('periodo_academico_id', $periodoActual->id)
+                ->where('tipo', 'semestral')
+                ->where('es_actual', true)
+                ->latest('id')
+                ->first()
+            : null;
 
         /*
          * Listado de asignaturas disponibles para realizar
@@ -41,9 +52,9 @@ class IntercambioDocenteController extends Controller
         if ($request->filled('asignatura_id')) {
 
             $asignatura = Asignatura::with([
-                'secciones' => function ($query) use ($versionActual) {
+                'secciones' => function ($query) use ($periodoActual, $versionActual) {
 
-                    $query->with([
+                    $query->where('periodo_academico_id', $periodoActual?->id)->with([
                         'profesores.profesor',
 
                         'actividades.grupos.horarios' => function ($query) use ($versionActual) {
@@ -64,7 +75,7 @@ class IntercambioDocenteController extends Controller
                 },
             ])->find($request->asignatura_id);
 
-            if ($asignatura) {
+            if ($asignatura && $versionActual) {
 
                 /*
                  * Obtenemos los profesores que participan
