@@ -99,7 +99,7 @@
         class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[0.7fr_0.8fr_1.1fr_1.45fr_0.75fr_0.8fr_1.45fr_1.45fr_auto_auto_auto] xl:items-end">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
 
             <div class="min-w-0">
                 <label
@@ -328,6 +328,9 @@
                 </select>
             </div>
 
+        </div>
+
+        <div class="mt-3 flex flex-wrap items-center gap-2">
             <button
                 type="submit"
                 class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
@@ -342,7 +345,7 @@
                 Limpiar
             </a>
 
-            <div class="flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
+            <div class="ml-auto flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
                 @if ($hayFiltroAplicado)
                     <span class="font-semibold text-gray-700">
                         {{ number_format($horarios->count()) }}
