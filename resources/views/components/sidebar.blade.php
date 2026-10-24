@@ -177,6 +177,9 @@
 
                     data-sidebar-main
 
+                    aria-label="Inicio"
+                    title="Inicio"
+
                     class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
 
                         {{ $inicioActivo
@@ -240,6 +243,9 @@
                     data-sidebar-main
 
                     data-sidebar-title="Programación semestral"
+
+                    aria-label="Programación semestral"
+                    title="Programación semestral"
 
                     data-first-url="{{ route('programacion.semestral') }}"
 
@@ -494,6 +500,9 @@
 
                     data-sidebar-title="Intercambio docente"
 
+                    aria-label="Intercambio docente"
+                    title="Intercambio docente"
+
                     data-first-url="{{ route('programacion.intercambio') }}"
 
                     data-target="submenu-intercambio"
@@ -653,6 +662,9 @@
                     data-sidebar-main
 
                     data-sidebar-title="Salas y recursos"
+
+                    aria-label="Salas y recursos"
+                    title="Salas y recursos"
 
                     data-first-url="{{ route('salas.index') }}"
 
@@ -825,6 +837,9 @@
                     data-sidebar-main
 
                     data-sidebar-title="Programación anterior"
+
+                    aria-label="Programación anterior"
+                    title="Programación anterior"
 
                     data-first-url="{{ route('programacion.index') }}"
 
@@ -1008,6 +1023,9 @@
 
                     data-sidebar-title="Administración"
 
+                    aria-label="Administración"
+                    title="Administración"
+
                     data-first-url="{{ route('administracion.index') }}"
 
                     data-target="submenu-administracion"
@@ -1158,6 +1176,9 @@
                     data-sidebar-main
 
                     data-sidebar-title="Configuración"
+
+                    aria-label="Configuración"
+                    title="Configuración"
 
                     data-first-url="{{ route('configuracion.index') }}"
 
