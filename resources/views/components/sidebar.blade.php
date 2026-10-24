@@ -139,7 +139,7 @@
 
                 alt="PROSEC"
 
-                class="h-auto w-full max-w-[210px]"
+                class="h-auto w-full max-w-[178.5px]"
 
             >
 
