@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
@@ -120,17 +122,27 @@ class UsuarioController extends Controller
             'role.exists' => 'El rol seleccionado no es válido.',
         ]);
 
-        $usuario->name = $datos['name'];
-        $usuario->rut = $datos['rut'];
-        $usuario->email = $datos['email'];
+        DB::transaction(function () use ($datos, $usuario) {
+            $rolAdministrador = $this->bloquearRolAdministrador();
+            $usuario = User::query()->lockForUpdate()->findOrFail($usuario->id);
 
-        if (!empty($datos['password'])) {
-            $usuario->password = $datos['password'];
-        }
+            if ($datos['role'] !== 'Administrador' && $this->esUltimoAdministrador($usuario, $rolAdministrador)) {
+                throw ValidationException::withMessages([
+                    'role' => 'Debe quedar al menos un administrador. Asigna este rol a otro usuario antes de cambiarlo.',
+                ]);
+            }
 
-        $usuario->save();
+            $usuario->name = $datos['name'];
+            $usuario->rut = $datos['rut'];
+            $usuario->email = $datos['email'];
 
-        $usuario->syncRoles([$datos['role']]);
+            if (!empty($datos['password'])) {
+                $usuario->password = $datos['password'];
+            }
+
+            $usuario->save();
+            $usuario->syncRoles([$datos['role']]);
+        });
 
         return redirect()
             ->route('administracion.index')
@@ -145,10 +157,43 @@ class UsuarioController extends Controller
                 ->with('error', 'No puedes eliminar tu propio usuario.');
         }
 
-        $usuario->delete();
+        $eliminado = DB::transaction(function () use ($usuario) {
+            $rolAdministrador = $this->bloquearRolAdministrador();
+            $usuario = User::query()->lockForUpdate()->findOrFail($usuario->id);
+
+            if ($this->esUltimoAdministrador($usuario, $rolAdministrador)) {
+                return false;
+            }
+
+            $usuario->delete();
+
+            return true;
+        });
+
+        if (!$eliminado) {
+            return redirect()
+                ->route('administracion.index')
+                ->with('error', 'No puedes eliminar al último administrador. Asigna este rol a otro usuario primero.');
+        }
 
         return redirect()
             ->route('administracion.index')
             ->with('success', 'Usuario eliminado correctamente.');
+    }
+
+    private function bloquearRolAdministrador(): ?Role
+    {
+        // Compartir este bloqueo evita retirar a los últimos administradores en solicitudes simultáneas.
+        return Role::where('name', 'Administrador')
+            ->where('guard_name', 'web')
+            ->lockForUpdate()
+            ->first();
+    }
+
+    private function esUltimoAdministrador(User $usuario, ?Role $rolAdministrador): bool
+    {
+        return $rolAdministrador !== null
+            && $usuario->roles()->whereKey($rolAdministrador->id)->exists()
+            && User::role($rolAdministrador)->count() <= 1;
     }
 }
