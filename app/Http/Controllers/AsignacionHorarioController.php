@@ -6,6 +6,7 @@ use App\Models\BloqueHorario;
 use App\Models\Carrera;
 use App\Models\Dia;
 use App\Models\DisponibilidadProfesor;
+use App\Models\GrupoProfesor;
 use App\Models\GrupoSeccion;
 use App\Models\Horario;
 use App\Models\HorarioProfesor;
@@ -560,13 +561,27 @@ if (
             }
         }
 
-       DB::transaction(function () use (
-    $datos,
-    $grupo,
-    $version,
-    $bloquesIds,
-    $profesoresGrupoSeleccionados
-) {
+        DB::transaction(function () use (
+            $datos,
+            $grupo,
+            $version,
+            $bloquesIds,
+            $profesoresIds
+        ) {
+            // Revalidar bajo el mismo bloqueo usado al quitar docentes del grupo.
+            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
+
+            $profesoresGrupoSeleccionados = GrupoProfesor::where('grupo_seccion_id', $grupo->id)
+                ->where('estado', true)
+                ->whereIn('profesor_id', $profesoresIds)
+                ->get();
+
+            if ($profesoresGrupoSeleccionados->count() !== $profesoresIds->count()) {
+                throw ValidationException::withMessages([
+                    'profesores_ids' => 'La asignación de profesores del grupo cambió. Revisa los docentes seleccionados antes de guardar el horario.',
+                ]);
+            }
+
             foreach ($bloquesIds as $bloqueId) {
                 $horario = Horario::create([
                     'actividad_seccion_id'

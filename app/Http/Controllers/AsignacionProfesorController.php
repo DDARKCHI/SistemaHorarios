@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Carrera;
 use App\Models\GrupoProfesor;
 use App\Models\GrupoSeccion;
+use App\Models\HorarioProfesor;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\Seccion;
@@ -289,15 +290,37 @@ class AsignacionProfesorController extends Controller
         GrupoProfesor $asignacion
     ) {
         $asignacion->load(
-            'grupoSeccion.actividadSeccion'
+            'grupoSeccion.actividadSeccion.seccion'
         );
 
-        $seccionId = $asignacion
-            ->grupoSeccion
-            ->actividadSeccion
-            ->seccion_id;
+        $grupo = $asignacion->grupoSeccion;
+        $seccion = $grupo->actividadSeccion->seccion;
 
-        $asignacion->delete();
+        DB::transaction(function () use ($asignacion, $grupo, $seccion) {
+            // El guardado de horarios utiliza el mismo bloqueo del grupo.
+            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
+
+            $tieneHorarios = HorarioProfesor::where('profesor_id', $asignacion->profesor_id)
+                ->where('estado', true)
+                ->whereHas('horario', function ($query) use ($grupo, $seccion) {
+                    $query->where('grupo_seccion_id', $grupo->id)
+                        ->where('estado', true)
+                        ->whereHas('versionPlanificacion', function ($version) use ($seccion) {
+                            $version->where('periodo_academico_id', $seccion->periodo_academico_id)
+                                ->where('tipo', 'semestral')
+                                ->where('es_actual', true);
+                        });
+                })
+                ->exists();
+
+            if ($tieneHorarios) {
+                throw ValidationException::withMessages([
+                    'asignacion' => 'No puedes quitar este profesor del grupo mientras tenga horarios asignados en la programación semestral actual. Revisa primero sus módulos en Asignación de horarios.',
+                ]);
+            }
+
+            $asignacion->delete();
+        });
 
         return redirect()
             ->route(
@@ -306,7 +329,7 @@ class AsignacionProfesorController extends Controller
                     'periodo_id' => $request->integer('periodo_id'),
                     'carrera_id' => $request->integer('carrera_id') ?: null,
                     'semestre' => $request->input('semestre'),
-                    'seccion_id' => $seccionId,
+                    'seccion_id' => $seccion->id,
                 ]
             )
             ->with(
