@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\InicioController;
 use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
 use App\Http\Controllers\ProgramacionSemestralController;
@@ -43,9 +44,7 @@ Route::post(
     [RecuperarContrasenaController::class, 'restablecer']
 )->name('password.update');
 
-Route::get('/', function () {
-    return view('inicio');
-})
+Route::get('/', [InicioController::class, 'index'])
     ->middleware([
         'auth',
         'permission.redirect:ver panel inicio',

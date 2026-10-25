@@ -8,11 +8,11 @@
 
 <div class="space-y-6">
 
-     <!-- primer titulo  -->
+    <!-- Presentación -->
     <div>
-        <h2 class="text-2xl font-bold text-texto">
+        <h1 class="text-2xl font-bold text-texto">
             Bienvenido al sistema
-        </h2>
+        </h1>
 
         <p class="mt-1 text-sm text-texto-secundario">
             Gestión y planificación académica de horarios, salas y recursos.
@@ -21,7 +21,7 @@
 
 
     <!-- Estado del periodo academico  -->
-    <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+    <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
 
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -32,13 +32,17 @@
                 </p>
 
                 <p class="mt-1 text-lg font-semibold text-texto">
-                    No configurado
+                    {{ $periodoActivo?->nombre ?? 'Sin período activo' }}
                 </p>
+
+                @if ($periodoActivo)
+                    <p class="mt-1 text-sm text-texto-secundario">Semestre {{ $periodoActivo->numero_semestre }} de {{ $periodoActivo->anio }}</p>
+                @endif
 
             </div>
 
             <span class="inline-flex w-fit items-center rounded-full bg-fondo px-3 py-1 text-xs font-medium text-texto-secundario">
-                Sin planificación activa
+                {{ $versionSemestral ? 'Semestral · ' . $versionSemestral->estado : 'Sin programación semestral' }}
             </span>
 
         </div>
@@ -47,10 +51,10 @@
 
 
     <!-- Tarjetas resumen  -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
 
         <!-- Carreras -->
-        <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+        <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
 
             <div class="flex items-start justify-between">
 
@@ -61,16 +65,16 @@
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-texto">
-                        0
+                        {{ number_format($totales['carreras'], 0, ',', '.') }}
                     </p>
 
                     <p class="mt-1 text-xs text-texto-secundario">
-                        Registradas
+                        Activas en el sistema
                     </p>
 
                 </div>
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-institucional">
+                <div class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-institucional sm:flex">
 
                     <svg class="h-5 w-5"
                          fill="none"
@@ -98,7 +102,7 @@
 
 
         <!-- Profesores  -->
-        <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+        <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
 
             <div class="flex items-start justify-between">
 
@@ -109,16 +113,16 @@
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-texto">
-                        0
+                        {{ number_format($totales['profesores'], 0, ',', '.') }}
                     </p>
 
                     <p class="mt-1 text-xs text-texto-secundario">
-                        Registrados
+                        Activos en el sistema
                     </p>
 
                 </div>
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-institucional">
+                <div class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-institucional sm:flex">
 
                     <svg class="h-5 w-5"
                          fill="none"
@@ -149,7 +153,7 @@
 
 
         <!-- Salas -->
-        <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+        <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
 
             <div class="flex items-start justify-between">
 
@@ -160,16 +164,16 @@
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-texto">
-                        0
+                        {{ number_format($totales['salas'], 0, ',', '.') }}
                     </p>
 
                     <p class="mt-1 text-xs text-texto-secundario">
-                        Registradas
+                        Activas en el sistema
                     </p>
 
                 </div>
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-institucional">
+                <div class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-institucional sm:flex">
 
                     <svg class="h-5 w-5"
                          fill="none"
@@ -191,28 +195,28 @@
         </div>
 
 
-        <!-- Cursos  -->
-        <div class="rounded-xl border border-borde bg-superficie p-5 shadow-sm">
+        <!-- Secciones del período -->
+        <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
 
             <div class="flex items-start justify-between">
 
                 <div>
 
                     <p class="text-sm text-texto-secundario">
-                        Cursos
+                        Secciones
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-texto">
-                        0
+                        {{ number_format($totales['secciones'], 0, ',', '.') }}
                     </p>
 
                     <p class="mt-1 text-xs text-texto-secundario">
-                        Registrados
+                        Activas en el período
                     </p>
 
                 </div>
 
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-institucional">
+                <div class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-institucional sm:flex">
 
                     <svg class="h-5 w-5"
                          fill="none"
@@ -242,119 +246,74 @@
 
 
     
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-
-        <!-- Vista semanal  -->
-        <div class="xl:col-span-2 rounded-xl border border-borde bg-superficie shadow-sm">
-
+    <div class="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-3">
+        <section class="min-w-0 rounded-xl border border-borde bg-superficie shadow-sm xl:col-span-2" aria-labelledby="resumen-programacion">
             <div class="border-b border-borde px-5 py-4">
-
-                <h3 class="font-semibold text-texto">
-                    Vista semanal
-                </h3>
-
-                <p class="mt-1 text-sm text-texto-secundario">
-                    Resumen general de la planificación.
-                </p>
-
-            </div>
-
-            <div class="p-5">
-
-                <div class="flex min-h-56 items-center justify-center rounded-lg border border-dashed border-borde bg-fondo">
-
-                    <div class="text-center">
-
-                        <p class="font-medium text-texto">
-                            No hay planificación disponible
-                        </p>
-
-                        <p class="mt-1 text-sm text-texto-secundario">
-                            La vista semanal estará disponible cuando exista un horario generado.
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- Estado de validación  -->
-        <div class="rounded-xl border border-borde bg-superficie shadow-sm">
-
-            <div class="border-b border-borde px-5 py-4">
-
-                <h3 class="font-semibold text-texto">
-                    Estado de validación
-                </h3>
-
-                <p class="mt-1 text-sm text-texto-secundario">
-                    Estado general de la planificación.
-                </p>
-
+                <h2 id="resumen-programacion" class="font-semibold text-texto">Programación semestral</h2>
+                <p class="mt-1 text-sm text-texto-secundario">Resumen de la versión actual del período activo.</p>
             </div>
 
             <div class="space-y-4 p-5">
+                @if ($versionSemestral)
+                    <div class="min-w-0">
+                        <p class="font-semibold text-texto">{{ $versionSemestral->nombre }}</p>
+                        <p class="mt-1 text-sm text-texto-secundario">Versión {{ $versionSemestral->version }} · {{ $versionSemestral->estado }}</p>
+                    </div>
 
-                <div class="flex items-center justify-between">
+                    <dl class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
+                        @foreach (['modulos' => 'Módulos programados', 'grupos' => 'Grupos con horarios', 'secciones' => 'Secciones con horarios'] as $clave => $etiqueta)
+                            <div class="min-w-0 rounded-lg bg-fondo p-4">
+                                <dt class="text-xs text-texto-secundario">{{ $etiqueta }}</dt>
+                                <dd class="mt-1 text-2xl font-bold text-texto">{{ number_format($resumen[$clave], 0, ',', '.') }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
 
-                    <span class="text-sm text-texto-secundario">
-                        Válidas
-                    </span>
+                    @if ($resumen['modulos'] === 0)
+                        <p class="rounded-lg border border-borde bg-fondo p-4 text-sm text-texto-secundario">Esta versión todavía no tiene módulos programados.</p>
+                    @else
+                        <p class="text-xs text-texto-secundario">Se cuentan los módulos activos de esta versión. Abre la programación y aplica un filtro para consultar sus horarios.</p>
+                    @endif
+                @else
+                    <div class="rounded-lg border border-dashed border-borde bg-fondo p-5">
+                        <p class="font-medium text-texto">{{ $periodoActivo ? 'Sin programación semestral actual' : 'Sin período activo' }}</p>
+                        <p class="mt-1 text-sm text-texto-secundario">
+                            {{ $periodoActivo ? 'Todavía no hay una programación semestral vigente para este período.' : 'Cuando haya un período activo, aquí verás el resumen de su programación semestral.' }}
+                        </p>
+                    </div>
+                @endif
 
-                    <span class="font-semibold text-texto">
-                        0
-                    </span>
+                @can('ver programacion semestral')
+                    <a href="{{ $urlProgramacion }}" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-institucional px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-institucional-oscuro sm:w-auto">
+                        Consultar programación
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" /></svg>
+                    </a>
+                @endcan
+            </div>
+        </section>
 
-                </div>
-
-                <div class="h-2 rounded-full bg-fondo">
-                    <div class="h-2 w-0 rounded-full bg-institucional"></div>
-                </div>
-
-
-                <div class="flex items-center justify-between">
-
-                    <span class="text-sm text-texto-secundario">
-                        Con observaciones
-                    </span>
-
-                    <span class="font-semibold text-texto">
-                        0
-                    </span>
-
-                </div>
-
-                <div class="h-2 rounded-full bg-fondo">
-                    <div class="h-2 w-0 rounded-full bg-institucional"></div>
-                </div>
-
-
-                <div class="flex items-center justify-between">
-
-                    <span class="text-sm text-texto-secundario">
-                        Inválidas
-                    </span>
-
-                    <span class="font-semibold text-texto">
-                        0
-                    </span>
-
-                </div>
-
-                <div class="h-2 rounded-full bg-fondo">
-                    <div class="h-2 w-0 rounded-full bg-institucional"></div>
-                </div>
-
+        <section class="min-w-0 rounded-xl border border-borde bg-superficie shadow-sm" aria-labelledby="titulo-accesos">
+            <div class="border-b border-borde px-5 py-4">
+                <h2 id="titulo-accesos" class="font-semibold text-texto">Accesos rápidos</h2>
+                <p class="mt-1 text-sm text-texto-secundario">Continúa con las tareas disponibles para tu cuenta.</p>
             </div>
 
-        </div>
-
+            <nav class="p-5" aria-label="Accesos rápidos">
+                <ul class="space-y-2">
+                    @forelse ($accesos as $acceso)
+                        <li>
+                            <a href="{{ $acceso['url'] }}" class="flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-lg border border-borde px-3 py-2.5 text-sm font-medium text-texto transition hover:border-institucional hover:bg-red-50">
+                                <span class="min-w-0">{{ $acceso['titulo'] }}</span>
+                                <svg class="h-4 w-4 shrink-0 text-texto-secundario" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" /></svg>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="text-sm text-texto-secundario">No hay otras acciones disponibles para tu cuenta.</li>
+                    @endforelse
+                </ul>
+            </nav>
+        </section>
     </div>
-
 </div>
 
 @endsection
