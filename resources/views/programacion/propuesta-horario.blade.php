@@ -2,10 +2,13 @@
 
 @section('content')
 @php
-    $seleccionActual = old(
-        'disponibilidades',
-        $seleccionados->keys()->all()
-    );
+    $periodoAnterior = old('periodo_id');
+    $seleccionAnterior = old('disponibilidades');
+    $esMismoPeriodo = is_scalar($periodoAnterior)
+        && (string) $periodoAnterior === (string) $periodo->id;
+    $seleccionActual = $esMismoPeriodo && is_array($seleccionAnterior)
+        ? array_values(array_filter($seleccionAnterior, 'is_string'))
+        : $seleccionados->keys()->all();
 @endphp
 
 <div class="min-w-0 w-full px-2 py-2">
@@ -27,7 +30,7 @@
     @endif
 
     @if ($errors->any())
-        <div class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+        <div role="alert" class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
             {{ $errors->first() }}
         </div>
     @endif
@@ -84,6 +87,7 @@
         id="form-propuesta"
     >
         @csrf
+        <input type="hidden" name="periodo_id" value="{{ $periodo->id }}">
 
         <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
 

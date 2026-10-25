@@ -10,14 +10,18 @@ use App\Models\Profesor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PropuestaHorarioController extends Controller
 {
+    private const PERIODO_CAMBIADO = 'El período académico cambió. Actualiza la página y revisa tu propuesta antes de guardarla.';
+
     public function index()
     {
         $profesor = $this->obtenerProfesor();
 
-        if (!$profesor) {
+        if (! $profesor) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
@@ -27,7 +31,7 @@ class PropuestaHorarioController extends Controller
 
         $periodo = $this->obtenerPeriodoActivo($profesor);
 
-        if (!$periodo) {
+        if (! $periodo) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
@@ -50,7 +54,7 @@ class PropuestaHorarioController extends Controller
 
         $seleccionados = $disponibilidades
             ->mapWithKeys(function ($disponibilidad) {
-                $clave = $disponibilidad->dia_id . '-' . $disponibilidad->bloque_horario_id;
+                $clave = $disponibilidad->dia_id.'-'.$disponibilidad->bloque_horario_id;
 
                 return [$clave => true];
             });
@@ -68,7 +72,7 @@ class PropuestaHorarioController extends Controller
     {
         $profesor = $this->obtenerProfesor();
 
-        if (!$profesor) {
+        if (! $profesor) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
@@ -78,7 +82,7 @@ class PropuestaHorarioController extends Controller
 
         $periodo = $this->obtenerPeriodoActivo($profesor);
 
-        if (!$periodo) {
+        if (! $periodo) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
@@ -87,25 +91,20 @@ class PropuestaHorarioController extends Controller
         }
 
         $datos = $request->validate([
+            'periodo_id' => ['required', 'integer', Rule::in([$periodo->id])],
             'disponibilidades' => ['nullable', 'array'],
             'disponibilidades.*' => [
                 'string',
                 'regex:/^\d+-\d+$/',
             ],
         ], [
+            'periodo_id.required' => 'Vuelve a abrir la propuesta para confirmar su período académico.',
+            'periodo_id.integer' => 'El período enviado no es válido. Vuelve a abrir la propuesta.',
+            'periodo_id.in' => self::PERIODO_CAMBIADO,
             'disponibilidades.array' => 'La disponibilidad enviada no es válida.',
+            'disponibilidades.*.string' => 'Uno de los bloques seleccionados no es válido.',
             'disponibilidades.*.regex' => 'Uno de los bloques seleccionados no es válido.',
         ]);
-
-        $diasValidos = Dia::where('estado', true)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $bloquesValidos = BloqueHorario::where('estado', true)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
 
         $disponibilidades = collect($datos['disponibilidades'] ?? [])
             ->map(function ($valor) {
@@ -116,16 +115,34 @@ class PropuestaHorarioController extends Controller
                     'bloque_horario_id' => $bloqueId,
                 ];
             })
-            ->filter(function ($item) use ($diasValidos, $bloquesValidos) {
-                return in_array($item['dia_id'], $diasValidos, true)
-                    && in_array($item['bloque_horario_id'], $bloquesValidos, true);
-            })
             ->unique(function ($item) {
-                return $item['dia_id'] . '-' . $item['bloque_horario_id'];
+                return $item['dia_id'].'-'.$item['bloque_horario_id'];
             })
             ->values();
 
         DB::transaction(function () use ($profesor, $periodo, $disponibilidades) {
+            // Serializar el reemplazo de propuestas del mismo docente.
+            Profesor::whereKey($profesor->id)->lockForUpdate()->firstOrFail();
+
+            $periodoVigente = $this->obtenerPeriodoActivo($profesor);
+            if (! $periodoVigente || $periodoVigente->id !== $periodo->id) {
+                throw ValidationException::withMessages(['periodo_id' => self::PERIODO_CAMBIADO]);
+            }
+
+            $diasValidos = Dia::where('estado', true)->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $bloquesValidos = BloqueHorario::where('estado', true)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+            $haySeleccionInvalida = $disponibilidades->contains(function ($item) use ($diasValidos, $bloquesValidos) {
+                return ! in_array($item['dia_id'], $diasValidos, true)
+                    || ! in_array($item['bloque_horario_id'], $bloquesValidos, true);
+            });
+
+            if ($haySeleccionInvalida) {
+                throw ValidationException::withMessages([
+                    'disponibilidades' => 'Uno de los días o bloques seleccionados ya no está activo o no es válido. Actualiza la página y revisa tu propuesta antes de guardarla.',
+                ]);
+            }
+
             DisponibilidadProfesor::where('profesor_id', $profesor->id)
                 ->where('periodo_academico_id', $periodo->id)
                 ->delete();
@@ -162,6 +179,7 @@ class PropuestaHorarioController extends Controller
             ->where('estado', true)
             ->orderByDesc('anio')
             ->orderByDesc('numero_semestre')
+            ->orderByDesc('id')
             ->first();
     }
 }
