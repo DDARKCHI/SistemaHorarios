@@ -26,3 +26,21 @@
 .sombra-card {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
 }
+
+@layer base {
+    body {
+        overflow-wrap: anywhere;
+    }
+
+    input,
+    select,
+    textarea {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    main .grid > *,
+    main .flex > * {
+        min-width: 0;
+    }
+}

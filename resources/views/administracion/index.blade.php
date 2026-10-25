@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-3 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -17,7 +17,7 @@
 
         <a
             href="{{ route('usuarios.create') }}"
-            class="inline-flex items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
         >
             Nuevo usuario
         </a>
@@ -37,7 +37,7 @@
 
     <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overscroll-x-contain" role="region" aria-label="Listado de usuarios" tabindex="0">
             <table class="min-w-full divide-y divide-gray-200">
 
                 <thead class="bg-gray-50">
@@ -70,7 +70,7 @@
 
                         <tr class="hover:bg-gray-50">
 
-                            <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-800">
+                            <td class="min-w-[10rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm font-medium text-gray-800 [overflow-wrap:anywhere]">
                                 {{ $usuario->name }}
                             </td>
 
@@ -78,12 +78,12 @@
                                 {{ $usuario->rut }}
                             </td>
 
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            <td class="min-w-[12rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm text-gray-600 [overflow-wrap:anywhere]">
                                 {{ $usuario->email }}
                             </td>
 
-                            <td class="whitespace-nowrap px-4 py-3">
-                                <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
+                            <td class="whitespace-normal px-4 py-3">
+                                <span class="inline-block max-w-[10rem] rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 [overflow-wrap:anywhere]">
                                     {{ $usuario->getRoleNames()->first() ?? 'Sin rol' }}
                                 </span>
                             </td>
@@ -94,7 +94,7 @@
 
                                     <a
                                         href="{{ route('usuarios.edit', $usuario) }}"
-                                        class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                                        class="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
                                     >
                                         Editar
                                     </a>
@@ -110,7 +110,7 @@
 
                                             <button
                                                 type="submit"
-                                                class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                                class="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
                                             >
                                                 Eliminar
                                             </button>

@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h1 class="text-base font-bold text-gray-800">
@@ -32,7 +32,7 @@
         action="{{ route('programacion.asignacion.profesores') }}"
         class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[0.8fr_1.8fr_0.7fr_2fr_auto_auto] xl:items-end">
+        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end [&>div]:min-w-0">
 
             <div>
                 <label for="periodo_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
@@ -42,7 +42,7 @@
                 <select
                     id="periodo_id"
                     name="periodo_id"
-                    class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     @foreach ($periodos as $periodo)
                         <option
@@ -63,7 +63,7 @@
                 <select
                     id="carrera_id"
                     name="carrera_id"
-                    class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">Todas las carreras</option>
 
@@ -86,7 +86,7 @@
                 <select
                     id="semestre"
                     name="semestre"
-                    class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">Todos</option>
 
@@ -109,7 +109,7 @@
                 <select
                     id="seccion_id"
                     name="seccion_id"
-                    class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">Seleccionar sección</option>
 
@@ -127,19 +127,21 @@
                 </select>
             </div>
 
+            <div class="flex min-w-0 flex-wrap gap-2 sm:col-span-2 xl:col-span-4">
             <button
                 type="submit"
-                class="h-9 rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800"
+                class="h-9 w-full rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800 sm:w-auto"
             >
                 Aplicar
             </button>
 
             <a
                 href="{{ route('programacion.asignacion.profesores') }}"
-                class="flex h-9 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                class="flex h-9 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
             >
                 Limpiar
             </a>
+            </div>
 
         </div>
     </form>
@@ -253,7 +255,7 @@
                                     ->sortByDesc('es_principal');
                             @endphp
 
-                            <div class="grid grid-cols-1 gap-4 border-b border-gray-200 p-4 last:border-b-0 xl:grid-cols-[0.7fr_1.2fr_1fr]">
+                            <div class="grid min-w-0 grid-cols-1 gap-4 border-b border-gray-200 p-4 last:border-b-0 xl:grid-cols-[minmax(0,0.7fr)_minmax(0,1.2fr)_minmax(0,1fr)] [&>div]:min-w-0">
 
                                 <div>
                                     <div class="text-xs font-bold text-gray-800">
@@ -294,7 +296,7 @@
 
                                                     <div class="flex items-start justify-between gap-2">
 
-                                                        <div>
+                                                        <div class="min-w-0 break-words">
                                                             <div class="flex flex-wrap items-center gap-2">
                                                                 <span class="text-xs font-semibold text-gray-800">
                                                                     {{ trim(
@@ -305,7 +307,7 @@
                                                                 </span>
 
                                                                 @if ($asignacion->es_principal)
-                                                                    <span class="rounded-full bg-red-50 px-2 py-0.5 text-[9px] font-bold text-red-700">
+                                                                    <span class="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
                                                                         Principal
                                                                     </span>
                                                                 @endif
@@ -321,7 +323,7 @@
                                                             </div>
                                                         </div>
 
-                                                        <form
+                                                        <form class="shrink-0"
                                                             method="POST"
                                                             action="{{ route(
                                                                 'programacion.asignacion.profesores.eliminar',
@@ -338,7 +340,7 @@
 
                                                             <button
                                                                 type="submit"
-                                                                class="rounded-md border border-red-200 bg-white px-2 py-1 text-[9px] font-semibold text-red-700 hover:bg-red-50"
+                                                                class="rounded-md border border-red-200 bg-white px-2 py-1 text-[10px] font-semibold text-red-700 hover:bg-red-50"
                                                             >
                                                                 Eliminar
                                                             </button>
@@ -363,7 +365,7 @@
                                     <form
                                         method="POST"
                                         action="{{ route('programacion.asignacion.profesores.guardar') }}"
-                                        class="space-y-2 formulario-profesor"
+                                        class="min-w-0 space-y-2 formulario-profesor"
                                         data-seccion-id="{{ $seccion->id }}"
                                     >
                                         @csrf
@@ -380,7 +382,7 @@
 
                                             <select
                                                 name="profesor_id"
-                                                class="profesor-select h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                                class="profesor-select h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                                             >
                                                 <option value="">
                                                     Seleccionar profesor
@@ -418,14 +420,14 @@
 
                                             </div>
 
-                                            <div class="resultados-profesor mt-2 hidden space-y-1"></div>
+                                            <div class="resultados-profesor mt-2 hidden min-w-0 space-y-1 break-words"></div>
 
                                         </div>
 
                                         <select
                                             name="tipo_participacion"
                                             required
-                                            class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                            class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                                         >
                                             <option value="PROFESOR RESPONSABLE">
                                                 Profesor responsable
@@ -453,7 +455,7 @@
                                                 type="checkbox"
                                                 name="es_principal"
                                                 value="1"
-                                                class="h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-red-600"
+                                                class="h-4 w-4 shrink-0 rounded border-gray-300 text-red-700 focus:ring-red-600"
                                             >
 
                                             <span class="text-[10px] font-medium text-gray-700">
@@ -463,7 +465,7 @@
 
                                         <button
                                             type="submit"
-                                            class="h-9 w-full rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800"
+                                            class="h-9 min-w-0 w-full max-w-full rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800"
                                         >
                                             Asignar
                                         </button>
@@ -689,7 +691,7 @@
 
                 boton.type = 'button';
                 boton.className =
-                    'block w-full rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-[10px] hover:bg-gray-50';
+                    'block min-w-0 w-full break-words rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-[11px] hover:bg-gray-50';
 
                 boton.innerHTML = `
                     <div class="font-semibold text-gray-700">

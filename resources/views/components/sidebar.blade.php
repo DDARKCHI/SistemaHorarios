@@ -1356,7 +1356,7 @@
 
     id="sidebar-flyout"
 
-    class="fixed z-[70] hidden w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-xl"
+    class="fixed z-[70] hidden max-h-[calc(100dvh-1.5rem)] w-64 overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-white p-3 shadow-xl"
 
 >
 
@@ -1420,6 +1420,8 @@
 
                     id="cerrar-menu-movil"
 
+                    aria-label="Cerrar menú"
+
                     class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-texto-secundario hover:bg-fondo"
 
                 >
@@ -1454,7 +1456,7 @@
 
 
 
-                <div class="flex justify-center pr-4">
+                <div class="flex min-w-0 justify-center pr-12">
 
                     <img
 

@@ -25,21 +25,21 @@
 
 <body class="min-h-screen bg-fondo">
 
-    <div class="flex min-h-screen items-center justify-center px-5 py-8">
+    <div class="flex min-h-screen items-center justify-center px-4 py-6 sm:px-5 sm:py-8">
 
         <div
-            class="sombra-card w-full rounded-xl border border-borde bg-superficie"
+            class="sombra-card min-w-0 w-full break-words rounded-xl border border-borde bg-superficie"
             style="max-width: 450px;"
         >
 
-            <div style="padding: 44px 42px 28px 42px;">
+            <div class="px-5 pb-7 pt-8 sm:px-[42px] sm:pt-11">
 
                 <div class="flex justify-center">
 
                     <img
                         src="{{ asset('images/prosec-logo.svg') }}"
                         alt="PROSEC - Programación Semestral de Cursos"
-                        style="width: 245px; height: auto;"
+                        style="width: 245px; max-width: 100%; height: auto;"
                     >
 
                 </div>
@@ -338,6 +338,8 @@
                         style="
                             height: 48px;
                             width: auto;
+                            max-width: 100%;
+                            object-fit: contain;
                         "
                     >
 

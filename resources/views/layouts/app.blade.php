@@ -25,7 +25,7 @@
         <!-- Contenido principal -->
         <div
             id="contenido-principal"
-            class="transition-all duration-300 lg:ml-64"
+            class="min-w-0 transition-all duration-300 lg:ml-64"
         >
 
             <!-- Navbar -->
@@ -33,7 +33,7 @@
 
 
             <!-- Contenido de cada página -->
-            <main class="p-6">
+            <main class="min-w-0 p-3 sm:p-6">
 
                 @yield('content')
 

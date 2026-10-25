@@ -84,27 +84,27 @@
 
         <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
 
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-                <div>
+                <div class="min-w-0">
                     <h2 class="text-lg font-semibold text-gray-800">
                         Resultado del análisis
                     </h2>
 
-                    <p class="mt-1 text-sm text-gray-500">
+                    <p class="mt-1 break-words text-sm text-gray-500">
                         {{ $resultado['nombre_archivo'] ?? 'Archivo' }}
                     </p>
                 </div>
 
                 @if($resultado['valido'] ?? false)
 
-                    <span class="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                    <span class="shrink-0 self-start rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
                         Estructura válida
                     </span>
 
                 @else
 
-                    <span class="rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
+                    <span class="shrink-0 self-start rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
                         Estructura incompleta
                     </span>
 

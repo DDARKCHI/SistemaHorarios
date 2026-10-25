@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <form
         id="filtros-form"
@@ -11,7 +11,7 @@
         class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-[0.7fr_0.8fr_1.1fr_1.45fr_0.75fr_0.8fr_1.45fr_1.45fr_auto_auto_auto] xl:items-end">
+        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end">
 
             <div class="min-w-0">
                 <label for="periodo_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
@@ -21,7 +21,7 @@
                 <select
                     id="periodo_id"
                     name="periodo_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     @foreach ($periodos as $periodo)
                         <option
@@ -42,7 +42,7 @@
                 <select
                     id="version_id"
                     name="version_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     @foreach ($versiones as $version)
                         <option
@@ -66,7 +66,7 @@
                 <select
                     id="sede_id"
                     name="sede_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas las sedes
@@ -91,7 +91,7 @@
                 <select
                     id="carrera_id"
                     name="carrera_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas las carreras
@@ -116,7 +116,7 @@
                 <select
                     id="semestre"
                     name="semestre"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos
@@ -141,7 +141,7 @@
                 <select
                     id="seccion_numero"
                     name="seccion_numero"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas
@@ -166,7 +166,7 @@
                 <select
                     id="asignatura_id"
                     name="asignatura_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos los ramos
@@ -191,7 +191,7 @@
                 <select
                     id="profesor_id"
                     name="profesor_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos los profesores
@@ -208,22 +208,23 @@
                 </select>
             </div>
 
+            <div class="flex min-w-0 flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4">
             <button
                 type="submit"
                 id="aplicar-filtros"
-                class="h-9 w-full whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800 xl:w-auto"
+                class="h-9 min-w-0 w-full max-w-full whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800 sm:w-auto"
             >
                 Aplicar
             </button>
 
             <a
                 href="{{ route('programacion.index') }}"
-               class="flex h-9 w-full items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50 xl:w-auto"
+               class="flex h-9 min-w-0 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:w-auto"
             >
                 Limpiar
             </a>
 
-            <div class="flex h-9 items-center justify-start whitespace-nowrap px-1 text-xs text-gray-500 xl:justify-end">
+            <div class="flex min-w-0 flex-wrap items-center gap-x-1 px-1 text-xs text-gray-500 sm:ml-auto">
 
     @if ($hayFiltroAplicado)
 
@@ -244,7 +245,7 @@
     @endif
 
 </div>
-
+            </div>
         </div>
     </form>
 
@@ -296,11 +297,13 @@
 
 @else
 
-        <div class="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <div class="overflow-x-auto">
+            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
 
-                <table class="w-full table-fixed border-collapse">
+            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación anterior" tabindex="0">
+
+                <table class="w-full min-w-[900px] table-fixed border-collapse">
 
                     <colgroup>
                         <col class="w-[70px]">
@@ -348,11 +351,11 @@
                                         {{ $bloque->numero }}
                                     </div>
 
-                                    <div class="mt-0.5 whitespace-nowrap text-[9px] leading-tight text-gray-500">
+                                    <div class="mt-0.5 whitespace-nowrap text-[10px] leading-tight text-gray-500">
                                         {{ \Carbon\Carbon::parse($bloque->hora_inicio)->format('H:i') }}
                                     </div>
 
-                                    <div class="whitespace-nowrap text-[9px] leading-tight text-gray-500">
+                                    <div class="whitespace-nowrap text-[10px] leading-tight text-gray-500">
                                         {{ \Carbon\Carbon::parse($bloque->hora_fin)->format('H:i') }}
                                     </div>
 
@@ -397,7 +400,7 @@
                                                                 </div>
 
                                                                 <div
-                                                                    class="mt-0.5 line-clamp-2 text-[9px] font-medium leading-tight text-gray-700"
+                                                                    class="mt-0.5 line-clamp-2 break-words text-[11px] font-medium leading-tight text-gray-700"
                                                                     title="{{ $asignatura?->nombre }}"
                                                                 >
                                                                     {{ $asignatura?->nombre ?? 'Asignatura sin nombre' }}
@@ -407,7 +410,7 @@
 
                                                             @if ($grupo)
 
-                                                                <span class="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[8px] font-semibold text-gray-600">
+                                                                <span class="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600">
                                                                     {{ $grupo->codigo }}
                                                                 </span>
 
@@ -415,7 +418,7 @@
 
                                                         </div>
 
-                                                        <div class="mt-1.5 space-y-0.5 text-[8px] leading-tight text-gray-500">
+                                                        <div class="mt-1.5 space-y-0.5 text-[10px] leading-tight text-gray-500">
 
                                                             <div>
                                                                 <span class="font-semibold text-gray-700">
@@ -618,7 +621,7 @@
         input.spellcheck = false;
 
         input.className =
-            'h-9 w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600';
+            'h-9 min-w-0 w-full max-w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600';
 
         const icono = document.createElement('div');
 
@@ -645,7 +648,7 @@
         const lista = document.createElement('div');
 
         lista.className =
-    'absolute left-0 top-full z-50 mt-1 hidden w-max min-w-full max-w-[420px] max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
+    'absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
         contenedor.appendChild(input);
         contenedor.appendChild(icono);
         contenedor.appendChild(lista);
@@ -796,7 +799,7 @@
                     const texto = document.createElement('span');
 
                     texto.className =
-    'block whitespace-nowrap';
+    'block min-w-0 whitespace-normal break-words';
 
                     texto.textContent =
                         option.textContent.trim();

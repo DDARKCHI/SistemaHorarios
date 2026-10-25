@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h1 class="text-base font-bold text-gray-800">
@@ -154,18 +154,18 @@
 
             </div>
 
-            <div class="flex justify-end gap-2 border-t border-gray-100 pt-4">
+            <div class="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
 
                 <a
                     href="{{ route('administracion.index') }}"
-                    class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    class="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
                 >
                     Cancelar
                 </a>
 
                 <button
                     type="submit"
-                    class="rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                    class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-institucional px-4 py-2 text-center text-sm font-semibold text-white hover:opacity-90 sm:w-auto"
                 >
                     Guardar cambios
                 </button>

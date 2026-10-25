@@ -2,14 +2,14 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     {{-- ENCABEZADO --}}
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
 
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-            <div>
+            <div class="min-w-0 flex-1">
                 <h1 class="text-base font-bold text-gray-800">
                     Intercambio Docente
                 </h1>
@@ -22,9 +22,9 @@
 
             @if ($asignatura)
 
-                <div class="rounded-md bg-gray-100 px-3 py-2 text-right">
+                <div class="min-w-0 break-words rounded-md bg-gray-100 px-3 py-2 sm:max-w-[50%] sm:text-right">
 
-                    <div class="text-[9px] font-semibold uppercase tracking-wide text-gray-500">
+                    <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                         Asignatura seleccionada
                     </div>
 
@@ -48,7 +48,7 @@
         class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
     >
 
-        <div class="grid grid-cols-[1fr_auto] items-end gap-3">
+        <div class="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
 
             <div class="min-w-0">
 
@@ -88,7 +88,7 @@
         autocomplete="off"
         spellcheck="false"
         placeholder="Buscar por código o nombre..."
-        class="h-9 w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+        class="h-9 min-w-0 w-full max-w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600"
     >
 
     <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -167,11 +167,11 @@
     @else
 
         {{-- RESUMEN --}}
-        <div class="mb-2 grid grid-cols-3 gap-2">
+        <div class="mb-2 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 [&>div]:min-w-0">
 
             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
 
-                <div class="text-[9px] font-semibold uppercase tracking-wide text-gray-500">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                     Profesores
                 </div>
 
@@ -184,7 +184,7 @@
 
             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
 
-                <div class="text-[9px] font-semibold uppercase tracking-wide text-gray-500">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                     Sedes donde imparten
                 </div>
 
@@ -197,11 +197,11 @@
 
             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
 
-                <div class="text-[9px] font-semibold uppercase tracking-wide text-gray-500">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                     Asignatura consultada
                 </div>
 
-                <div class="mt-0.5 truncate text-xs font-bold text-gray-800">
+                <div class="mt-0.5 break-words text-xs font-bold text-gray-800">
                     {{ $asignatura->codigo }}
                 </div>
 
@@ -226,9 +226,11 @@
                 </div>
 
 
-                <div class="overflow-x-auto">
+                <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 2xl:hidden">Desliza la tabla para ver todas las columnas.</p>
 
-                    <table class="w-full border-collapse">
+                <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Resultados de intercambio docente" tabindex="0">
+
+                    <table class="w-full min-w-[680px] border-collapse">
 
                         <thead>
 
@@ -295,7 +297,7 @@
 
                                         @if ($profesor?->correo_institucional)
 
-                                            <div class="mt-0.5 text-[9px] text-gray-500">
+                                            <div class="mt-0.5 break-all text-[10px] text-gray-500">
                                                 {{ $profesor->correo_institucional }}
                                             </div>
 
@@ -306,7 +308,7 @@
 
                                             <div class="mt-1">
 
-                                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[8px] font-semibold text-gray-600">
+                                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
                                                     {{ $profesor->tipo_profesor }}
                                                 </span>
 
@@ -322,7 +324,7 @@
 
                                         @if ($sedes->isEmpty())
 
-                                            <div class="text-[9px] text-gray-400">
+                                            <div class="text-[10px] text-gray-400">
                                                 Sin sede registrada
                                             </div>
 
@@ -332,7 +334,7 @@
 
                                                 @foreach ($sedes as $sede)
 
-                                                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[8px] font-semibold text-gray-600">
+                                                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
                                                         {{ $sede->nombre }}
                                                     </span>
 
@@ -352,11 +354,11 @@
                                             {{ $cantidadHorarios }}
                                         </div>
 
-                                        <div class="text-[9px] text-gray-500">
+                                        <div class="text-[10px] text-gray-500">
                                             módulos semanales
                                         </div>
 
-                                        <div class="mt-2 text-[9px] text-gray-500">
+                                        <div class="mt-2 text-[10px] text-gray-500">
                                             {{ $cantidadAsignaturas }}
                                             {{ $cantidadAsignaturas == 1 ? 'asignatura' : 'asignaturas' }}
                                         </div>
@@ -369,7 +371,7 @@
 
                                         @if ($cargaPorAsignatura->isEmpty())
 
-                                            <span class="text-[9px] text-gray-400">
+                                            <span class="text-[10px] text-gray-400">
                                                 Sin carga registrada
                                             </span>
 
@@ -411,11 +413,11 @@
 
                                                             <div class="flex items-center justify-between gap-2">
 
-                                                                <div class="text-[9px] font-bold text-gray-800">
+                                                                <div class="text-[10px] font-bold text-gray-800">
                                                                     {{ $asignaturaCarga->codigo }}
                                                                 </div>
 
-                                                                <span class="text-[8px] font-semibold text-gray-400">
+                                                                <span class="text-[10px] font-semibold text-gray-400">
                                                                     {{ $carga['cantidad_horarios'] }}
                                                                     {{ $carga['cantidad_horarios'] == 1 ? 'módulo' : 'módulos' }}
                                                                 </span>
@@ -423,7 +425,7 @@
                                                             </div>
 
 
-                                                            <div class="mt-0.5 text-[8px] leading-tight text-gray-500">
+                                                            <div class="mt-0.5 text-[10px] leading-tight text-gray-500">
                                                                 {{ $asignaturaCarga->nombre }}
                                                             </div>
 
@@ -503,7 +505,7 @@
             <div class="min-w-0">
 
                 <div
-                    class="sticky top-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+                    class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm xl:sticky xl:top-2"
                 >
 
                     {{-- CABECERA --}}
@@ -516,7 +518,7 @@
 
                         <div
                             id="panel-subtitulo"
-                            class="mt-1 text-xs font-bold text-gray-800"
+                            class="mt-1 break-words text-xs font-bold text-gray-800"
                         >
                             Selecciona una asignatura
                         </div>
@@ -524,7 +526,7 @@
 
                         <div
                             id="panel-profesor"
-                            class="mt-0.5 text-[9px] text-gray-400"
+                            class="mt-0.5 break-words text-[10px] text-gray-400"
                         >
                             El horario aparecerá aquí
                         </div>
@@ -535,7 +537,7 @@
                     {{-- CONTENIDO --}}
                     <div
                         id="panel-contenido"
-                        class="max-h-[calc(100vh-250px)] overflow-y-auto px-3 py-3"
+                        class="min-w-0 px-3 py-3 xl:max-h-[calc(100vh-250px)] xl:overflow-y-auto"
                     >
 
                         <div class="py-10 text-center">
@@ -548,7 +550,7 @@
                                 Selecciona una asignatura
                             </div>
 
-                            <div class="mt-1 text-[9px] text-gray-400">
+                            <div class="mt-1 text-[10px] text-gray-400">
                                 Haz clic sobre una asignatura de la tabla
                                 para visualizar sus horarios.
                             </div>
@@ -571,7 +573,7 @@
                 Evaluación de reemplazo
             </div>
 
-            <div class="mt-1 text-[9px] text-gray-400">
+            <div class="mt-1 text-[10px] text-gray-400">
                 En esta sección se podrá comprobar posteriormente la disponibilidad
                 del profesor y detectar conflictos con el horario que se desea cubrir.
             </div>
@@ -793,7 +795,7 @@
 
                                 <div class="mb-1.5 flex items-center gap-2">
 
-                                    <div class="text-[9px] font-bold uppercase tracking-wide text-gray-600">
+                                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                         ${escaparHTML(dia)}
                                     </div>
 
@@ -821,9 +823,9 @@
                             html += `
                                 <div class="mb-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
 
-                                    <div class="flex items-center justify-between gap-3">
+                                    <div class="flex min-w-0 items-start justify-between gap-3">
 
-                                        <div>
+                                        <div class="min-w-0 break-words">
 
                                             <div class="text-[10px] font-bold text-gray-700">
                                                 ${
@@ -838,7 +840,7 @@
                                             ${
                                                 sede
                                                 ? `
-                                                    <div class="mt-0.5 text-[8px] text-gray-400">
+                                                    <div class="mt-0.5 text-[10px] text-gray-400">
                                                         ${escaparHTML(sede)}
                                                     </div>
                                                 `
@@ -851,7 +853,7 @@
                                         ${
                                             bloque
                                             ? `
-                                                <span class="rounded-full bg-white px-2 py-1 text-[8px] font-bold text-gray-500">
+                                                <span class="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-bold text-gray-500">
                                                     M${escaparHTML(bloque)}
                                                 </span>
                                             `
@@ -1030,7 +1032,7 @@
                     document.createElement('span');
 
                 texto.className =
-                    'block whitespace-nowrap';
+                    'block min-w-0 whitespace-normal break-words';
 
                 texto.textContent =
                     option.textContent.trim();

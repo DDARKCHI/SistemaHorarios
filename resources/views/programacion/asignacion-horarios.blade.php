@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h1 class="text-base font-bold text-gray-800">
@@ -33,7 +33,7 @@
 
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 [&>div]:min-w-0">
 
             <div>
                 <label for="periodo_id" class="mb-1 block text-xs font-semibold text-gray-600">
@@ -141,7 +141,7 @@
     @if ($version)
         <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
 
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 [&>div]:min-w-0">
 
                 <div>
                     <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
@@ -273,13 +273,13 @@
                                     </div>
                                 </div>
 
-                                <div class="flex flex-wrap gap-2">
+                                <div class="flex min-w-0 max-w-full flex-wrap gap-2">
 
                                     @forelse ($profesoresGrupo as $grupoProfesor)
 
                                         @if ($grupoProfesor->profesor)
 
-                                            <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700">
+                                            <span class="inline-flex min-w-0 max-w-full flex-wrap items-center break-words rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700">
 
                                                 {{ trim(
                                                     $grupoProfesor->profesor->nombre
@@ -448,7 +448,7 @@
 
         @if ($horario->observaciones)
 
-            <div class="mt-1 text-[11px] text-gray-500">
+            <div class="mt-1 break-words text-[11px] text-gray-500">
                 {{ $horario->observaciones }}
             </div>
 
@@ -458,9 +458,9 @@
 
     @if ($horario->profesores->isNotEmpty())
 
-        <div class="shrink-0 rounded-md border border-gray-200 bg-white px-3 py-2">
+        <div class="min-w-0 max-w-full break-words rounded-md border border-gray-200 bg-white px-3 py-2 lg:flex-1">
 
-            <div class="text-[9px] font-bold uppercase tracking-wide text-gray-400">
+            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
                 {{ $horario->profesores->count() === 1 ? 'Profesor asignado' : 'Profesores asignados' }}
             </div>
 
@@ -569,7 +569,7 @@
 
                                     </div>
 
-                                    <div class="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                    <div class="mb-3 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2 [&>div]:min-w-0">
 
                                         <div>
                                             <label class="mb-1 block text-xs font-semibold text-gray-600">
@@ -579,7 +579,7 @@
                                             <select
                                                 name="dia_id"
                                                 required
-                                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
+                                            class="min-w-0 w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
                                             >
                                                 <option value="">
                                                     Seleccionar
@@ -603,7 +603,7 @@
                                                 name="observaciones"
                                                 maxlength="255"
                                                 placeholder="Opcional"
-                                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
+                                                class="min-w-0 w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
                                             >
                                         </div>
 
@@ -652,16 +652,16 @@
 
                 @if ($grupoProfesor->profesor)
 
-                    <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition hover:border-gray-300 hover:bg-white">
+                    <label class="flex min-w-0 cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition hover:border-gray-300 hover:bg-white">
 
                         <input
                             type="checkbox"
                             name="profesores_ids[]"
                             value="{{ $grupoProfesor->profesor->id }}"
-                            class="rounded border-gray-300 text-institucional focus:ring-institucional"
+                            class="mt-0.5 shrink-0 rounded border-gray-300 text-institucional focus:ring-institucional"
                         >
 
-                        <span class="text-xs text-gray-700">
+                        <span class="min-w-0 break-words text-xs text-gray-700">
 
                             {{ trim(
                                 $grupoProfesor->profesor->nombre
@@ -867,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const lista = document.createElement('div');
 
         lista.className =
-            'absolute left-0 top-full z-50 mt-1 hidden w-max min-w-full max-w-[520px] max-h-60 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
+            'absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
 
         contenedor.appendChild(input);
         contenedor.appendChild(icono);
@@ -966,7 +966,7 @@ const texto =
     document.createElement('span');
 
 texto.className =
-    'block whitespace-nowrap';
+    'block min-w-0 whitespace-normal break-words';
 
 texto.textContent =
     obtenerTextoOpcion(opcion);

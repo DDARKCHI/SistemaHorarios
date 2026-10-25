@@ -8,7 +8,7 @@
     );
 @endphp
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h1 class="text-base font-bold text-gray-800">
@@ -32,7 +32,7 @@
         </div>
     @endif
 
-    <div class="mb-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+    <div class="mb-2 grid min-w-0 grid-cols-1 gap-2 break-words md:grid-cols-3 [&>div]:min-w-0">
 
         <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
             <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
@@ -130,11 +130,13 @@
 
         </div>
 
-        <div class="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <div class="overflow-x-auto">
+            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
 
-                <table class="w-full min-w-[800px] table-fixed border-collapse">
+            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Disponibilidad semanal del profesor" tabindex="0">
+
+                <table class="w-full min-w-[900px] table-fixed border-collapse">
 
                     <colgroup>
                         <col class="w-[95px]">
@@ -176,14 +178,14 @@
                                         Bloque {{ $bloque->numero }}
                                     </div>
 
-                                    <div class="mt-0.5 whitespace-nowrap text-[9px] leading-tight text-gray-500">
+                                    <div class="mt-0.5 whitespace-nowrap text-[10px] leading-tight text-gray-500">
                                         {{ \Carbon\Carbon::parse($bloque->hora_inicio)->format('H:i') }}
                                         -
                                         {{ \Carbon\Carbon::parse($bloque->hora_fin)->format('H:i') }}
                                     </div>
 
                                     @if ($bloque->es_almuerzo)
-                                        <div class="mt-0.5 text-[8px] font-semibold uppercase text-gray-400">
+                                        <div class="mt-0.5 text-[10px] font-semibold uppercase text-gray-400">
                                             Almuerzo
                                         </div>
                                     @endif
@@ -205,13 +207,14 @@
                                     <td class="border-b border-r border-gray-200 p-1 text-center last:border-r-0">
 
                                         <label
-                                            class="grupo-bloque flex min-h-[36px] cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white transition hover:border-red-300 hover:bg-red-50"
+                                            class="grupo-bloque flex min-h-[44px] cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white transition hover:border-red-300 hover:bg-red-50"
                                         >
 
                                             <input
                                                 type="checkbox"
                                                 name="disponibilidades[]"
                                                 value="{{ $clave }}"
+                                                aria-label="{{ $dia->nombre }}, módulo {{ $bloque->numero }}, de {{ substr($bloque->hora_inicio, 0, 5) }} a {{ substr($bloque->hora_fin, 0, 5) }}"
                                                 class="checkbox-disponibilidad h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-red-600"
                                                 @checked($seleccionado)
                                             >

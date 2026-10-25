@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="w-full px-2 py-2">
+<div class="min-w-0 w-full px-2 py-2">
 
     <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h1 class="text-base font-bold text-gray-800">
@@ -30,7 +30,7 @@
         <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
 
-                <div>
+                <div class="min-w-0">
                     <div class="text-sm font-semibold text-gray-800">
                         Generar programación semestral
                     </div>
@@ -44,12 +44,12 @@
                     <form
                         method="POST"
                         action="{{ route('programacion.semestral.generar') }}"
-                        class="flex flex-col gap-2 sm:flex-row sm:items-end"
+                        class="flex min-w-0 w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-end"
                         onsubmit="return confirmarGeneracion()"
                     >
                         @csrf
 
-                        <div class="min-w-[190px]">
+                        <div class="min-w-0 flex-1 sm:min-w-[190px]">
                             <label
                                 for="version_anterior_id"
                                 class="mb-1 block text-[11px] font-semibold text-gray-600"
@@ -61,7 +61,7 @@
                                 id="version_anterior_id"
                                 name="version_anterior_id"
                                 required
-                                class="h-9 w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                             >
                                 @foreach ($versionesAnteriores as $versionAnterior)
                                     <option value="{{ $versionAnterior->id }}">
@@ -112,7 +112,7 @@
                 <select
                     id="periodo_id"
                     name="periodo_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     @foreach ($periodos as $periodo)
                         <option
@@ -136,7 +136,7 @@
                 <select
                     id="version_id"
                     name="version_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                     @disabled($versiones->isEmpty())
                 >
                     @if ($versiones->isEmpty())
@@ -171,7 +171,7 @@
                 <select
                     id="sede_id"
                     name="sede_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas las sedes
@@ -199,7 +199,7 @@
                 <select
                     id="carrera_id"
                     name="carrera_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas las carreras
@@ -227,7 +227,7 @@
                 <select
                     id="semestre"
                     name="semestre"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos
@@ -255,7 +255,7 @@
                 <select
                     id="seccion_numero"
                     name="seccion_numero"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todas
@@ -283,7 +283,7 @@
                 <select
                     id="asignatura_id"
                     name="asignatura_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos los ramos
@@ -311,7 +311,7 @@
                 <select
                     id="profesor_id"
                     name="profesor_id"
-                    class="h-9 w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
                 >
                     <option value="">
                         Todos los profesores
@@ -420,11 +420,13 @@
 
     @else
 
-        <div class="w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <div class="overflow-x-auto">
+            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
 
-                <table class="w-full table-fixed border-collapse">
+            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación semestral" tabindex="0">
+
+                <table class="w-full min-w-[900px] table-fixed border-collapse">
 
                     <colgroup>
                         <col class="w-[70px]">
@@ -462,16 +464,16 @@
                                         {{ $bloque->numero }}
                                     </div>
 
-                                    <div class="mt-0.5 whitespace-nowrap text-[9px] leading-tight text-gray-500">
+                                    <div class="mt-0.5 whitespace-nowrap text-[10px] leading-tight text-gray-500">
                                         {{ \Carbon\Carbon::parse($bloque->hora_inicio)->format('H:i') }}
                                     </div>
 
-                                    <div class="whitespace-nowrap text-[9px] leading-tight text-gray-500">
+                                    <div class="whitespace-nowrap text-[10px] leading-tight text-gray-500">
                                         {{ \Carbon\Carbon::parse($bloque->hora_fin)->format('H:i') }}
                                     </div>
 
                                     @if ($bloque->es_almuerzo)
-                                        <div class="mt-1 text-[8px] font-semibold text-gray-400">
+                                        <div class="mt-1 text-[10px] font-semibold text-gray-400">
                                             Almuerzo
                                         </div>
                                     @endif
@@ -515,7 +517,7 @@
                                                                 </div>
 
                                                                 <div
-                                                                    class="mt-0.5 line-clamp-2 text-[9px] font-medium leading-tight text-gray-700"
+                                                                    class="mt-0.5 line-clamp-2 break-words text-[11px] font-medium leading-tight text-gray-700"
                                                                     title="{{ $asignatura?->nombre }}"
                                                                 >
                                                                     {{ $asignatura?->nombre ?? 'Asignatura sin nombre' }}
@@ -524,14 +526,14 @@
                                                             </div>
 
                                                             @if ($grupo)
-                                                                <span class="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[8px] font-semibold text-gray-600">
+                                                                <span class="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-600">
                                                                     {{ $grupo->codigo }}
                                                                 </span>
                                                             @endif
 
                                                         </div>
 
-                                                        <div class="mt-1.5 space-y-0.5 text-[8px] leading-tight text-gray-500">
+                                                        <div class="mt-1.5 space-y-0.5 text-[10px] leading-tight text-gray-500">
 
                                                             <div>
                                                                 <span class="font-semibold text-gray-700">
