@@ -242,19 +242,11 @@
     $cantidadMaximaModulos = (int) $actividad->cantidad_horas;
     $cantidadModulosAsignados = $grupo->horarios->count();
 
-    $cantidadModulosDisponibles = max(
-        0,
-        $cantidadMaximaModulos - $cantidadModulosAsignados
+    $progresoModulos = \App\Support\ProgresoModulos::calcular(
+        $cantidadModulosAsignados,
+        $cantidadMaximaModulos
     );
-
-    $porcentajeAsignacion = $cantidadMaximaModulos > 0
-        ? min(
-            100,
-            (int) round(
-                ($cantidadModulosAsignados / $cantidadMaximaModulos) * 100
-            )
-        )
-        : 0;
+    $cantidadModulosDisponibles = $progresoModulos['faltantes'];
 @endphp
 
                         <div class="px-4 py-4">
@@ -316,99 +308,7 @@
                                 </div>
 
                             @endif
-                            <div class="mb-3">
-
-    @if ($porcentajeAsignacion === 100)
-
-        <div class="rounded-lg border border-green-200 bg-green-50/70 px-4 py-3">
-
-            <div class="flex items-center justify-between gap-3">
-
-                <div>
-                    <div class="text-xs font-bold uppercase text-green-700">
-                        Asignación completa
-                    </div>
-
-                    <div class="mt-0.5 text-[11px] text-green-600">
-                        {{ $cantidadModulosAsignados }} de {{ $cantidadMaximaModulos }} módulos asignados.
-                    </div>
-                </div>
-
-                <div class="text-xl font-bold text-green-700">
-                    {{ $porcentajeAsignacion }}%
-                </div>
-
-            </div>
-
-        </div>
-
-    @elseif ($porcentajeAsignacion > 0)
-
-        <div class="rounded-lg border border-yellow-200 bg-yellow-50/70 px-4 py-3">
-
-            <div class="flex items-center justify-between gap-3">
-
-                <div>
-                    <div class="text-xs font-bold uppercase text-yellow-700">
-                        Asignación pendiente
-                    </div>
-
-                    <div class="mt-0.5 text-[11px] text-yellow-700">
-                        {{ $cantidadModulosAsignados }} de {{ $cantidadMaximaModulos }} módulos asignados.
-                    </div>
-
-                    <div class="mt-1 text-[11px] font-semibold text-yellow-800">
-                        @if ($cantidadModulosDisponibles === 1)
-                            Falta 1 módulo por asignar.
-                        @else
-                            Faltan {{ $cantidadModulosDisponibles }} módulos por asignar.
-                        @endif
-                    </div>
-                </div>
-
-                <div class="text-xl font-bold text-yellow-700">
-                    {{ $porcentajeAsignacion }}%
-                </div>
-
-            </div>
-
-        </div>
-
-    @else
-
-        <div class="rounded-lg border border-red-200 bg-red-50/70 px-4 py-3">
-
-            <div class="flex items-center justify-between gap-3">
-
-                <div>
-                    <div class="text-xs font-bold uppercase text-red-700">
-                        Sin horarios asignados
-                    </div>
-
-                    <div class="mt-0.5 text-[11px] text-red-600">
-                        0 de {{ $cantidadMaximaModulos }} módulos asignados.
-                    </div>
-
-                    <div class="mt-1 text-[11px] font-semibold text-red-700">
-                        @if ($cantidadModulosDisponibles === 1)
-                            Falta 1 módulo por asignar.
-                        @else
-                            Faltan {{ $cantidadModulosDisponibles }} módulos por asignar.
-                        @endif
-                    </div>
-                </div>
-
-                <div class="text-xl font-bold text-red-700">
-                    0%
-                </div>
-
-            </div>
-
-        </div>
-
-    @endif
-
-</div>
+                            <x-progreso-modulos :progreso="$progresoModulos" />
 
                             <div class="mb-3">
 
@@ -525,7 +425,7 @@
 
                             @if ($profesoresGrupo->isNotEmpty())
 
-    @if ($porcentajeAsignacion < 100)
+    @if ($progresoModulos['puede_agregar'])
 
         <form
             method="POST"
