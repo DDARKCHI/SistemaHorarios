@@ -9,6 +9,11 @@
     $seleccionActual = $esMismoPeriodo && is_array($seleccionAnterior)
         ? array_values(array_filter($seleccionAnterior, 'is_string'))
         : $seleccionados->keys()->all();
+    $diaAnterior = old('dia_activo');
+    $diaRestaurado = $esMismoPeriodo && is_scalar($diaAnterior)
+        ? $dias->first(fn ($dia) => (string) $dia->id === (string) $diaAnterior)
+        : null;
+    $diaInicial = $diaRestaurado?->id ?? $dias->first()?->id;
 @endphp
 
 <div class="min-w-0 w-full px-2 py-2">
@@ -108,22 +113,22 @@
                     <button
                         type="button"
                         id="seleccionar-todos"
-                        class="h-9 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                        class="min-h-11 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
                     >
-                        Seleccionar todos
+                        Marcar semana
                     </button>
 
                     <button
                         type="button"
                         id="limpiar-seleccion"
-                        class="h-9 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                        class="min-h-11 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
                     >
-                        Limpiar
+                        Limpiar semana
                     </button>
 
                     <button
                         type="submit"
-                        class="h-9 rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                        class="min-h-11 rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
                     >
                         Guardar propuesta
                     </button>
@@ -134,11 +139,34 @@
 
         </div>
 
-        <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div id="calendario-disponibilidad" data-calendario-disponibilidad class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
+            <div id="controles-disponibilidad-diaria" class="border-b border-gray-200 bg-gray-50 px-3 py-3" hidden>
+                <label for="dia-disponibilidad" class="mb-1 block text-xs font-semibold text-gray-700">Día a editar</label>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="dia-anterior" aria-label="Día anterior" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 disabled:cursor-not-allowed disabled:opacity-40">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 18-6-6 6-6" /></svg>
+                    </button>
+                    <select id="dia-disponibilidad" name="dia_activo" class="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-red-600 focus:ring-1 focus:ring-red-600">
+                        @foreach ($dias as $dia)
+                            <option value="{{ $dia->id }}" @selected($diaInicial === $dia->id)>{{ $dia->nombre }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" id="dia-siguiente" aria-label="Día siguiente" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 disabled:cursor-not-allowed disabled:opacity-40">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 6 7-6 7" /></svg>
+                    </button>
+                </div>
+                <p class="mt-2 text-[11px] text-gray-500">Los bloques marcados se conservan al cambiar de día.</p>
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <button type="button" id="marcar-dia" class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-100">Marcar día</button>
+                    <button type="button" id="limpiar-dia" class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-100">Limpiar día</button>
+                </div>
+                <p id="resumen-dia" class="mt-2 text-xs font-medium text-gray-700" aria-live="polite" aria-atomic="true"></p>
+            </div>
 
-            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Disponibilidad semanal del profesor" tabindex="0">
+            <p id="ayuda-calendario" class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
+
+            <div id="region-disponibilidad" class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Disponibilidad semanal del profesor" tabindex="0">
 
                 <table class="w-full min-w-[900px] table-fixed border-collapse">
 
@@ -154,13 +182,13 @@
 
                         <tr class="bg-gray-100">
 
-                            <th class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                            <th scope="col" class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-2 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                 Bloque
                             </th>
 
                             @foreach ($dias as $dia)
 
-                                <th class="border-b border-r border-gray-200 px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-gray-700 last:border-r-0">
+                                <th scope="col" data-dia-columna="{{ $dia->id }}" class="border-b border-r border-gray-200 px-2 py-2 text-center text-xs font-bold uppercase tracking-wide text-gray-700 last:border-r-0 lg:text-[10px]">
                                     {{ $dia->nombre }}
                                 </th>
 
@@ -176,7 +204,7 @@
 
                             <tr>
 
-                                <td class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-2 py-1">
+                                <th scope="row" class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-2 py-1 text-left font-normal">
 
                                     <div class="text-xs font-bold text-gray-800">
                                         Bloque {{ $bloque->numero }}
@@ -194,7 +222,7 @@
                                         </div>
                                     @endif
 
-                                </td>
+                                </th>
 
                                 @foreach ($dias as $dia)
 
@@ -208,7 +236,7 @@
                                         );
                                     @endphp
 
-                                    <td class="border-b border-r border-gray-200 p-1 text-center last:border-r-0">
+                                    <td data-dia-columna="{{ $dia->id }}" class="border-b border-r border-gray-200 p-1 text-center last:border-r-0">
 
                                         <label
                                             class="grupo-bloque flex min-h-[44px] cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white transition hover:border-red-300 hover:bg-red-50"
@@ -218,6 +246,7 @@
                                                 type="checkbox"
                                                 name="disponibilidades[]"
                                                 value="{{ $clave }}"
+                                                data-dia="{{ $dia->id }}"
                                                 aria-label="{{ $dia->nombre }}, módulo {{ $bloque->numero }}, de {{ substr($bloque->hora_inicio, 0, 5) }} a {{ substr($bloque->hora_fin, 0, 5) }}"
                                                 class="checkbox-disponibilidad h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-red-600"
                                                 @checked($seleccionado)
@@ -256,7 +285,7 @@
 
             <button
                 type="submit"
-                class="h-9 rounded-md bg-red-700 px-5 text-xs font-semibold text-white transition hover:bg-red-800"
+                class="min-h-11 rounded-md bg-red-700 px-5 text-xs font-semibold text-white transition hover:bg-red-800"
             >
                 Guardar propuesta
             </button>
@@ -269,58 +298,74 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const checkboxes = document.querySelectorAll(
-            '.checkbox-disponibilidad'
-        );
-
-        const cantidad = document.getElementById(
-            'cantidad-seleccionados'
-        );
-
-        const seleccionarTodos = document.getElementById(
-            'seleccionar-todos'
-        );
-
-        const limpiarSeleccion = document.getElementById(
-            'limpiar-seleccion'
-        );
+        const formulario = document.getElementById('form-propuesta');
+        const checkboxes = Array.from(formulario.querySelectorAll('.checkbox-disponibilidad'));
+        const cantidad = document.getElementById('cantidad-seleccionados');
+        const calendario = document.getElementById('calendario-disponibilidad');
+        const controlesDiarios = document.getElementById('controles-disponibilidad-diaria');
+        const selectorDia = document.getElementById('dia-disponibilidad');
+        const anterior = document.getElementById('dia-anterior');
+        const siguiente = document.getElementById('dia-siguiente');
+        const resumenDia = document.getElementById('resumen-dia');
+        const region = document.getElementById('region-disponibilidad');
+        const ayuda = document.getElementById('ayuda-calendario');
+        const columnas = calendario.querySelectorAll('[data-dia-columna]');
+        const pantallaDiaria = window.matchMedia('(width < 64rem)');
 
         function actualizarCantidad() {
-            let total = 0;
+            cantidad.textContent = checkboxes.filter(checkbox => checkbox.checked).length;
+            const dia = selectorDia.selectedOptions[0];
+            if (!dia) return;
 
-            checkboxes.forEach(function (checkbox) {
-                if (checkbox.checked) {
-                    total++;
-                }
-            });
-
-            cantidad.textContent = total;
+            const marcados = checkboxes.filter(checkbox => checkbox.dataset.dia === dia.value && checkbox.checked).length;
+            const texto = `${dia.textContent.trim()}: ${marcados} ${marcados === 1 ? 'bloque seleccionado' : 'bloques seleccionados'}.`;
+            if (resumenDia.textContent !== texto) resumenDia.textContent = texto;
         }
 
-        checkboxes.forEach(function (checkbox) {
-            checkbox.addEventListener(
-                'change',
-                actualizarCantidad
-            );
-        });
+        function actualizarVista() {
+            const diaria = pantallaDiaria.matches && selectorDia.options.length > 0;
+            calendario.dataset.vista = diaria ? 'diaria' : 'semanal';
+            controlesDiarios.hidden = !diaria;
+            ayuda.hidden = diaria;
 
-        seleccionarTodos.addEventListener('click', function () {
-            checkboxes.forEach(function (checkbox) {
-                checkbox.checked = true;
+            // Ocultar columnas conserva habilitadas sus casillas para enviar toda la semana.
+            columnas.forEach(function (columna) {
+                columna.hidden = diaria && columna.dataset.diaColumna !== selectorDia.value;
             });
 
+            anterior.disabled = selectorDia.selectedIndex <= 0;
+            siguiente.disabled = selectorDia.selectedIndex < 0 || selectorDia.selectedIndex >= selectorDia.options.length - 1;
+            const nombreDia = selectorDia.selectedOptions[0]?.textContent.trim().toLowerCase();
+            region.setAttribute('aria-label', diaria ? `Disponibilidad del ${nombreDia}` : 'Disponibilidad semanal del profesor');
             actualizarCantidad();
-        });
+        }
 
-        limpiarSeleccion.addEventListener('click', function () {
+        function cambiarDia(paso) {
+            const destino = selectorDia.selectedIndex + paso;
+            if (destino < 0 || destino >= selectorDia.options.length) return;
+            selectorDia.selectedIndex = destino;
+            actualizarVista();
+        }
+
+        function marcarCasillas(marcar, soloDia = false) {
             checkboxes.forEach(function (checkbox) {
-                checkbox.checked = false;
+                if (!soloDia || checkbox.dataset.dia === selectorDia.value) checkbox.checked = marcar;
             });
-
             actualizarCantidad();
-        });
+        }
 
-        actualizarCantidad();
+        checkboxes.forEach(checkbox => checkbox.addEventListener('change', actualizarCantidad));
+        selectorDia.addEventListener('change', actualizarVista);
+        anterior.addEventListener('click', () => cambiarDia(-1));
+        siguiente.addEventListener('click', () => cambiarDia(1));
+        document.getElementById('marcar-dia').addEventListener('click', () => marcarCasillas(true, true));
+        document.getElementById('limpiar-dia').addEventListener('click', () => marcarCasillas(false, true));
+        document.getElementById('seleccionar-todos').addEventListener('click', () => marcarCasillas(true));
+        document.getElementById('limpiar-seleccion').addEventListener('click', () => marcarCasillas(false));
+        pantallaDiaria.addEventListener('change', actualizarVista);
+        window.addEventListener('pageshow', actualizarVista);
+
+        actualizarVista();
     });
 </script>
 @endsection

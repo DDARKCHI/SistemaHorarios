@@ -76,6 +76,7 @@ class PropuestaHorarioTest extends IsolatedDatabaseTestCase
             ->assertViewHas('profesor', fn ($profesor) => $profesor->is($this->profesor));
 
         $this->assertSame((string) $this->periodo->id, $this->periodoDelFormulario($response));
+        $this->assertUnaSolaSerieDeCasillas($response);
         $this->assertSame([$this->par(1, 1)], $this->seleccionesMarcadas($response));
         $this->assertSame($antes, $this->snapshot());
     }
@@ -205,12 +206,19 @@ class PropuestaHorarioTest extends IsolatedDatabaseTestCase
         // El empate de año y semestre también debe resolverse por el ID más reciente.
         $nuevoPeriodo = $this->crearPeriodo(['nombre' => '2026-2 actualizado']);
         $this->crearDisponibilidad($this->profesor, $nuevoPeriodo, 5, 5, ['observaciones' => 'Selección del nuevo período']);
+        $paginaNueva = $this->get(route('programacion.propuesta'))->assertOk();
+        $diaPredeterminado = $this->diaActivoDelFormulario($paginaNueva);
+        $diaAnterior = collect($this->dias)->first(fn ($dia) => (string) $dia !== $diaPredeterminado);
         $antes = $this->snapshot();
 
         $this->enviar(['periodo_id' => $this->periodo->id])
             ->assertSessionHasErrors('periodo_id')->assertSessionMissing('success');
         $this->assertSame($antes, $this->snapshot());
-        $this->enviar(['periodo_id' => $this->periodo->id, 'disponibilidades' => [$this->par(1, 1)]])
+        $this->enviar([
+            'periodo_id' => $this->periodo->id,
+            'dia_activo' => $diaAnterior,
+            'disponibilidades' => [$this->par(1, 1)],
+        ])
             ->assertSessionHasErrors('periodo_id')->assertSessionMissing('success');
         $this->assertSame($antes, $this->snapshot());
 
@@ -219,7 +227,27 @@ class PropuestaHorarioTest extends IsolatedDatabaseTestCase
             ->assertViewHas('periodo', fn ($periodo) => $periodo->is($nuevoPeriodo))
             ->assertSee('El período académico cambió. Actualiza la página y revisa tu propuesta antes de guardarla.');
         $this->assertSame((string) $nuevoPeriodo->id, $this->periodoDelFormulario($paginaActual));
+        $this->assertSame($diaPredeterminado, $this->diaActivoDelFormulario($paginaActual));
         $this->assertSame([$this->par(5, 5)], $this->seleccionesMarcadas($paginaActual));
+        $this->assertSame($antes, $this->snapshot());
+    }
+
+    public function test_el_dia_elegido_se_recupera_tras_un_error_del_mismo_periodo_sin_alterar_lo_guardado(): void
+    {
+        $antes = $this->snapshot();
+
+        $this->enviar([
+            'periodo_id' => $this->periodo->id,
+            'dia_activo' => $this->dias[4],
+            'disponibilidades' => [$this->par(2, 2), '999999-'.$this->bloques[1]],
+        ])->assertRedirect(route('programacion.propuesta'))
+            ->assertSessionHasErrors('disponibilidades')->assertSessionMissing('success');
+
+        $regreso = $this->get(route('programacion.propuesta'))->assertOk();
+
+        $this->assertSame((string) $this->dias[4], $this->diaActivoDelFormulario($regreso));
+        $this->assertSame([$this->par(2, 2)], $this->seleccionesMarcadas($regreso));
+        $this->assertUnaSolaSerieDeCasillas($regreso);
         $this->assertSame($antes, $this->snapshot());
     }
 
@@ -353,5 +381,35 @@ class PropuestaHorarioTest extends IsolatedDatabaseTestCase
         sort($valores);
 
         return $valores;
+    }
+
+    private function diaActivoDelFormulario(TestResponse $response): string
+    {
+        $selector = $this->xpath($response)->query('//form[@id="form-propuesta"]//select[@name="dia_activo"]')->item(0);
+        $this->assertNotNull($selector, 'La vista por día debe conservar el día que el docente estaba editando.');
+        $elegida = $this->xpath($response)->query('//form[@id="form-propuesta"]//select[@name="dia_activo"]/option[@selected]')->item(0);
+        $primera = $selector->getElementsByTagName('option')->item(0);
+        $this->assertNotNull($primera);
+
+        return ($elegida ?? $primera)->getAttribute('value');
+    }
+
+    private function assertUnaSolaSerieDeCasillas(TestResponse $response): void
+    {
+        $valores = [];
+        foreach ($this->xpath($response)->query('//form[@id="form-propuesta"]//input[@name="disponibilidades[]"]') as $nodo) {
+            $valores[] = $nodo->getAttribute('value');
+        }
+        $esperados = [];
+        foreach ($this->dias as $dia) {
+            foreach ($this->bloques as $bloque) {
+                $esperados[] = $dia.'-'.$bloque;
+            }
+        }
+        sort($valores);
+        sort($esperados);
+
+        $this->assertSame($esperados, $valores, 'Cambiar entre día y semana debe usar la misma serie de casillas, sin duplicarlas.');
+        $this->assertCount(count($valores), array_unique($valores));
     }
 }

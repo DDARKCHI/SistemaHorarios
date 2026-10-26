@@ -44,3 +44,17 @@
         min-width: 0;
     }
 }
+
+@media (width < 64rem) {
+    [data-calendario-disponibilidad][data-vista='diaria'] table {
+        min-width: 100%;
+    }
+
+    [data-calendario-disponibilidad][data-vista='diaria'] colgroup {
+        display: none;
+    }
+
+    [data-calendario-disponibilidad][data-vista='diaria'] th:first-child {
+        width: 6rem;
+    }
+}
