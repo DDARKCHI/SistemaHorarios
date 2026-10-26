@@ -54,7 +54,7 @@ class IntercambioDocenteControllerTest extends TestCase
         Model::unsetEventDispatcher();
 
         $views = $this->createMock(Factory::class);
-        $views->expects($this->once())->method('make')
+        $views->expects($this->atLeastOnce())->method('make')
             ->willReturnCallback(function ($name, $data) {
                 $this->assertSame('programacion.intercambio', $name);
                 $this->viewData = $data;
@@ -167,6 +167,92 @@ class IntercambioDocenteControllerTest extends TestCase
         $this->assertCount(0, $this->viewData['resultados']);
     }
 
+    public function test_reune_todas_las_secciones_del_mismo_docente_sin_atribuirle_modulos_del_codocente(): void
+    {
+        $this->multiSectionFixture();
+        $antes = $this->snapshot();
+
+        $this->consult(1);
+
+        $results = $this->viewData['resultados']->keyBy('profesor.id');
+        $this->assertSame([1, 3], $results->keys()->sort()->values()->all());
+        $docente = $results[1];
+        $this->assertSame([100, 103], $docente['horarios']->pluck('horario.id')->sort()->values()->all());
+        $this->assertSame([2, 3], $docente['horarios']->pluck('grupo.id')->sort()->values()->all());
+        $this->assertSame([1, 2], $docente['sedes']->pluck('id')->sort()->values()->all());
+        $this->assertSame([100, 103, 105], $docente['horarios_carga']->pluck('id')->sort()->values()->all());
+        $this->assertSame([1, 2, 3], $docente['sedes_carga']->pluck('id')->sort()->values()->all());
+        $this->assertSame(3, $docente['cantidad_horarios']);
+        $this->assertSame(2, $docente['cantidad_asignaturas']);
+        $this->assertSame([1, 2], $docente['asignaturas_carga']->pluck('id')->sort()->values()->all());
+        $this->assertSame([100, 103, 105], $docente['horarios_ocupados']->pluck('horario_id')->sort()->values()->all());
+        $porAsignatura = $docente['carga_por_asignatura']->keyBy('asignatura.id');
+        $this->assertSame(2, $porAsignatura[1]['cantidad_horarios']);
+        $this->assertSame(1, $porAsignatura[2]['cantidad_horarios']);
+
+        $codocente = $results[3];
+        $this->assertSame([103, 104], $codocente['horarios']->pluck('horario.id')->sort()->values()->all());
+        $this->assertSame([103, 104], $codocente['horarios_carga']->pluck('id')->sort()->values()->all());
+        $this->assertSame([2], $codocente['sedes']->pluck('id')->all());
+        $this->assertSame(2, $codocente['cantidad_horarios']);
+        $this->assertSame(1, $codocente['cantidad_asignaturas']);
+        $this->assertSame($antes, $this->snapshot(), 'Consultar el intercambio no debe alterar asignaciones ni históricos.');
+    }
+
+    public function test_la_carga_se_consulta_por_lotes_aunque_haya_varios_docentes_y_secciones(): void
+    {
+        $this->multiSectionFixture();
+        DB::connection()->enableQueryLog();
+        DB::connection()->flushQueryLog();
+        $this->consult(1);
+        $this->assertCount(2, $this->viewData['resultados']);
+        $consultasIniciales = $this->cantidadConsultas();
+
+        for ($id = 4; $id <= 9; $id++) {
+            DB::table('profesores')->insert(['id' => $id, 'nombre' => 'Docente '.$id]);
+            DB::table('secciones_profesores')->insert([
+                ['seccion_id' => 2, 'profesor_id' => $id],
+                ['seccion_id' => 3, 'profesor_id' => $id],
+            ]);
+            DB::table('horarios_profesores')->insert([
+                ['horario_id' => 100, 'profesor_id' => $id],
+                ['horario_id' => 103, 'profesor_id' => $id],
+            ]);
+        }
+        DB::connection()->flushQueryLog();
+
+        $this->consult(1);
+
+        $consultas = $this->cantidadConsultas();
+        $this->assertCount(8, $this->viewData['resultados']);
+        $this->assertSame($consultasIniciales, $consultas, 'La cantidad de consultas no debe crecer al pasar de dos a ocho docentes: '.$consultasIniciales.' a '.$consultas.'.');
+    }
+
+    public function test_un_docente_vinculado_sin_modulos_sigue_apareciendo_con_carga_vacia(): void
+    {
+        $this->academicFixture();
+        DB::table('profesores')->insert(['id' => 3, 'nombre' => 'Sin módulos']);
+        DB::table('secciones_profesores')->insert([
+            'seccion_id' => 2, 'profesor_id' => 3,
+            'tipo_participacion' => 'Ayudante', 'es_principal' => false,
+        ]);
+        $antes = $this->snapshot();
+
+        $this->consult(1);
+
+        $results = $this->viewData['resultados']->keyBy('profesor.id');
+        $this->assertSame([1, 3], $results->keys()->sort()->values()->all());
+        $docente = $results[3];
+        foreach (['horarios', 'horarios_carga', 'horarios_ocupados', 'sedes', 'sedes_carga', 'asignaturas_carga', 'carga_por_asignatura'] as $campo) {
+            $this->assertCount(0, $docente[$campo], $campo.' debe permanecer vacío para quien no tiene módulos.');
+        }
+        $this->assertSame(0, $docente['cantidad_horarios']);
+        $this->assertSame(0, $docente['cantidad_asignaturas']);
+        $this->assertSame('Ayudante', $docente['tipo_participacion']);
+        $this->assertFalse($docente['es_principal']);
+        $this->assertSame($antes, $this->snapshot());
+    }
+
     public function test_una_asignatura_inexistente_devuelve_resultados_vacios(): void
     {
         $this->period(3, 2026, 2, true);
@@ -242,6 +328,73 @@ class IntercambioDocenteControllerTest extends TestCase
             ['horario_id' => 101, 'profesor_id' => 1],
             ['horario_id' => 102, 'profesor_id' => 2],
         ]);
+    }
+
+    private function multiSectionFixture(): void
+    {
+        $this->academicFixture();
+        DB::table('asignaturas')->insert(['id' => 2, 'codigo' => 'INF1', 'nombre' => 'Informática', 'estado' => true]);
+        DB::table('secciones')->insert([
+            ['id' => 3, 'asignatura_id' => 1, 'periodo_academico_id' => 3],
+            ['id' => 4, 'asignatura_id' => 2, 'periodo_academico_id' => 3],
+        ]);
+        DB::table('profesores')->insert(['id' => 3, 'nombre' => 'Codocente']);
+        DB::table('secciones_profesores')->insert([
+            ['seccion_id' => 3, 'profesor_id' => 1],
+            ['seccion_id' => 3, 'profesor_id' => 3],
+            ['seccion_id' => 4, 'profesor_id' => 1],
+        ]);
+        DB::table('actividades_seccion')->insert([['id' => 3, 'seccion_id' => 3], ['id' => 4, 'seccion_id' => 4]]);
+        DB::table('grupos_seccion')->insert([
+            ['id' => 3, 'actividad_seccion_id' => 3], ['id' => 4, 'actividad_seccion_id' => 4],
+        ]);
+        DB::table('bloques_horarios')->insert([
+            ['id' => 2, 'numero' => 2, 'hora_inicio' => '09:00:00', 'hora_fin' => '09:50:00'],
+            ['id' => 3, 'numero' => 3, 'hora_inicio' => '10:00:00', 'hora_fin' => '10:50:00'],
+            ['id' => 4, 'numero' => 4, 'hora_inicio' => '11:00:00', 'hora_fin' => '11:50:00'],
+        ]);
+        DB::table('horarios')->insert([
+            ['id' => 103, 'actividad_seccion_id' => 3, 'grupo_seccion_id' => 3, 'version_planificacion_id' => 22, 'dia_id' => 1, 'bloque_horario_id' => 2],
+            ['id' => 104, 'actividad_seccion_id' => 3, 'grupo_seccion_id' => 3, 'version_planificacion_id' => 22, 'dia_id' => 1, 'bloque_horario_id' => 3],
+            ['id' => 105, 'actividad_seccion_id' => 4, 'grupo_seccion_id' => 4, 'version_planificacion_id' => 22, 'dia_id' => 1, 'bloque_horario_id' => 4],
+        ]);
+        DB::table('horarios_profesores')->insert([
+            ['horario_id' => 103, 'profesor_id' => 1],
+            ['horario_id' => 103, 'profesor_id' => 1],
+            ['horario_id' => 103, 'profesor_id' => 3],
+            ['horario_id' => 104, 'profesor_id' => 3],
+            ['horario_id' => 105, 'profesor_id' => 1],
+            ['horario_id' => 102, 'profesor_id' => 1],
+        ]);
+        DB::table('sedes')->insert([
+            ['id' => 1, 'nombre' => 'Central'], ['id' => 2, 'nombre' => 'Norte'], ['id' => 3, 'nombre' => 'Sur'],
+        ]);
+        DB::table('salas')->insert([
+            ['id' => 1, 'sede_id' => 1], ['id' => 2, 'sede_id' => 2], ['id' => 3, 'sede_id' => 3],
+        ]);
+        DB::table('asignaciones_salas')->insert([
+            ['horario_id' => 100, 'sala_id' => 1],
+            ['horario_id' => 103, 'sala_id' => 2],
+            ['horario_id' => 103, 'sala_id' => 2],
+            ['horario_id' => 104, 'sala_id' => 2],
+            ['horario_id' => 105, 'sala_id' => 3],
+        ]);
+    }
+
+    private function snapshot(): array
+    {
+        return collect(['asignaturas', 'secciones', 'profesores', 'secciones_profesores',
+            'actividades_seccion', 'grupos_seccion', 'horarios', 'horarios_profesores',
+            'sedes', 'salas', 'asignaciones_salas'])
+            ->mapWithKeys(fn ($tabla) => [$tabla => DB::table($tabla)->orderBy('id')->get()->map(fn ($fila) => (array) $fila)->all()])
+            ->all();
+    }
+
+    private function cantidadConsultas(): int
+    {
+        return collect(DB::connection()->getQueryLog())->filter(
+            fn ($consulta) => str_starts_with(strtolower(ltrim($consulta['query'])), 'select')
+        )->count();
     }
 
     private function createSchema(): void

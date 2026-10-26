@@ -244,7 +244,7 @@
                                     Sede(s)
                                 </th>
 
-                                <th class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                                <th class="min-w-28 border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                     Carga actual
                                 </th>
 
@@ -348,7 +348,7 @@
 
 
                                     {{-- CARGA --}}
-                                    <td class="border-b border-r border-gray-200 px-3 py-3">
+                                    <td class="min-w-28 border-b border-r border-gray-200 px-3 py-3">
 
                                         <div class="text-lg font-bold text-gray-800">
                                             {{ $cantidadHorarios }}
