@@ -69,3 +69,12 @@ select {
         width: 6rem;
     }
 }
+
+/* El desplegable conserva su comportamiento nativo dentro de la barra de búsqueda. */
+[data-filtros-salas]::details-content {
+    display: contents;
+}
+
+[data-filtros-salas]:not([open]) [data-panel-filtros-salas] {
+    display: none;
+}

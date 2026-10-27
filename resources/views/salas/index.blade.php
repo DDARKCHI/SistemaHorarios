@@ -48,18 +48,21 @@
             || filled($filtros['capacidad_minima']) || $filtros['estado'] !== 'activas'
             || filled($filtros['uso']);
     @endphp
-    <form method="GET" action="{{ route('salas.index') }}" aria-label="Buscar y filtrar salas" class="grid min-w-0 grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+    <form method="GET" action="{{ route('salas.index') }}" aria-label="Buscar y filtrar salas" class="grid min-w-0 grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:grid-cols-[minmax(0,1fr)_auto_minmax(10rem,13rem)]">
         <div class="min-w-0">
             <label for="busqueda-salas" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Buscar sala</label>
             <input id="busqueda-salas" type="search" name="q" maxlength="100" value="{{ $filtros['q'] ?? '' }}" placeholder="Código, nombre o edificio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
         </div>
-        <details class="min-w-0 sm:col-span-2" @if ($hayFiltrosAvanzados || $errors->hasAny(['sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'])) open @endif>
-            <summary class="min-h-11 cursor-pointer rounded-lg bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 marker:text-institucional">
+        <div class="flex gap-2 sm:col-start-2 sm:row-start-1">
+            <button type="submit" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white transition hover:bg-institucional-oscuro sm:flex-none">Buscar</button>
+            <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:flex-none">Limpiar</a>
+        </div>
+        <details data-filtros-salas class="contents" @if ($hayFiltrosAvanzados || $errors->hasAny(['sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'])) open @endif>
+            <summary class="min-h-11 cursor-pointer rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-sm font-semibold text-gray-700 marker:text-institucional sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1" title="Sede, tipo, capacidad, estado y uso">
                 Filtrar salas
                 @if ($hayFiltrosAvanzados)<span class="ml-1 text-[11px] font-medium text-institucional">Filtros aplicados</span>@endif
-                <span class="mt-0.5 block text-xs font-normal text-gray-500">Sede, tipo, capacidad, estado y uso</span>
             </summary>
-        <div class="mt-3 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div data-panel-filtros-salas class="grid min-w-0 grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-3 xl:grid-cols-5">
             <div class="min-w-0">
                 <label for="sede-salas" class="mb-1 block text-xs font-semibold text-gray-700">Sede</label>
                 <select id="sede-salas" name="sede_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
@@ -100,10 +103,6 @@
             </div>
         </div>
         </details>
-        <div class="flex gap-2 sm:col-start-2 sm:row-start-1">
-            <button type="submit" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white transition hover:bg-institucional-oscuro sm:flex-none">Buscar</button>
-            <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:flex-none">Limpiar</a>
-        </div>
     </form>
 
     <section aria-labelledby="listado-salas" class="min-w-0">

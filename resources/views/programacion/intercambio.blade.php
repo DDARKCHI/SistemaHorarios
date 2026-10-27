@@ -721,7 +721,7 @@
                         if (elemento) {
 
                             nombreProfesor =
-                                elemento.textContent.trim();
+                                elemento.textContent.replace(/\s+/g, ' ').trim();
 
                         }
 
@@ -948,7 +948,7 @@
 
             if (opcion && opcion.value) {
                 input.value =
-                    opcion.textContent.trim();
+                    opcion.textContent.replace(/\s+/g, ' ').trim();
             }
         }
 
@@ -964,7 +964,7 @@
             select.value = option.value;
 
             input.value =
-                option.textContent.trim();
+                option.textContent.replace(/\s+/g, ' ').trim();
 
             cerrarLista();
         }
@@ -1035,7 +1035,7 @@
                     'block min-w-0 whitespace-normal break-words';
 
                 texto.textContent =
-                    option.textContent.trim();
+                    option.textContent.replace(/\s+/g, ' ').trim();
 
                 boton.appendChild(texto);
 

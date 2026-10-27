@@ -1,4 +1,5 @@
 const normalizar = (texto) => String(texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const textoOpcion = (opcion) => String(opcion?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('select[data-select-buscable]').forEach((select) => {
@@ -24,8 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
             lista.setAttribute('aria-label', etiqueta.textContent.trim());
         }
         const flecha = document.createElement('span');
-        flecha.className = 'pointer-events-none absolute right-3 top-3 text-gray-400';
-        flecha.textContent = '⌄';
+        flecha.className = 'pointer-events-none absolute right-3 top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center text-gray-400';
+        const icono = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        icono.setAttribute('viewBox', '0 0 24 24');
+        icono.setAttribute('fill', 'none');
+        icono.setAttribute('stroke', 'currentColor');
+        icono.setAttribute('stroke-width', '2');
+        icono.setAttribute('class', 'h-3.5 w-3.5');
+        const trazo = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        trazo.setAttribute('d', 'M19 9l-7 7-7-7');
+        trazo.setAttribute('stroke-linecap', 'round');
+        trazo.setAttribute('stroke-linejoin', 'round');
+        icono.append(trazo);
+        flecha.append(icono);
         flecha.setAttribute('aria-hidden', 'true');
         const estado = document.createElement('p');
         estado.className = 'sr-only';
@@ -36,9 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let opciones = [];
         let activo = -1;
         let abierto = false;
-        const seleccionado = () => select.selectedOptions[0]?.textContent.trim() ?? '';
+        const seleccionado = () => textoOpcion(select.selectedOptions[0]);
         const sincronizar = () => {
             input.value = seleccionado();
+            input.title = input.value;
             input.disabled = select.disabled;
         };
         const cerrar = () => {
@@ -48,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.removeAttribute('aria-activedescendant');
             activo = -1;
             sincronizar();
+            input.setSelectionRange(0, 0);
         };
         const elegir = (opcion) => {
             if (!opcion || opcion.disabled) return;
@@ -90,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.setAttribute('role', 'option');
                 item.setAttribute('aria-selected', String(opcion.selected));
                 if (opcion.selected) item.classList.add('bg-red-50', 'font-semibold', 'text-red-700');
-                item.textContent = opcion.textContent.trim();
+                item.textContent = textoOpcion(opcion);
                 item.addEventListener('mousedown', (event) => event.preventDefault());
                 item.addEventListener('click', () => { elegir(opcion); input.focus(); cerrar(); });
                 lista.append(item);

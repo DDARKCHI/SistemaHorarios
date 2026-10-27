@@ -690,7 +690,7 @@
             const opcion = obtenerOpcionSeleccionada();
 
             input.value = opcion
-                ? opcion.textContent.trim()
+                ? opcion.textContent.replace(/\s+/g, ' ').trim()
                 : '';
         }
 
@@ -802,7 +802,7 @@
     'block min-w-0 whitespace-normal break-words';
 
                     texto.textContent =
-                        option.textContent.trim();
+                        option.textContent.replace(/\s+/g, ' ').trim();
 
                     item.appendChild(texto);
 
