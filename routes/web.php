@@ -239,6 +239,12 @@ Route::middleware('auth')->group(function () {
         )
         ->name('programacion.intercambio');
 
+    Route::get('/programacion/intercambio/carga', [IntercambioDocenteController::class, 'carga'])
+        ->middleware('permission.redirect:ver intercambio docente')->name('programacion.intercambio.carga');
+
+    Route::post('/programacion/intercambio/aplicar', [IntercambioDocenteController::class, 'aplicar'])
+        ->middleware(['permission.redirect:ver intercambio docente', 'permission.redirect:asignar profesores'])->name('programacion.intercambio.aplicar');
+
     Route::get('/salas', [SalaController::class, 'index'])
         ->middleware(
             'permission.redirect:gestionar salas y recursos'

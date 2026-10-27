@@ -1,1121 +1,124 @@
 @extends('layouts.app')
-
+@section('title', 'Intercambio docente')
 @section('content')
-
-<div class="min-w-0 w-full px-2 py-2">
-
-    {{-- ENCABEZADO --}}
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-
-        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
-            <div class="min-w-0 flex-1">
-                <h1 class="text-base font-bold text-gray-800">
-                    Intercambio Docente
-                </h1>
-
-                <p class="mt-0.5 text-xs text-gray-500">
-                    Consulta profesores que actualmente imparten una asignatura
-                    y revisa su carga, ubicación y horarios para evaluar posibles reemplazos.
-                </p>
-            </div>
-
-            @if ($asignatura)
-
-                <div class="min-w-0 break-words rounded-md bg-gray-100 px-3 py-2 sm:max-w-[50%] sm:text-right">
-
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                        Asignatura seleccionada
-                    </div>
-
-                    <div class="text-xs font-bold text-gray-800">
-                        {{ $asignatura->codigo }} — {{ $asignatura->nombre }}
-                    </div>
-
-                </div>
-
-            @endif
-
-        </div>
-
-    </div>
-
-
-    {{-- BUSCADOR --}}
-    <form
-        method="GET"
-        action="{{ route('programacion.intercambio') }}"
-        class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
-    >
-
-        <div class="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-
-            <div class="min-w-0">
-
-                <label
-                    for="asignatura_id"
-                    class="mb-1 block text-[11px] font-semibold text-gray-600"
-                >
-                    Ramo
-                </label>
-
-                <div class="relative w-full">
-
-    <select
-        id="asignatura_id"
-        name="asignatura_id"
-        class="hidden"
-    >
-        <option value="">
-            Selecciona una asignatura
-        </option>
-
-        @foreach ($asignaturas as $item)
-
-            <option
-                value="{{ $item->id }}"
-                @selected($asignatura?->id == $item->id)
-            >
-                {{ $item->codigo }} — {{ $item->nombre }}
-            </option>
-
-        @endforeach
-    </select>
-
-    <input
-        type="text"
-        id="asignatura_busqueda"
-        autocomplete="off"
-        spellcheck="false"
-        placeholder="Buscar por código o nombre..."
-        class="h-9 min-w-0 w-full max-w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600"
-    >
-
-    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
-        <svg
-            class="h-3.5 w-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 9l-7 7-7-7"
-            />
-        </svg>
-    </div>
-
-    <div
-        id="asignatura_lista"
-        class="absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-64 overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
-    ></div>
-
-</div>
-            </div>
-
-
-            <button
-                type="submit"
-                class="h-9 whitespace-nowrap rounded-md bg-red-700 px-5 text-xs font-semibold text-white transition hover:bg-red-800"
-            >
-                Buscar profesores
-            </button>
-
-        </div>
-
-    </form>
-
-
-    {{-- SIN ASIGNATURA --}}
-    @if (!$asignatura)
-
-        <div class="rounded-lg border border-gray-200 bg-white px-4 py-12 text-center shadow-sm">
-
-            <div class="text-sm font-semibold text-gray-700">
-                Selecciona una asignatura
-            </div>
-
-            <div class="mt-1 text-xs text-gray-400">
-                Podrás consultar los profesores que actualmente la imparten,
-                sus sedes, carga horaria y horarios ocupados.
-            </div>
-
-        </div>
-
-
-    {{-- SIN RESULTADOS --}}
-    @elseif ($resultados->isEmpty())
-
-        <div class="rounded-lg border border-gray-200 bg-white px-4 py-12 text-center shadow-sm">
-
-            <div class="text-sm font-semibold text-gray-700">
-                No se encontraron profesores
-            </div>
-
-            <div class="mt-1 text-xs text-gray-400">
-                La asignatura seleccionada no tiene profesores asociados
-                en la programación actual.
-            </div>
-
-        </div>
-
-
-    {{-- RESULTADOS --}}
+<div class="min-w-0 space-y-4 px-2 py-2">
+    <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0"><h1 class="text-base font-bold text-gray-800">Intercambio docente</h1><p class="mt-1 text-sm text-gray-600">Elige una clase, compara candidatos y confirma el reemplazo cuando sea compatible.</p></div>
+        <a href="{{ route('programacion.intercambio.carga') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar carga por ramo</a>
+    </header>
+    @if (session('success'))<p role="status" class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">{{ session('success') }}</p>@endif
+    @if ($errors->any())<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><ul class="list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    @if (! $versionActual)
+        <section class="rounded-lg border border-gray-200 bg-white p-8 text-center"><h2 class="text-sm font-semibold">Sin programación semestral actual</h2><p class="mt-2 text-sm text-gray-500">Se necesita un período activo con una versión semestral actual para evaluar reemplazos.</p></section>
     @else
-
-        {{-- RESUMEN --}}
-        <div class="mb-2 grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 [&>div]:min-w-0">
-
-            <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                    Profesores
+        <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600"><span class="font-semibold">{{ $periodoActual->nombre }}</span><span class="rounded-full bg-white px-3 py-1 text-xs">Semestral v{{ $versionActual->version }} · {{ $versionActual->estado }}</span></div>
+        <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" aria-labelledby="clase-reemplazo">
+            <h2 id="clase-reemplazo" class="mb-3 text-sm font-bold text-gray-800">1. Selecciona la clase que se quiere cubrir</h2>
+            <form method="GET" action="{{ route('programacion.intercambio') }}" id="origen-reemplazo" class="grid min-w-0 items-end gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto]">
+                <div class="min-w-0"><label for="docente-reemplazo" class="mb-1.5 block font-semibold text-gray-700">Docente actual</label>
+                    <select data-select-buscable id="docente-reemplazo" name="docente_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-institucional focus:ring-1 focus:ring-institucional">
+                        <option value="">Busca por RUT o nombre</option>@foreach ($docentes as $item)<option value="{{ $item->id }}" @selected($docente?->id === $item->id)>{{ trim($item->nombre.' '.$item->apellido) }} · {{ $item->rut }}</option>@endforeach
+                    </select>
                 </div>
-
-                <div class="mt-0.5 text-lg font-bold text-gray-800">
-                    {{ $resultados->count() }}
+                <div class="min-w-0"><label for="grupo-reemplazo" class="mb-1.5 block font-semibold text-gray-700">Ramo, sección y grupo</label>
+                    <select data-select-buscable id="grupo-reemplazo" name="grupo_id" @disabled($cursos->isEmpty()) class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-institucional focus:ring-1 focus:ring-institucional">
+                        <option value="">{{ $docente ? 'Selecciona una clase del docente' : 'Primero selecciona un docente' }}</option>
+                        @foreach ($cursos as $item)<option value="{{ $item['grupo_id'] }}" @selected(($curso['grupo_id'] ?? null) === $item['grupo_id'])>{{ $item['asignatura']?->codigo }} · {{ $item['asignatura']?->nombre }} · Sec. {{ $item['seccion']->codigo }} · {{ $item['actividad']->tipo }} · {{ $item['grupo']->codigo }}</option>@endforeach
+                    </select>
                 </div>
-
-            </div>
-
-
-            <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                    Sedes donde imparten
-                </div>
-
-                <div class="mt-0.5 text-lg font-bold text-gray-800">
-                    {{ $resultados->flatMap(fn ($resultado) => $resultado['sedes'])->pluck('id')->unique()->count() }}
-                </div>
-
-            </div>
-
-
-            <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
-
-                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                    Asignatura consultada
-                </div>
-
-                <div class="mt-0.5 break-words text-xs font-bold text-gray-800">
-                    {{ $asignatura->codigo }}
-                </div>
-
-            </div>
-
-        </div>
-
-
-        {{-- CONTENEDOR DE RESULTADOS Y HORARIO --}}
-        <div class="grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.85fr)]">
-
-
-            {{-- TABLA DE PROFESORES --}}
-            <div class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-
-                <div class="border-b border-gray-200 bg-gray-100 px-4 py-2">
-
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                        Profesores que imparten la asignatura
+                <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Ver clase</button>
+            </form>
+            @if ($docente && $cursos->isEmpty())<p class="mt-3 text-sm text-gray-500">Este docente no tiene clases con grupos activos para reemplazar en esta versión.</p>@endif
+        </section>
+        @if ($curso)
+            <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" aria-label="Clase seleccionada">
+                <div class="flex min-w-0 flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h2 class="break-words text-sm font-bold text-gray-800">{{ $curso['asignatura']?->codigo }} · {{ $curso['asignatura']?->nombre }}</h2><p class="mt-1 text-sm text-gray-600">Sección {{ $curso['seccion']->codigo }} · {{ $curso['actividad']->tipo }} · {{ $curso['grupo']->codigo }}</p><p class="mt-1 text-sm text-gray-600">Docente: {{ trim($docente->nombre.' '.$docente->apellido) }}</p></div><span class="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold">{{ $objetivo->count() }} {{ $objetivo->count() === 1 ? 'módulo a cubrir' : 'módulos a cubrir' }}</span></div>
+                <ul class="mt-3 flex flex-wrap gap-2">@foreach ($objetivo as $modulo)<li class="rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-600">{{ $modulo->dia?->nombre }} · {{ substr((string) $modulo->bloqueHorario?->hora_inicio, 0, 5) }}–{{ substr((string) $modulo->bloqueHorario?->hora_fin, 0, 5) }}</li>@endforeach</ul>
+            </section>
+            <section id="candidatos-reemplazo" class="scroll-mt-24 rounded-lg border border-gray-200 bg-white p-4 shadow-sm" aria-labelledby="buscar-candidato">
+                <h2 id="buscar-candidato" class="mb-3 text-sm font-bold text-gray-800">2. Busca un posible reemplazo</h2>
+                <form method="GET" action="{{ route('programacion.intercambio') }}#candidatos-reemplazo" class="grid min-w-0 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <input type="hidden" name="docente_id" value="{{ $docente->id }}"><input type="hidden" name="grupo_id" value="{{ $curso['grupo_id'] }}">
+                    <div class="min-w-0"><label for="busqueda-candidato" class="mb-1.5 block font-semibold text-gray-700">RUT o nombre del candidato</label><input id="busqueda-candidato" type="search" name="q" maxlength="80" value="{{ $datos['q'] ?? '' }}" placeholder="Ej.: apellido o RUT con o sin puntos" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm"></div>
+                    <button type="submit" class="min-h-11 rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Buscar docentes</button>
+                </form>
+                @if ($candidatos)
+                    <div class="mt-4 grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        @forelse ($candidatos as $item)
+                            <article class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 p-3">
+                                <div class="min-w-0"><h3 class="break-words text-sm font-semibold text-gray-800">{{ trim($item->nombre.' '.$item->apellido) }}</h3><p class="mt-1 text-xs text-gray-500">RUT: {{ $item->rut ?: 'Sin RUT registrado' }}</p></div>
+                                <a href="{{ route('programacion.intercambio', ['docente_id' => $docente->id, 'grupo_id' => $curso['grupo_id'], 'q' => $datos['q'] ?? null, 'candidato_id' => $item->id]) }}#comparacion-reemplazo" class="mt-auto inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Comparar disponibilidad</a>
+                            </article>
+                        @empty<p class="text-sm text-gray-500 sm:col-span-2 xl:col-span-3">No se encontraron docentes activos con esa búsqueda.</p>@endforelse
                     </div>
-
+                    @if ($candidatos->hasPages())<div class="mt-4">{{ $candidatos->fragment('candidatos-reemplazo')->links() }}</div>@endif
+                @else<p class="mt-3 text-sm text-gray-500">Busca un docente para comparar su carga actual y la disponibilidad declarada.</p>@endif
+            </section>
+        @endif
+        @if ($comparacion)
+            @php
+                $porCelda = $comparacion['carga']->groupBy(fn ($h) => $h->dia_id.'-'.$h->bloque_horario_id);
+                $objetivoPorCelda = $comparacion['filas']->groupBy(fn ($f) => $f['horario']->dia_id.'-'.$f['horario']->bloque_horario_id);
+                $disponiblePorCelda = $comparacion['disponibilidad']->filter(fn ($d) => mb_strtolower(trim((string) $d->tipo_disponibilidad)) === 'disponible')->keyBy(fn ($d) => $d->dia_id.'-'.$d->bloque_horario_id);
+            @endphp
+            <section id="comparacion-reemplazo" class="min-w-0 scroll-mt-24 space-y-3" aria-labelledby="titulo-comparacion">
+                <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div class="flex min-w-0 flex-wrap items-start justify-between gap-3"><div class="min-w-0"><h2 id="titulo-comparacion" class="text-sm font-bold text-gray-800">3. Compara y confirma el reemplazo</h2><p class="mt-1 break-words text-base font-semibold text-gray-900">{{ trim($comparacion['candidato']->nombre.' '.$comparacion['candidato']->apellido) }}</p></div><span @class(['rounded-full px-3 py-1 text-xs font-semibold', 'bg-green-50 text-green-800' => $comparacion['compatible'], 'bg-red-50 text-red-800' => ! $comparacion['compatible']])>{{ $comparacion['compatible'] ? 'Sin topes de clases' : 'Reemplazo no compatible' }}</span></div>
+                    <dl class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div class="rounded-lg bg-gray-50 p-3"><dt class="text-sm text-gray-600">Carga actual del candidato</dt><dd class="mt-1 text-xl font-bold">{{ $comparacion['carga']->count() }} <span class="text-xs font-normal">módulos</span></dd></div>
+                        <div class="rounded-lg bg-gray-50 p-3"><dt class="text-sm text-gray-600">Módulos con topes</dt><dd class="mt-1 text-xl font-bold">{{ $comparacion['topes'] }}</dd></div>
+                        <div class="rounded-lg bg-gray-50 p-3"><dt class="text-sm text-gray-600">Disponibilidad declarada</dt><dd class="mt-1 text-sm font-semibold">{{ $comparacion['sin_disponibilidad'] ? 'Sin informar' : $comparacion['cubiertos'].' de '.$objetivo->count().' módulos cubiertos' }}</dd></div>
+                    </dl>
+                    @if ($comparacion['horas_incompletas'])<p class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Hay módulos con horas incompletas. Corrige esos datos antes de confirmar un reemplazo.</p>@endif
+                    @if ($comparacion['fuera'])<p class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{{ $comparacion['fuera'] }} módulos quedan fuera de la disponibilidad declarada.</p>@endif
                 </div>
-
-
-                <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 2xl:hidden">Desliza la tabla para ver todas las columnas.</p>
-
-                <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Resultados de intercambio docente" tabindex="0">
-
-                    <table class="w-full min-w-[680px] border-collapse">
-
-                        <thead>
-
-                            <tr class="bg-gray-50">
-
-                                <th class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                    Profesor
-                                </th>
-
-                                <th class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                    Sede(s)
-                                </th>
-
-                                <th class="min-w-28 border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                    Carga actual
-                                </th>
-
-                                <th class="border-b border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                    Asignaturas actuales
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            @foreach ($resultados as $indice => $resultado)
-
-                                @php
-
-                                    $profesor = $resultado['profesor'];
-
-                                    $sedes = $resultado['sedes'];
-
-                                    $cantidadHorarios =
-                                        $resultado['cantidad_horarios'];
-
-                                    $cantidadAsignaturas =
-                                        $resultado['cantidad_asignaturas'];
-
-                                    $cargaPorAsignatura =
-                                        $resultado['carga_por_asignatura'];
-
-                                    $horariosOcupados =
-                                        collect($resultado['horarios_ocupados']);
-
-                                @endphp
-
-
-                                <tr
-                                    class="align-top hover:bg-gray-50"
-                                    data-profesor-row="{{ $indice }}"
-                                >
-
-                                    {{-- PROFESOR --}}
-                                    <td class="border-b border-r border-gray-200 px-3 py-3">
-
-                                        <div class="text-xs font-bold text-gray-800">
-                                            {{ trim(($profesor?->nombre ?? '') . ' ' . ($profesor?->apellido ?? '')) ?: 'Sin profesor' }}
-                                        </div>
-
-
-                                        @if ($profesor?->correo_institucional)
-
-                                            <div class="mt-0.5 break-all text-[10px] text-gray-500">
-                                                {{ $profesor->correo_institucional }}
-                                            </div>
-
-                                        @endif
-
-
-                                        @if ($profesor?->tipo_profesor)
-
-                                            <div class="mt-1">
-
-                                                <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                                                    {{ $profesor->tipo_profesor }}
-                                                </span>
-
-                                            </div>
-
-                                        @endif
-
-                                    </td>
-
-
-                                    {{-- SEDES --}}
-                                    <td class="border-b border-r border-gray-200 px-3 py-3">
-
-                                        @if ($sedes->isEmpty())
-
-                                            <div class="text-[10px] text-gray-400">
-                                                Sin sede registrada
-                                            </div>
-
-                                        @else
-
-                                            <div class="flex flex-wrap gap-1">
-
-                                                @foreach ($sedes as $sede)
-
-                                                    <span class="rounded-full bg-gray-100 px-2 py-1 text-[10px] font-semibold text-gray-600">
-                                                        {{ $sede->nombre }}
-                                                    </span>
-
-                                                @endforeach
-
-                                            </div>
-
-                                        @endif
-
-                                    </td>
-
-
-                                    {{-- CARGA --}}
-                                    <td class="min-w-28 border-b border-r border-gray-200 px-3 py-3">
-
-                                        <div class="text-lg font-bold text-gray-800">
-                                            {{ $cantidadHorarios }}
-                                        </div>
-
-                                        <div class="text-[10px] text-gray-500">
-                                            módulos semanales
-                                        </div>
-
-                                        <div class="mt-2 text-[10px] text-gray-500">
-                                            {{ $cantidadAsignaturas }}
-                                            {{ $cantidadAsignaturas == 1 ? 'asignatura' : 'asignaturas' }}
-                                        </div>
-
-                                    </td>
-
-
-                                    {{-- ASIGNATURAS --}}
-                                    <td class="border-b border-gray-200 px-3 py-3">
-
-                                        @if ($cargaPorAsignatura->isEmpty())
-
-                                            <span class="text-[10px] text-gray-400">
-                                                Sin carga registrada
-                                            </span>
-
-                                        @else
-
-                                            <div class="space-y-1.5">
-
-                                                @foreach ($cargaPorAsignatura as $carga)
-
-                                                    @php
-
-                                                        $asignaturaCarga =
-                                                            $carga['asignatura'];
-
-                                                        $horariosAsignatura =
-                                                            $horariosOcupados->filter(
-                                                                function ($horario) use ($asignaturaCarga) {
-
-                                                                    return $asignaturaCarga
-                                                                        && isset($horario['asignatura'])
-                                                                        && $horario['asignatura']?->id
-                                                                            == $asignaturaCarga->id;
-
-                                                                }
-                                                            );
-
-                                                    @endphp
-
-
-                                                    @if ($asignaturaCarga)
-
-                                                        {{-- ASIGNATURA SELECCIONABLE --}}
-                                                        <button
-                                                            type="button"
-                                                            class="js-asignatura w-full rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2 text-left transition hover:border-gray-300 hover:bg-gray-100"
-                                                            data-profesor="{{ $indice }}"
-                                                            data-asignatura="{{ $asignaturaCarga->id }}"
-                                                        >
-
-                                                            <div class="flex items-center justify-between gap-2">
-
-                                                                <div class="text-[10px] font-bold text-gray-800">
-                                                                    {{ $asignaturaCarga->codigo }}
-                                                                </div>
-
-                                                                <span class="text-[10px] font-semibold text-gray-400">
-                                                                    {{ $carga['cantidad_horarios'] }}
-                                                                    {{ $carga['cantidad_horarios'] == 1 ? 'módulo' : 'módulos' }}
-                                                                </span>
-
-                                                            </div>
-
-
-                                                            <div class="mt-0.5 text-[10px] leading-tight text-gray-500">
-                                                                {{ $asignaturaCarga->nombre }}
-                                                            </div>
-
-                                                        </button>
-
-
-                                                        {{-- DATOS OCULTOS --}}
-                                                        <div
-                                                            class="js-datos-asignatura hidden"
-                                                            data-profesor="{{ $indice }}"
-                                                            data-asignatura="{{ $asignaturaCarga->id }}"
-                                                            data-codigo="{{ $asignaturaCarga->codigo }}"
-                                                            data-nombre="{{ $asignaturaCarga->nombre }}"
-                                                        >
-
-                                                            @foreach ($horariosAsignatura as $horario)
-
-                                                                @php
-
-                                                                    $horarioModelo =
-                                                                        $resultado['horarios_carga']
-                                                                            ->firstWhere(
-                                                                                'id',
-                                                                                $horario['horario_id']
-                                                                            );
-
-                                                                    $sedesHorario =
-                                                                        $horarioModelo?->asignacionesSalas
-                                                                            ?->map(
-                                                                                fn ($asignacion) =>
-                                                                                    $asignacion->sala?->sede?->nombre
-                                                                            )
-                                                                            ->filter()
-                                                                            ->unique()
-                                                                            ->join(', ');
-
-                                                                @endphp
-
-
-                                                                <div
-                                                                    class="js-horario-dato"
-                                                                    data-dia="{{ $horario['dia'] ?? 'Día no definido' }}"
-                                                                    data-bloque="{{ $horario['bloque'] ?? '' }}"
-                                                                    data-hora-inicio="{{ $horario['hora_inicio'] ?? '' }}"
-                                                                    data-hora-fin="{{ $horario['hora_fin'] ?? '' }}"
-                                                                    data-sede="{{ $sedesHorario }}"
-                                                                ></div>
-
-                                                            @endforeach
-
-                                                        </div>
-
-                                                    @endif
-
-                                                @endforeach
-
-                                            </div>
-
-                                        @endif
-
-                                    </td>
-
-                                </tr>
-
-                            @endforeach
-
-                        </tbody>
-
-                    </table>
-
+                <div class="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach ($comparacion['filas'] as $fila)
+                        <article class="rounded-lg border border-gray-200 bg-white p-3"><p class="text-sm font-semibold">{{ $fila['horario']->dia?->nombre }} · {{ substr((string) $fila['horario']->bloqueHorario?->hora_inicio, 0, 5) }}–{{ substr((string) $fila['horario']->bloqueHorario?->hora_fin, 0, 5) }}</p><p class="mt-1 text-sm {{ $fila['conflictos']->isEmpty() ? 'text-green-700' : 'text-red-700' }}">{{ $fila['conflictos']->isEmpty() ? 'Sin topes con otras clases' : 'Coincide con otra clase del candidato' }}</p><p class="mt-1 text-xs text-gray-500">Disponibilidad: {{ $fila['disponible'] === null ? 'sin informar' : ($fila['disponible'] ? 'declarada' : 'fuera de lo declarado') }}</p>@foreach ($fila['conflictos'] as $tope)<p class="mt-1 break-words text-xs text-red-800">{{ $tope->actividadSeccion?->seccion?->asignatura?->codigo }} · {{ $tope->actividadSeccion?->seccion?->asignatura?->nombre }}</p>@endforeach</article>
+                    @endforeach
                 </div>
-
-            </div>
-
-
-            {{-- PANEL DERECHO --}}
-            <div class="min-w-0">
-
-                <div
-                    class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm xl:sticky xl:top-2"
-                >
-
-                    {{-- CABECERA --}}
-                    <div class="border-b border-gray-200 bg-gray-100 px-4 py-3">
-
-                        <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                            Horario
-                        </div>
-
-
-                        <div
-                            id="panel-subtitulo"
-                            class="mt-1 break-words text-xs font-bold text-gray-800"
-                        >
-                            Selecciona una asignatura
-                        </div>
-
-
-                        <div
-                            id="panel-profesor"
-                            class="mt-0.5 break-words text-[10px] text-gray-400"
-                        >
-                            El horario aparecerá aquí
-                        </div>
-
+                <div class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 border-b border-gray-200 p-3 text-xs text-gray-600"><span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-gray-400" aria-hidden="true"></span>Clases actuales</span><span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-sky-500" aria-hidden="true"></span>Clase a cubrir</span><span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-green-500" aria-hidden="true"></span>Disponibilidad declarada</span><span><span class="mr-1 inline-block h-2 w-2 rounded-full bg-red-500" aria-hidden="true"></span>Coincidencia de clases</span></div>
+                    <div class="relative max-h-[70vh] min-w-0 max-w-full overflow-auto" role="region" aria-label="Comparación semanal del candidato" tabindex="0">
+                        <table class="w-full min-w-[1000px] table-fixed border-collapse text-left">
+                            <caption class="sr-only">Clases actuales del candidato y módulos de la clase que se quiere cubrir</caption>
+                            <colgroup><col class="w-28">@foreach ($dias as $dia)<col>@endforeach</colgroup>
+                            <thead><tr><th scope="col" class="sticky top-0 left-0 z-30 border-b border-r border-gray-200 bg-gray-100 px-2 py-3 text-xs">Horario</th>@foreach ($dias as $dia)<th scope="col" class="sticky top-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-2 py-3 text-center text-xs">{{ $dia->nombre }}</th>@endforeach</tr></thead>
+                            <tbody>@foreach ($bloques as $bloque)<tr class="align-top"><th scope="row" class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-2 py-3 text-xs font-normal">{{ substr((string) $bloque->hora_inicio, 0, 5) }}–{{ substr((string) $bloque->hora_fin, 0, 5) }}</th>
+                                @foreach ($dias as $dia)
+                                    @php($clave = $dia->id.'-'.$bloque->id)
+                                    @php($solicitados = $objetivoPorCelda->get($clave, collect()))
+                                    @php($compartidos = $solicitados->pluck('horario.id'))
+                                    @php($topesCelda = $solicitados->contains(fn ($f) => $f['conflictos']->isNotEmpty()))
+                                    <td @class(['border-b border-r border-gray-200 p-1.5', 'bg-red-50' => $topesCelda, 'bg-green-50' => ! $topesCelda && ($disponiblePorCelda->has($clave) || $solicitados->contains(fn ($f) => $f['disponible'] === true))])>
+                                        <div class="space-y-2">@foreach ($porCelda->get($clave, collect())->reject(fn ($h) => $compartidos->contains($h->id)) as $horario)<div><p class="mb-1 text-[10px] font-semibold text-gray-500">Clase actual</p><x-intercambio-clase :horario="$horario" /></div>@endforeach
+                                            @foreach ($solicitados as $fila)<div><p class="mb-1 text-[10px] font-semibold {{ $fila['conflictos']->isEmpty() ? 'text-sky-800' : 'text-red-800' }}">{{ $fila['conflictos']->isEmpty() ? 'Clase a cubrir' : 'Tope de horario' }}</p><x-intercambio-clase :horario="$fila['horario']" /></div>@endforeach
+                                        </div>
+                                    </td>
+                                @endforeach
+                            </tr>@endforeach</tbody>
+                        </table>
                     </div>
-
-
-                    {{-- CONTENIDO --}}
-                    <div
-                        id="panel-contenido"
-                        class="min-w-0 px-3 py-3 xl:max-h-[calc(100vh-250px)] xl:overflow-y-auto"
-                    >
-
-                        <div class="py-10 text-center">
-
-                            <div class="text-2xl text-gray-300">
-                                ◷
-                            </div>
-
-                            <div class="mt-2 text-[10px] font-semibold text-gray-500">
-                                Selecciona una asignatura
-                            </div>
-
-                            <div class="mt-1 text-[10px] text-gray-400">
-                                Haz clic sobre una asignatura de la tabla
-                                para visualizar sus horarios.
-                            </div>
-
-                        </div>
-
-                    </div>
-
                 </div>
-
-            </div>
-
-        </div>
-
-
-        {{-- EVALUACIÓN --}}
-        <div class="mt-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-
-            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                Evaluación de reemplazo
-            </div>
-
-            <div class="mt-1 text-[10px] text-gray-400">
-                En esta sección se podrá comprobar posteriormente la disponibilidad
-                del profesor y detectar conflictos con el horario que se desea cubrir.
-            </div>
-
-        </div>
-
-
-        {{-- JAVASCRIPT --}}
-        <script>
-
-            document.addEventListener('DOMContentLoaded', function () {
-
-                const botones =
-                    document.querySelectorAll('.js-asignatura');
-
-                const panelContenido =
-                    document.getElementById('panel-contenido');
-
-                const panelSubtitulo =
-                    document.getElementById('panel-subtitulo');
-
-                const panelProfesor =
-                    document.getElementById('panel-profesor');
-
-
-                function escaparHTML(texto) {
-
-                    const div =
-                        document.createElement('div');
-
-                    div.textContent =
-                        texto ?? '';
-
-                    return div.innerHTML;
-
-                }
-
-
-                function seleccionarAsignatura(boton) {
-
-                    const profesorId =
-                        boton.dataset.profesor;
-
-                    const asignaturaId =
-                        boton.dataset.asignatura;
-
-
-                    /*
-                     * IMPORTANTE:
-                     * quitar TODAS las selecciones anteriores.
-                     *
-                     * De esta manera solamente puede existir
-                     * una asignatura seleccionada en toda la pantalla.
-                     */
-                    botones.forEach(function (item) {
-
-                        item.classList.remove(
-                            'border-red-300',
-                            'bg-red-50'
-                        );
-
-                        item.classList.add(
-                            'border-gray-200',
-                            'bg-gray-50'
-                        );
-
-                    });
-
-
-                    /*
-                     * Marcar únicamente la seleccionada.
-                     */
-                    boton.classList.remove(
-                        'border-gray-200',
-                        'bg-gray-50'
-                    );
-
-                    boton.classList.add(
-                        'border-red-300',
-                        'bg-red-50'
-                    );
-
-
-                    /*
-                     * Buscar los datos correspondientes.
-                     */
-                    const datos =
-                        document.querySelector(
-                            '.js-datos-asignatura[data-profesor="' +
-                            profesorId +
-                            '"][data-asignatura="' +
-                            asignaturaId +
-                            '"]'
-                        );
-
-
-                    if (!datos) {
-
-                        panelSubtitulo.textContent =
-                            'Sin información';
-
-                        panelProfesor.textContent =
-                            '';
-
-                        panelContenido.innerHTML = `
-                            <div class="py-8 text-center text-[10px] text-gray-400">
-                                No se encontraron horarios para esta asignatura.
-                            </div>
-                        `;
-
-                        return;
-
-                    }
-
-
-                    const codigo =
-                        datos.dataset.codigo || '';
-
-                    const nombre =
-                        datos.dataset.nombre || '';
-
-
-                    /*
-                     * Obtener nombre del profesor.
-                     */
-                    const fila =
-                        document.querySelector(
-                            '[data-profesor-row="' +
-                            profesorId +
-                            '"]'
-                        );
-
-
-                    let nombreProfesor =
-                        '';
-
-
-                    if (fila) {
-
-                        const elemento =
-                            fila.querySelector(
-                                'td:first-child .text-xs'
-                            );
-
-                        if (elemento) {
-
-                            nombreProfesor =
-                                elemento.textContent.replace(/\s+/g, ' ').trim();
-
-                        }
-
-                    }
-
-
-                    panelSubtitulo.innerHTML =
-                        escaparHTML(codigo) +
-                        ' — ' +
-                        escaparHTML(nombre);
-
-
-                    panelProfesor.textContent =
-                        nombreProfesor;
-
-
-                    /*
-                     * Obtener horarios.
-                     */
-                    const horarios =
-                        datos.querySelectorAll(
-                            '.js-horario-dato'
-                        );
-
-
-                    if (!horarios.length) {
-
-                        panelContenido.innerHTML = `
-                            <div class="py-8 text-center text-[10px] text-gray-400">
-                                Esta asignatura no tiene horarios registrados.
-                            </div>
-                        `;
-
-                        return;
-
-                    }
-
-
-                    /*
-                     * Agrupar horarios por día.
-                     */
-                    const porDia = {};
-
-
-                    horarios.forEach(function (horario) {
-
-                        const dia =
-                            horario.dataset.dia ||
-                            'Día no definido';
-
-
-                        if (!porDia[dia]) {
-
-                            porDia[dia] = [];
-
-                        }
-
-
-                        porDia[dia].push(horario);
-
-                    });
-
-
-                    let html = '';
-
-
-                    Object.keys(porDia).forEach(function (dia) {
-
-                        html += `
-                            <div class="mb-3 last:mb-0">
-
-                                <div class="mb-1.5 flex items-center gap-2">
-
-                                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                        ${escaparHTML(dia)}
-                                    </div>
-
-                                    <div class="h-px flex-1 bg-gray-200"></div>
-
-                                </div>
-                        `;
-
-
-                        porDia[dia].forEach(function (horario) {
-
-                            const bloque =
-                                horario.dataset.bloque || '';
-
-                            const horaInicio =
-                                horario.dataset.horaInicio || '';
-
-                            const horaFin =
-                                horario.dataset.horaFin || '';
-
-                            const sede =
-                                horario.dataset.sede || '';
-
-
-                            html += `
-                                <div class="mb-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
-
-                                    <div class="flex min-w-0 items-start justify-between gap-3">
-
-                                        <div class="min-w-0 break-words">
-
-                                            <div class="text-[10px] font-bold text-gray-700">
-                                                ${
-                                                    horaInicio && horaFin
-                                                    ? escaparHTML(horaInicio) +
-                                                      ' - ' +
-                                                      escaparHTML(horaFin)
-                                                    : 'Horario no definido'
-                                                }
-                                            </div>
-
-                                            ${
-                                                sede
-                                                ? `
-                                                    <div class="mt-0.5 text-[10px] text-gray-400">
-                                                        ${escaparHTML(sede)}
-                                                    </div>
-                                                `
-                                                : ''
-                                            }
-
-                                        </div>
-
-
-                                        ${
-                                            bloque
-                                            ? `
-                                                <span class="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-bold text-gray-500">
-                                                    M${escaparHTML(bloque)}
-                                                </span>
-                                            `
-                                            : ''
-                                        }
-
-                                    </div>
-
-                                </div>
-                            `;
-
-                        });
-
-
-                        html += `
-                            </div>
-                        `;
-
-                    });
-
-
-                    panelContenido.innerHTML =
-                        html;
-
-                }
-
-
-                /*
-                 * Registrar eventos de cada asignatura.
-                 */
-                botones.forEach(function (boton) {
-
-                    boton.addEventListener(
-                        'click',
-                        function () {
-
-                            seleccionarAsignatura(this);
-
-                        }
-                    );
-
-                });
-
-
-                /*
-                 * IMPORTANTE:
-                 * No seleccionar ninguna asignatura automáticamente.
-                 *
-                 * El usuario debe hacer clic explícitamente
-                 * en la asignatura que desea consultar.
-                 */
-
-            });
-
-        </script>
-
-@endif
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-
-        const select =
-            document.getElementById('asignatura_id');
-
-        const input =
-            document.getElementById('asignatura_busqueda');
-
-        const lista =
-            document.getElementById('asignatura_lista');
-
-        if (!select || !input || !lista) {
-            return;
-        }
-
-        function normalizar(texto) {
-            return String(texto ?? '')
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase()
-                .trim();
-        }
-
-        function opcionSeleccionada() {
-            return select.options[
-                select.selectedIndex
-            ] ?? null;
-        }
-
-        function actualizarInput() {
-            const opcion =
-                opcionSeleccionada();
-
-            if (opcion && opcion.value) {
-                input.value =
-                    opcion.textContent.replace(/\s+/g, ' ').trim();
-            }
-        }
-
-        function cerrarLista() {
-            lista.classList.add('hidden');
-        }
-
-        function abrirLista() {
-            lista.classList.remove('hidden');
-        }
-
-        function seleccionarOpcion(option) {
-            select.value = option.value;
-
-            input.value =
-                option.textContent.replace(/\s+/g, ' ').trim();
-
-            cerrarLista();
-        }
-
-        function renderizar(busqueda = '') {
-            lista.innerHTML = '';
-
-            const termino =
-                normalizar(busqueda);
-
-            const opciones =
-                Array.from(select.options)
-                    .filter(function (option) {
-
-                        if (!option.value) {
-                            return false;
-                        }
-
-                        if (!termino) {
-                            return true;
-                        }
-
-                        return normalizar(
-                            option.textContent
-                        ).includes(termino);
-                    });
-
-            if (opciones.length === 0) {
-                const vacio =
-                    document.createElement('div');
-
-                vacio.className =
-                    'px-3 py-2.5 text-xs text-gray-400';
-
-                vacio.textContent =
-                    'No se encontraron asignaturas';
-
-                lista.appendChild(vacio);
-
-                return;
-            }
-
-            opciones.forEach(function (option) {
-
-                const boton =
-                    document.createElement('button');
-
-                boton.type = 'button';
-
-                boton.className =
-                    'flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-50';
-
-                if (
-                    String(option.value) ===
-                    String(select.value)
-                ) {
-                    boton.classList.add(
-                        'bg-red-50',
-                        'font-semibold',
-                        'text-red-700'
-                    );
-                }
-
-                const texto =
-                    document.createElement('span');
-
-                texto.className =
-                    'block min-w-0 whitespace-normal break-words';
-
-                texto.textContent =
-                    option.textContent.replace(/\s+/g, ' ').trim();
-
-                boton.appendChild(texto);
-
-                boton.addEventListener(
-                    'mousedown',
-                    function (event) {
-                        event.preventDefault();
-                        seleccionarOpcion(option);
-                    }
-                );
-
-                lista.appendChild(boton);
-            });
-        }
-
-        input.addEventListener(
-            'focus',
-            function () {
-                input.select();
-                renderizar('');
-                abrirLista();
-            }
-        );
-
-        input.addEventListener(
-            'input',
-            function () {
-                select.value = '';
-
-                renderizar(
-                    input.value
-                );
-
-                abrirLista();
-            }
-        );
-
-        input.addEventListener(
-            'click',
-            function () {
-                renderizar(
-                    input.value
-                );
-
-                abrirLista();
-            }
-        );
-
-        input.addEventListener(
-            'blur',
-            function () {
-                setTimeout(
-                    function () {
-                        cerrarLista();
-
-                        if (!select.value) {
-                            input.value = '';
-                        }
-                    },
-                    100
-                );
-            }
-        );
-
-        document.addEventListener(
-            'click',
-            function (event) {
-                if (
-                    !input.contains(event.target) &&
-                    !lista.contains(event.target)
-                ) {
-                    cerrarLista();
-                }
-            }
-        );
-
-        actualizarInput();
-    });
-</script>
-
+                @can('asignar profesores')
+                    <form method="POST" action="{{ route('programacion.intercambio.aplicar') }}" class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" onsubmit="return confirm('Se sustituirá al docente de esta clase en la versión actual. ¿Confirmas el reemplazo?')">
+                        @csrf
+                        @foreach (['docente_id' => $docente->id, 'grupo_id' => $curso['grupo_id'], 'candidato_id' => $comparacion['candidato']->id, 'periodo_id' => $periodoActual->id, 'version_id' => $versionActual->id, 'huella' => $huella] as $campo => $valor)<input type="hidden" name="{{ $campo }}" value="{{ $valor }}">@endforeach
+                        <p class="text-sm text-gray-700">Se reemplazará a <strong>{{ trim($docente->nombre.' '.$docente->apellido) }}</strong> por <strong>{{ trim($comparacion['candidato']->nombre.' '.$comparacion['candidato']->apellido) }}</strong> en los {{ $objetivo->count() }} módulos de esta clase.</p>
+                        @if ($comparacion['sin_disponibilidad'])<label class="mt-3 flex min-h-11 items-start gap-3 rounded-lg bg-amber-50 p-3 text-amber-900"><input type="checkbox" name="confirmar_disponibilidad" value="1" required class="mt-1 h-4 w-4 shrink-0 rounded border-gray-300">El docente no ha registrado disponibilidad para este período. Confirmo que consulté con él y puede cubrir estos módulos.</label>@endif
+                        @if ($versionActual->estado !== 'Borrador')<p class="mt-3 text-sm text-amber-800">Solo se pueden aplicar reemplazos en una versión en borrador.</p>@endif
+                        <button type="submit" @disabled(! $comparacion['compatible'] || $versionActual->estado !== 'Borrador') class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500 sm:w-auto">Confirmar reemplazo</button>
+                    </form>
+                @endcan
+            </section>
+        @endif
+    @endif
 </div>
-
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const docente = document.getElementById('docente-reemplazo');
+    const grupo = document.getElementById('grupo-reemplazo');
+    if (docente && grupo) docente.addEventListener('change', function () { grupo.value = ''; document.getElementById('origen-reemplazo').submit(); });
+});
+</script>
 @endsection

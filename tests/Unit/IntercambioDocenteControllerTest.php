@@ -56,7 +56,7 @@ class IntercambioDocenteControllerTest extends TestCase
         $views = $this->createMock(Factory::class);
         $views->expects($this->atLeastOnce())->method('make')
             ->willReturnCallback(function ($name, $data) {
-                $this->assertSame('programacion.intercambio', $name);
+                $this->assertSame('programacion.intercambio-carga', $name);
                 $this->viewData = $data;
 
                 return $this->createStub(View::class);
@@ -276,7 +276,7 @@ class IntercambioDocenteControllerTest extends TestCase
     private function consult(?int $asignaturaId = null): void
     {
         $parameters = $asignaturaId ? ['asignatura_id' => $asignaturaId] : [];
-        (new IntercambioDocenteController)->index(Request::create('/programacion/intercambio', 'GET', $parameters));
+        (new IntercambioDocenteController)->carga(Request::create('/programacion/intercambio/carga', 'GET', $parameters));
     }
 
     private function period(int $id, int $year, int $semester, bool $active): void
@@ -433,6 +433,7 @@ class IntercambioDocenteControllerTest extends TestCase
             $table->unsignedBigInteger('profesor_id');
             $table->string('tipo_participacion')->default('Titular');
             $table->boolean('es_principal')->default(true);
+            $table->boolean('estado')->default(true);
         });
         Schema::create('actividades_seccion', function (Blueprint $table) {
             $table->id();
@@ -449,11 +450,13 @@ class IntercambioDocenteControllerTest extends TestCase
             $table->unsignedBigInteger('version_planificacion_id');
             $table->unsignedBigInteger('dia_id');
             $table->unsignedBigInteger('bloque_horario_id');
+            $table->boolean('estado')->default(true);
         });
         Schema::create('horarios_profesores', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('horario_id');
             $table->unsignedBigInteger('profesor_id');
+            $table->boolean('estado')->default(true);
         });
         Schema::create('dias', function (Blueprint $table) {
             $table->id();
