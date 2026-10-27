@@ -786,7 +786,7 @@
 
 
 
-                        <span>Asignación de salas</span>
+                        <span>Catálogo de salas</span>
 
                     </a>
 
@@ -1884,7 +1884,7 @@
 
                         >
 
-                            Asignación de salas
+                            Catálogo de salas
 
                         </a>
 

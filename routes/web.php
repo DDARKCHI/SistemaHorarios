@@ -12,6 +12,7 @@ use App\Http\Controllers\AsignacionProfesorController;
 use App\Http\Controllers\AsignacionHorarioController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\SalaController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -237,9 +238,7 @@ Route::middleware('auth')->group(function () {
         )
         ->name('programacion.intercambio');
 
-    Route::get('/salas', function () {
-        return view('salas.index');
-    })
+    Route::get('/salas', [SalaController::class, 'index'])
         ->middleware(
             'permission.redirect:gestionar salas y recursos'
         )
