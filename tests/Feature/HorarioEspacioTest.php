@@ -452,6 +452,20 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
         ];
     }
 
+    public function test_las_tarjetas_muestran_los_recursos_activos_del_modulo_sin_heredar_los_del_espacio(): void
+    {
+        $datos = $this->programacion();
+        $datos['otra_sala']->update(['codigo' => 'SALA-RETIRADA']);
+        $this->asignarSala($datos['directa'], $datos['otra_sala'], false);
+        $this->asignarLab($datos['directa'], $datos['otro_lab'], false);
+
+        $sesiones = $this->paraSala($datos['sala'])->assertOk()->viewData('sesiones');
+
+        $this->assertSame(['Sala' => ['A-101'], 'Lab.' => [], 'Lab. móvil' => []], $sesiones->firstWhere('id', $datos['directa']->id)['recursos']);
+        $this->assertSame(['Sala' => [], 'Lab.' => ['LAB-1'], 'Lab. móvil' => []], $sesiones->firstWhere('id', $datos['laboratorio']->id)['recursos']);
+        $this->assertSame(['Sala' => ['A-101'], 'Lab.' => ['LAB-1'], 'Lab. móvil' => []], $sesiones->firstWhere('id', $datos['doble']->id)['recursos']);
+    }
+
     private function programacion(): array
     {
         $periodo = $this->periodo();

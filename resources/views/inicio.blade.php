@@ -11,12 +11,8 @@
     <!-- Presentación -->
     <div>
         <h1 class="text-2xl font-bold text-texto">
-            Bienvenido al sistema
+            Bienvenido al sistema, {{ auth()->user()->name }}
         </h1>
-
-        <p class="mt-1 text-sm text-texto-secundario">
-            Gestión y planificación académica de horarios, salas y recursos.
-        </p>
     </div>
 
 

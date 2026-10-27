@@ -36,8 +36,8 @@
     <summary class="min-h-11 cursor-pointer px-1 py-3 text-sm font-semibold text-gray-700 marker:text-institucional">{{ $espacioSeleccionado && $periodoSeleccionado && $versionSeleccionada ? 'Cambiar espacio o programación' : 'Seleccionar espacio y programación' }}</summary>
     <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="mt-2 grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
         <div class="min-w-0 sm:col-span-2 xl:col-span-1">
-            <label for="espacio-horario" class="mb-1 block text-xs font-semibold text-gray-700">Sala o laboratorio</label>
-            <select id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
+            <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
+            <select data-select-buscable id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona un espacio</option>
                 @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios'] as $tipoEspacio => $etiquetaGrupo)
                     @if ($espacios->contains('tipo', $tipoEspacio))
@@ -51,8 +51,8 @@
             </select>
         </div>
         <div class="min-w-0">
-            <label for="periodo-horario-espacio" class="mb-1 block text-xs font-semibold text-gray-700">Período académico</label>
-            <select id="periodo-horario-espacio" name="periodo_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
+            <label for="periodo-horario-espacio" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Período académico</label>
+            <select data-select-buscable id="periodo-horario-espacio" name="periodo_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona un período</option>
                 @foreach ($periodos as $periodo)
                     <option value="{{ $periodo->id }}" data-universidad="{{ $periodo->universidad_id }}" @selected($periodoSeleccionado?->id === $periodo->id)>{{ $periodo->nombre }}{{ $periodo->estado ? ' · Activo' : '' }}</option>
@@ -60,8 +60,8 @@
             </select>
         </div>
         <div class="min-w-0">
-            <label for="version-horario-espacio" class="mb-1 block text-xs font-semibold text-gray-700">Versión de programación</label>
-            <select id="version-horario-espacio" name="version_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
+            <label for="version-horario-espacio" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Versión de programación</label>
+            <select data-select-buscable id="version-horario-espacio" name="version_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona una versión</option>
                 @foreach ($versiones as $version)
                     <option value="{{ $version->id }}" @selected($versionSeleccionada?->id === $version->id)>{{ $version->tipo === 'semestral' ? 'Semestral' : 'Importación anterior' }} · v{{ $version->version }} · {{ $version->estado }}{{ $version->es_actual ? ' · Actual' : '' }}</option>
@@ -71,34 +71,35 @@
         @if ($vista)<input type="hidden" name="vista" value="{{ $vista }}">@endif
         @if ($diaSeleccionado)<input type="hidden" name="dia_id" value="{{ $diaSeleccionado->id }}">@endif
         <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro sm:col-span-2 xl:col-span-1">Consultar</button>
-        <p class="text-xs leading-relaxed text-gray-500 sm:col-span-2 xl:col-span-4">Cada consulta corresponde a un solo período y versión. Al cambiar de período, consulta para actualizar las versiones disponibles.</p>
     </form>
     </details>
 
     @if ($espacioSeleccionado)
         <section aria-labelledby="espacio-consultado" class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div class="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto]">
                 <div class="min-w-0">
-                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">{{ $espacioSeleccionado['tipo'] === 'laboratorio' ? 'Laboratorio consultado' : 'Sala consultada' }}</p>
+                    <p class="text-sm font-semibold leading-5 text-gray-700">{{ $espacioSeleccionado['tipo'] === 'laboratorio' ? 'Laboratorio consultado' : 'Sala consultada' }}</p>
                     <h2 id="espacio-consultado" class="mt-1 break-words text-lg font-bold text-gray-900">{{ $espacioSeleccionado['codigo'] ?: 'Sin código' }}</h2>
-                    <p class="mt-0.5 break-words text-sm text-gray-700">{{ $espacioSeleccionado['nombre'] ?: 'Sin nombre registrado' }}</p>
+                    @if (filled($espacioSeleccionado['nombre']) && $espacioSeleccionado['nombre'] !== $espacioSeleccionado['codigo'])
+                        <p class="mt-0.5 break-words text-sm text-gray-700">{{ $espacioSeleccionado['nombre'] }}</p>
+                    @endif
                     <p class="mt-1 break-words text-xs text-gray-500">{{ $espacioSeleccionado['sede'] ?: 'Sin sede registrada' }}</p>
                 </div>
-                <div class="flex min-w-0 flex-wrap items-start gap-2 text-[11px]">
+                <dl class="grid min-w-0 grid-cols-2 gap-3">
+                    <div class="min-w-0">
+                        <dt class="text-sm font-semibold leading-5 text-gray-700">Capacidad registrada</dt>
+                        <dd class="mt-1 text-sm text-gray-700">{{ $espacioSeleccionado['capacidad'] > 0 ? $espacioSeleccionado['capacidad'].($espacioSeleccionado['capacidad'] == 1 ? ' persona' : ' personas') : 'Sin capacidad informada' }}</dd>
+                    </div>
+                    <div class="min-w-0">
+                        <dt class="text-sm font-semibold leading-5 text-gray-700">Ubicación</dt>
+                        <dd class="mt-1 break-words text-sm text-gray-700">{{ $espacioSeleccionado['edificio'] ?: 'Sin edificio registrado' }}{{ filled($espacioSeleccionado['piso']) ? ' · Piso '.$espacioSeleccionado['piso'] : '' }}</dd>
+                    </div>
+                </dl>
+                <div class="flex min-w-0 flex-wrap items-start gap-2 text-[11px] sm:col-span-2 xl:col-span-1 xl:max-w-56 xl:justify-end">
                     <span @class(['rounded-full px-2.5 py-1 font-semibold', 'bg-green-50 text-green-800' => $espacioSeleccionado['estado'], 'bg-gray-100 text-gray-600' => ! $espacioSeleccionado['estado']])>{{ $espacioSeleccionado['estado'] ? 'Registro activo' : 'Registro inactivo' }}</span>
                     <span class="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600">{{ $espacioSeleccionado['disponible'] ? 'Uso habilitado en catálogo' : 'Uso deshabilitado en catálogo' }}</span>
                 </div>
             </div>
-            <dl class="mt-3 grid gap-3 border-t border-gray-100 pt-3 text-xs sm:grid-cols-2">
-                <div>
-                    <dt class="font-semibold text-gray-500">Capacidad registrada</dt>
-                    <dd class="mt-1 text-gray-700">{{ $espacioSeleccionado['capacidad'] > 0 ? $espacioSeleccionado['capacidad'].($espacioSeleccionado['capacidad'] == 1 ? ' persona' : ' personas') : 'Sin capacidad informada' }}</dd>
-                </div>
-                <div>
-                    <dt class="font-semibold text-gray-500">Ubicación</dt>
-                    <dd class="mt-1 break-words text-gray-700">{{ $espacioSeleccionado['edificio'] ?: 'Sin edificio registrado' }}{{ filled($espacioSeleccionado['piso']) ? ' · Piso '.$espacioSeleccionado['piso'] : '' }}</dd>
-                </div>
-            </dl>
             @if ($espacioSeleccionado['tipo'] === 'laboratorio')
                 <div class="mt-3 flex min-w-0 flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-xs leading-relaxed text-gray-600">Se muestran las asignaciones explícitas al laboratorio. Consulta también el uso de la sala que lo contiene.</p>
@@ -135,10 +136,10 @@
                 <span class="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-700">{{ $versionSeleccionada->tipo === 'semestral' ? 'Semestral' : 'Importación anterior' }} · v{{ $versionSeleccionada->version }}</span>
                 <span class="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] text-gray-600">{{ $versionSeleccionada->estado }}</span>
             </div>
-            <dl class="grid grid-cols-3 gap-2">
-                <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm"><dt class="text-[11px] text-gray-500">Bloques con clases</dt><dd class="mt-1 text-xl font-bold text-gray-800">{{ $resumen['bloques'] }}</dd></div>
-                <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm"><dt class="text-[11px] text-gray-500">Asignaturas</dt><dd class="mt-1 text-xl font-bold text-gray-800">{{ $resumen['asignaturas'] }}</dd></div>
-                <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm"><dt class="text-[11px] text-gray-500">Bloques con varias clases</dt><dd class="mt-1 text-xl font-bold {{ $resumen['coincidencias'] ? 'text-amber-700' : 'text-gray-800' }}">{{ $resumen['coincidencias'] }}</dd></div>
+            <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block"><dt class="text-sm font-semibold leading-5 text-gray-700">Bloques con clases</dt><dd class="text-xl font-bold sm:mt-1 text-gray-800">{{ $resumen['bloques'] }}</dd></div>
+                <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block"><dt class="text-sm font-semibold leading-5 text-gray-700">Asignaturas</dt><dd class="text-xl font-bold sm:mt-1 text-gray-800">{{ $resumen['asignaturas'] }}</dd></div>
+                <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block"><dt class="text-sm font-semibold leading-5 text-gray-700">Bloques con varias clases</dt><dd class="text-xl font-bold sm:mt-1 {{ $resumen['coincidencias'] ? 'text-amber-700' : 'text-gray-800' }}">{{ $resumen['coincidencias'] }}</dd></div>
             </dl>
         </section>
 
@@ -195,7 +196,7 @@
                                                     @forelse ($clases as $sesion)
                                                         <x-clase-espacio :sesion="$sesion" :compacta="true" />
                                                     @empty
-                                                        <p class="py-2 text-center text-[11px] text-gray-400"><span aria-hidden="true">—</span><span class="sr-only">Sin asignación registrada</span></p>
+                                                        <p class="py-2 text-center text-[11px] text-gray-400"><span class="sr-only">Sin asignación registrada</span></p>
                                                     @endforelse
                                                 </div>
                                             </td>
@@ -213,7 +214,7 @@
                     @foreach ($parametros as $nombreParametro => $valorParametro)
                         @if ($nombreParametro !== 'dia_id' && $valorParametro !== null && $valorParametro !== '')<input type="hidden" name="{{ $nombreParametro }}" value="{{ $valorParametro }}">@endif
                     @endforeach
-                    <label for="dia-horario-espacio" class="mb-1 block text-xs font-semibold text-gray-700">Día a consultar</label>
+                    <label for="dia-horario-espacio" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Día a consultar</label>
                     <div class="flex min-w-0 flex-wrap items-center gap-2">
                         @if ($diaAnterior)
                             <a href="{{ $urlHorario(['dia_id' => $diaAnterior->id]) }}" aria-label="Día anterior" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"><span aria-hidden="true">←</span></a>
@@ -275,13 +276,14 @@
 
         periodo.addEventListener('change', function () {
             version.value = '';
+            version.dispatchEvent(new Event('change', { bubbles: true }));
         });
         espacio.addEventListener('change', function () {
             const institucionEspacio = espacio.selectedOptions[0]?.dataset.universidad;
             const institucionPeriodo = periodo.selectedOptions[0]?.dataset.universidad;
             if (institucionEspacio && institucionPeriodo && institucionEspacio !== institucionPeriodo) {
                 periodo.value = '';
-                version.value = '';
+                periodo.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
     });

@@ -27,8 +27,8 @@
     @endif
 
     @can('generar programacion semestral')
-        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+            <div class="grid min-w-0 items-center gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
 
                 <div class="min-w-0">
                     <div class="text-sm font-semibold text-gray-800">
@@ -44,24 +44,24 @@
                     <form
                         method="POST"
                         action="{{ route('programacion.semestral.generar') }}"
-                        class="flex min-w-0 w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-end"
+                        class="grid min-w-0 w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
                         onsubmit="return confirmarGeneracion()"
                     >
                         @csrf
 
-                        <div class="min-w-0 flex-1 sm:min-w-[190px]">
+                        <div class="min-w-0">
                             <label
                                 for="version_anterior_id"
-                                class="mb-1 block text-[11px] font-semibold text-gray-600"
+                                class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
                             >
                                 Programación anterior
                             </label>
 
-                            <select
+                            <select data-select-buscable
                                 id="version_anterior_id"
                                 name="version_anterior_id"
                                 required
-                                class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                class="h-11 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-red-600 focus:ring-red-600"
                             >
                                 @foreach ($versionesAnteriores as $versionAnterior)
                                     <option value="{{ $versionAnterior->id }}">
@@ -77,7 +77,7 @@
 
                         <button
                             type="submit"
-                            class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                            class="min-h-11 whitespace-nowrap rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800"
                         >
                             Generar programación
                         </button>
@@ -109,7 +109,7 @@
                     Período
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="periodo_id"
                     name="periodo_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -133,7 +133,7 @@
                     Versión
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="version_id"
                     name="version_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -168,7 +168,7 @@
                     Sede
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="sede_id"
                     name="sede_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -196,7 +196,7 @@
                     Carrera
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="carrera_id"
                     name="carrera_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -224,7 +224,7 @@
                     Semestre
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="semestre"
                     name="semestre"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -252,7 +252,7 @@
                     Sección
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="seccion_numero"
                     name="seccion_numero"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -280,7 +280,7 @@
                     Ramo
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="asignatura_id"
                     name="asignatura_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -308,7 +308,7 @@
                     Profesor
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="profesor_id"
                     name="profesor_id"
                     class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -825,7 +825,10 @@
         });
     }
 
+    let ultimaConsultaFiltros = 0;
+
     async function actualizarFiltros(opciones = {}) {
+        const consultaActual = ++ultimaConsultaFiltros;
         const parametros = new URLSearchParams();
 
         if (periodoSelect.value) {
@@ -913,6 +916,7 @@
             }
 
             const datos = await respuesta.json();
+            if (consultaActual !== ultimaConsultaFiltros) return;
 
             if (opciones.actualizarCarreras) {
                 cargarCarreras(

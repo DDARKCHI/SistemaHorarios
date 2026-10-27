@@ -455,7 +455,7 @@
 
 
 
-                    @can('enviar propuesta horario')
+                    @if (auth()->user()->can('enviar propuesta horario') && ! auth()->user()->hasRole('Administrador'))
 
                     <a
                         href="{{ route('programacion.propuesta') }}"
@@ -474,7 +474,7 @@
                         <span>Propuesta de horario</span>
                     </a>
 
-                    @endcan
+                    @endif
 
                 </div>
 
@@ -1657,7 +1657,7 @@
 
 
 
-                        @can('enviar propuesta horario')
+                        @if (auth()->user()->can('enviar propuesta horario') && ! auth()->user()->hasRole('Administrador'))
 
                         <a
                             href="{{ route('programacion.propuesta') }}"
@@ -1669,7 +1669,7 @@
                             Propuesta de horario
                         </a>
 
-                        @endcan
+                        @endif
 
                     </div>
 

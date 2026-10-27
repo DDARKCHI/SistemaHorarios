@@ -3,11 +3,12 @@
 @section('content')
 
 <div class="min-w-0 w-full space-y-3 px-2 py-2">
-    <header class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-        <h1 class="text-base font-bold text-gray-800">Salas y recursos</h1>
-        <p class="mt-1 text-sm text-gray-600">Consulta el catálogo de salas registradas y encuentra espacios por sede, tipo o capacidad.</p>
-        <p class="mt-2 text-xs leading-relaxed text-gray-500">La capacidad registrada y la habilitación de uso son datos del catálogo; no indican si una sala está libre en un horario.</p>
-        <a href="{{ route('salas.horario') }}" class="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar horarios</a>
+    <header class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+        <div class="min-w-0 flex-1">
+            <h1 class="text-base font-bold text-gray-800">Salas y recursos</h1>
+            <p class="mt-1 text-sm text-gray-600">Consulta el catálogo de salas registradas y encuentra espacios por sede, tipo o capacidad.</p>
+        </div>
+        <a href="{{ route('salas.horario') }}" class="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto">Consultar horarios</a>
     </header>
 
     @if ($errors->any())
@@ -23,21 +24,21 @@
 
     <section aria-labelledby="resumen-salas">
         <div class="mb-2 flex flex-wrap items-baseline justify-between gap-1 px-1">
-            <h2 id="resumen-salas" class="text-xs font-semibold text-gray-600">Resumen del catálogo</h2>
+            <h2 id="resumen-salas" class="text-sm font-semibold leading-5 text-gray-700">Resumen del catálogo</h2>
             <p class="text-[11px] text-gray-500">Los filtros se aplican al listado.</p>
         </div>
-        <dl class="grid grid-cols-3 gap-2">
-            <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm">
-                <dt class="text-[11px] font-medium text-gray-500">Salas registradas</dt>
-                <dd class="mt-1 text-xl font-bold text-gray-800">{{ $resumen['total'] }}</dd>
+        <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">
+                <dt class="text-sm font-semibold leading-5 text-gray-700">Salas registradas</dt>
+                <dd class="text-xl font-bold text-gray-800 sm:mt-1">{{ $resumen['total'] }}</dd>
             </div>
-            <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm">
-                <dt class="text-[11px] font-medium text-gray-500">Registros activos</dt>
-                <dd class="mt-1 text-xl font-bold text-gray-800">{{ $resumen['activas'] }}</dd>
+            <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">
+                <dt class="text-sm font-semibold leading-5 text-gray-700">Registros activos</dt>
+                <dd class="text-xl font-bold text-gray-800 sm:mt-1">{{ $resumen['activas'] }}</dd>
             </div>
-            <div class="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm">
-                <dt class="text-[11px] font-medium text-gray-500">Sedes con salas</dt>
-                <dd class="mt-1 text-xl font-bold text-gray-800">{{ $resumen['sedes'] }}</dd>
+            <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">
+                <dt class="text-sm font-semibold leading-5 text-gray-700">Sedes con salas</dt>
+                <dd class="text-xl font-bold text-gray-800 sm:mt-1">{{ $resumen['sedes'] }}</dd>
             </div>
         </dl>
     </section>
@@ -49,7 +50,7 @@
     @endphp
     <form method="GET" action="{{ route('salas.index') }}" aria-label="Buscar y filtrar salas" class="grid min-w-0 grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <div class="min-w-0">
-            <label for="busqueda-salas" class="mb-1 block text-xs font-semibold text-gray-700">Buscar sala</label>
+            <label for="busqueda-salas" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Buscar sala</label>
             <input id="busqueda-salas" type="search" name="q" maxlength="100" value="{{ $filtros['q'] ?? '' }}" placeholder="Código, nombre o edificio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
         </div>
         <details class="min-w-0 sm:col-span-2" @if ($hayFiltrosAvanzados || $errors->hasAny(['sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'])) open @endif>
@@ -160,12 +161,6 @@
                                 <dd class="mt-0.5 break-words text-gray-800">{{ $sala->edificio ?: 'Sin edificio registrado' }}{{ filled($sala->piso) ? ' · Piso '.$sala->piso : '' }}</dd>
                             </div>
                         </dl>
-                        @if ($sala->descripcion)
-                            <details class="mt-3 border-t border-gray-100 pt-1">
-                                <summary class="min-h-11 cursor-pointer py-3 text-xs font-semibold text-institucional">Ver descripción</summary>
-                                <p class="break-words pb-2 text-sm leading-relaxed whitespace-pre-line text-gray-600">{{ $sala->descripcion }}</p>
-                            </details>
-                        @endif
                         <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Ver horario</a>
                     </article>
                 @endforeach
@@ -173,42 +168,42 @@
 
             <div class="hidden min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm xl:block">
                 <div class="max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Listado de salas" tabindex="0">
-                    <table class="w-full min-w-[900px] border-collapse text-left text-sm">
+                    <table class="w-full min-w-[900px] table-fixed border-collapse text-left text-sm">
+                        <colgroup><col class="w-[14%]"><col class="w-[18%]"><col class="w-[15%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[17%]"></colgroup>
                         <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                             <tr>
                                 <th scope="col" class="px-4 py-3">Sala</th>
                                 <th scope="col" class="px-4 py-3">Sede y tipo</th>
-                                <th scope="col" class="min-w-28 px-4 py-3">Capacidad registrada</th>
+                                <th scope="col" class="px-4 py-3">Capacidad registrada</th>
                                 <th scope="col" class="px-4 py-3">Ubicación</th>
-                                <th scope="col" class="min-w-40 px-4 py-3">Estado y uso</th>
+                                <th scope="col" class="px-4 py-3">Estado y uso</th>
+                                <th scope="col" class="px-4 py-3 text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($salas as $sala)
                                 <tr class="align-top hover:bg-gray-50">
-                                    <th scope="row" class="min-w-40 max-w-56 px-4 py-4 font-normal">
+                                    <th scope="row" class="px-4 py-4 font-normal">
                                         <div class="break-words font-bold text-gray-900">{{ $sala->codigo }}</div>
                                         <p class="mt-1 break-words text-xs text-gray-600">{{ $sala->nombre ?: 'Sin nombre registrado' }}</p>
-                                        @if ($sala->descripcion)
-                                            <details class="mt-2">
-                                                <summary class="min-h-11 cursor-pointer py-3 text-xs font-semibold text-institucional">Ver descripción</summary>
-                                                <p class="break-words pb-1 text-xs leading-relaxed whitespace-pre-line text-gray-600">{{ $sala->descripcion }}</p>
-                                            </details>
-                                        @endif
                                     </th>
-                                    <td class="min-w-48 max-w-64 px-4 py-4">
+                                    <td class="px-4 py-4">
                                         <p class="break-words text-xs font-medium text-gray-800">{{ $sala->sede?->nombre ?? 'Sin sede registrada' }} @if ($sala->sede && ! $sala->sede->estado)<span class="font-normal text-gray-500">(inactiva)</span>@endif</p>
                                         <p class="mt-2 break-words text-xs text-gray-500">{{ $sala->tipoSala?->nombre ?? 'Sin tipo registrado' }} @if ($sala->tipoSala && ! $sala->tipoSala->estado)<span>(inactivo)</span>@endif</p>
                                     </td>
                                     <td class="px-4 py-4 text-xs font-semibold text-gray-800">{{ $sala->capacidad > 0 ? $sala->capacidad.($sala->capacidad == 1 ? ' persona' : ' personas') : 'Sin capacidad informada' }}</td>
-                                    <td class="min-w-36 max-w-48 px-4 py-4 text-xs text-gray-600">
+                                    <td class="px-4 py-4 text-xs text-gray-600">
                                         <p class="break-words">{{ $sala->edificio ?: 'Sin edificio registrado' }}</p>
                                         @if (filled($sala->piso))<p class="mt-1 break-words text-gray-500">Piso {{ $sala->piso }}</p>@endif
                                     </td>
                                     <td class="px-4 py-4">
                                         <span @class(['inline-block rounded-full px-2 py-1 text-[10px] font-semibold', 'bg-green-50 text-green-800' => $sala->estado, 'bg-gray-100 text-gray-600' => ! $sala->estado])>{{ $sala->estado ? 'Registro activo' : 'Registro inactivo' }}</span>
                                         <p class="mt-2 text-xs text-gray-600">{{ $sala->disponible ? 'Uso habilitado' : 'Uso deshabilitado' }}</p>
-                                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-institucional hover:bg-red-100">Ver horario</a>
+                                    </td>
+                                    <td class="px-4 py-4">
+                                        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-institucional hover:bg-red-100">Ver horario</a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

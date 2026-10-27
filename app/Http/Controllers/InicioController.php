@@ -66,7 +66,8 @@ class InicioController extends Controller
             ['ver programacion anterior', 'Consultar programación anterior', 'programacion.index', $filtroPeriodo],
             ['administrar usuarios', 'Administrar usuarios', 'administracion.index', []],
         ])
-            ->filter(fn (array $acceso) => $request->user()->can($acceso[0]))
+            ->filter(fn (array $acceso) => $request->user()->can($acceso[0])
+                && ($acceso[2] !== 'programacion.propuesta' || ! $request->user()->hasRole('Administrador')))
             ->map(fn (array $acceso) => ['titulo' => $acceso[1], 'url' => route($acceso[2], $acceso[3])])
             ->values()
             ->all();

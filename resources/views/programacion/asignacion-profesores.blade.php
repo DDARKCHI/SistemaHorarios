@@ -39,7 +39,7 @@
                     Período
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="periodo_id"
                     name="periodo_id"
                     class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -60,7 +60,7 @@
                     Carrera
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="carrera_id"
                     name="carrera_id"
                     class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -83,7 +83,7 @@
                     Semestre
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="semestre"
                     name="semestre"
                     class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -106,7 +106,7 @@
                     Sección
                 </label>
 
-                <select
+                <select data-select-buscable
                     id="seccion_id"
                     name="seccion_id"
                     class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
@@ -549,7 +549,10 @@
         });
     }
 
+    let ultimaConsultaFiltros = 0;
+
     async function consultarFiltros(parametros) {
+        const consultaActual = ++ultimaConsultaFiltros;
         try {
             const respuesta = await fetch(
                 filtrosUrl + '?' + parametros.toString(),
@@ -564,7 +567,8 @@
                 throw new Error('No fue posible actualizar los filtros.');
             }
 
-            return await respuesta.json();
+            const datos = await respuesta.json();
+            return consultaActual === ultimaConsultaFiltros ? datos : null;
 
         } catch (error) {
             console.error(error);

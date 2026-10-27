@@ -221,6 +221,29 @@ class InicioTest extends IsolatedDatabaseTestCase
         $this->get(route('inicio'))->assertRedirect(route('programacion.semestral'));
     }
 
+    #[\PHPUnit\Framework\Attributes\DataProvider('rolesDisponibilidad')]
+    public function test_la_disponibilidad_personal_no_aparece_en_el_panel_ni_en_los_menus_del_administrador(array $roles, bool $visible): void
+    {
+        $this->darPermisos('enviar propuesta horario', 'ver programacion semestral');
+        foreach ($roles as $rol) {
+            $this->usuario->assignRole(\Spatie\Permission\Models\Role::findOrCreate($rol, 'web'));
+        }
+        $this->actingAs($this->usuario->fresh());
+
+        $response = $this->get(route('inicio'))->assertOk();
+        $this->assertSame($visible, collect($response->viewData('accesos'))->contains('titulo', 'Mi disponibilidad'));
+        $this->assertSame($visible, str_contains($response->getContent(), 'href="'.e(route('programacion.propuesta')).'"'));
+    }
+
+    public static function rolesDisponibilidad(): array
+    {
+        return [
+            'administrador' => [['Administrador'], false],
+            'profesor' => [['Profesor'], true],
+            'administrador con segundo rol docente' => [['Administrador', 'Profesor'], false],
+        ];
+    }
+
     private function darPermisos(string ...$permisos): void
     {
         foreach ($permisos as $permiso) {

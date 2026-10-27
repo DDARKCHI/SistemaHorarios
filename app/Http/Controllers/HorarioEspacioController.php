@@ -103,6 +103,12 @@ class HorarioEspacioController extends Controller
                     'dia', 'bloqueHorario', 'actividadSeccion.seccion.asignatura', 'grupoSeccion',
                     'profesores' => fn ($query) => $query->where('estado', true)->orderBy('id'),
                     'profesores.profesor:id,nombre,apellido',
+                    'asignacionesSalas' => fn ($query) => $query->where('estado', true)->orderBy('id'),
+                    'asignacionesSalas.sala:id,codigo,nombre',
+                    'asignacionesLaboratorios' => fn ($query) => $query->where('estado', true)->orderBy('id'),
+                    'asignacionesLaboratorios.laboratorio:id,codigo,nombre',
+                    'asignacionesLaboratoriosMoviles' => fn ($query) => $query->where('estado', true)->orderBy('id'),
+                    'asignacionesLaboratoriosMoviles.laboratorioMovil:id,codigo,nombre',
                 ])
                 ->orderBy('id')->get();
         }
@@ -185,6 +191,17 @@ class HorarioEspacioController extends Controller
                 return $nombre !== '' ? $nombre : trim(($participacion->profesor?->nombre ?? '').' '.($participacion->profesor?->apellido ?? ''));
             })->filter()->values()->all();
 
+            $recursos = [];
+            foreach ([
+                ['Sala', 'asignacionesSalas', 'sala'],
+                ['Lab.', 'asignacionesLaboratorios', 'laboratorio'],
+                ['Lab. móvil', 'asignacionesLaboratoriosMoviles', 'laboratorioMovil'],
+            ] as [$etiqueta, $relacion, $recurso]) {
+                $recursos[$etiqueta] = $horario->{$relacion}->map(fn ($asignacion) =>
+                    trim((string) ($asignacion->{$recurso}?->codigo ?: $asignacion->{$recurso}?->nombre))
+                )->filter()->unique()->values()->all();
+            }
+
             return [
                 'id' => $horario->id, 'dia_id' => $horario->dia_id, 'bloque_id' => $horario->bloque_horario_id,
                 'asignatura_id' => $asignatura?->id,
@@ -192,8 +209,8 @@ class HorarioEspacioController extends Controller
                 'nombre_asignatura' => $asignatura?->nombre ?? 'Asignatura no registrada',
                 'actividad' => $horario->actividadSeccion?->tipo ?? 'Actividad sin definir',
                 'seccion' => $seccion?->codigo ?: ($seccion?->nombre ?: 'Sin sección'),
-                'grupo' => $horario->grupoSeccion?->codigo ?: ($horario->grupoSeccion?->nombre ?: 'Sin grupo'),
-                'profesores' => $profesores, 'observaciones' => $horario->observaciones,
+                'grupo' => $horario->grupoSeccion?->codigo ?: $horario->grupoSeccion?->nombre,
+                'profesores' => $profesores, 'recursos' => $recursos, 'observaciones' => $horario->observaciones,
             ];
         })->values();
     }
