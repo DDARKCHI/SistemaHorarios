@@ -9,12 +9,13 @@ use App\Models\Profesor;
 use App\Models\Sala;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
+use App\Services\IndicadoresProgramacion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
 class InicioController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, IndicadoresProgramacion $indicadoresProgramacion): View
     {
         $periodoActivo = PeriodoAcademico::where('estado', true)
             ->orderByDesc('anio')
@@ -54,6 +55,8 @@ class InicioController extends Controller
             ];
         }
 
+        $indicadores = $indicadoresProgramacion->calcular($periodoActivo, $versionSemestral);
+
         $filtroPeriodo = $periodoActivo ? ['periodo_id' => $periodoActivo->id] : [];
         $filtrosProgramacion = $filtroPeriodo + ($versionSemestral ? ['version_id' => $versionSemestral->id] : []);
         $urlProgramacion = route('programacion.semestral', $filtrosProgramacion);
@@ -73,7 +76,7 @@ class InicioController extends Controller
             ->all();
 
         return view('inicio', compact(
-            'periodoActivo', 'versionSemestral', 'totales', 'resumen', 'accesos', 'urlProgramacion'
+            'periodoActivo', 'versionSemestral', 'totales', 'resumen', 'accesos', 'urlProgramacion', 'indicadores'
         ));
     }
 }

@@ -46,6 +46,33 @@
     </div>
 
 
+    <section aria-labelledby="titulo-indicadores" class="min-w-0 space-y-3">
+        <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 id="titulo-indicadores" class="text-base font-bold text-texto">Avance de la programación</h2>
+            <p class="text-sm text-texto-secundario">{{ $periodoActivo?->nombre ?? 'Sin período activo' }} @if ($versionSemestral)· Semestral v{{ $versionSemestral->version }}@endif</p>
+        </div>
+        @if ($versionSemestral)
+            <p class="text-sm leading-relaxed text-texto-secundario">La carga, los docentes y los espacios muestran la cobertura de las clases. Los recursos muestran cuántos tienen asignaciones en esta versión.</p>
+        @endif
+        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            @foreach ($indicadores['graficos'] as $indicador)
+                <x-indicador-circular :indicador="$indicador" />
+            @endforeach
+        </div>
+        @php($pendientesIndicadores = array_filter($indicadores['pendientes']))
+        @if ($pendientesIndicadores)
+            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                <p class="font-semibold">Datos de carga por revisar</p>
+                <ul class="mt-1 flex flex-wrap gap-x-5 gap-y-1">
+                    @foreach (['actividades_sin_grupos' => 'actividades sin grupos activos', 'grupos_sin_carga' => 'grupos sin carga definida', 'modulos_sin_grupo' => 'módulos sin grupo', 'excedentes' => 'módulos sobre la carga requerida'] as $clave => $etiqueta)
+                        @if ($indicadores['pendientes'][$clave])<li>{{ number_format($indicadores['pendientes'][$clave], 0, ',', '.') }} {{ $etiqueta }}</li>@endif
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+    </section>
+
+
     <!-- Tarjetas resumen  -->
     <div class="grid min-w-0 grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
 
