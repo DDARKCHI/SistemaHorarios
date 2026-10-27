@@ -7,6 +7,7 @@
         <h1 class="text-base font-bold text-gray-800">Salas y recursos</h1>
         <p class="mt-1 text-sm text-gray-600">Consulta el catálogo de salas registradas y encuentra espacios por sede, tipo o capacidad.</p>
         <p class="mt-2 text-xs leading-relaxed text-gray-500">La capacidad registrada y la habilitación de uso son datos del catálogo; no indican si una sala está libre en un horario.</p>
+        <a href="{{ route('salas.horario') }}" class="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar horarios</a>
     </header>
 
     @if ($errors->any())
@@ -165,6 +166,7 @@
                                 <p class="break-words pb-2 text-sm leading-relaxed whitespace-pre-line text-gray-600">{{ $sala->descripcion }}</p>
                             </details>
                         @endif
+                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Ver horario</a>
                     </article>
                 @endforeach
             </div>
@@ -206,6 +208,7 @@
                                     <td class="px-4 py-4">
                                         <span @class(['inline-block rounded-full px-2 py-1 text-[10px] font-semibold', 'bg-green-50 text-green-800' => $sala->estado, 'bg-gray-100 text-gray-600' => ! $sala->estado])>{{ $sala->estado ? 'Registro activo' : 'Registro inactivo' }}</span>
                                         <p class="mt-2 text-xs text-gray-600">{{ $sala->disponible ? 'Uso habilitado' : 'Uso deshabilitado' }}</p>
+                                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-2 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-institucional hover:bg-red-100">Ver horario</a>
                                     </td>
                                 </tr>
                             @endforeach

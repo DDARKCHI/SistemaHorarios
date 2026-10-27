@@ -13,6 +13,7 @@ use App\Http\Controllers\AsignacionHorarioController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SalaController;
+use App\Http\Controllers\HorarioEspacioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -243,6 +244,10 @@ Route::middleware('auth')->group(function () {
             'permission.redirect:gestionar salas y recursos'
         )
         ->name('salas.index');
+
+    Route::get('/salas/horario', [HorarioEspacioController::class, 'index'])
+        ->middleware('permission.redirect:gestionar salas y recursos')
+        ->name('salas.horario');
 
     Route::get(
         '/administracion',

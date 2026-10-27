@@ -792,15 +792,10 @@
 
 
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Laboratorios</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                    <a href="{{ route('salas.horario') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('salas.horario') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('salas.horario') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
+                        <span>Horario de espacios</span>
+                    </a>
 
 
 
@@ -1890,11 +1885,7 @@
 
 
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Laboratorios
-
-                        </div>
+                        <a href="{{ route('salas.horario') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('salas.horario') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Horario de espacios</a>
 
 
 

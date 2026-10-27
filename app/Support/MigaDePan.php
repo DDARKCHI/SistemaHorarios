@@ -15,6 +15,7 @@ class MigaDePan
         'programacion.propuesta' => ['Propuesta de horario', 'programacion.semestral'],
         'programacion.intercambio' => ['Intercambio docente'],
         'salas.index' => ['Salas y recursos'],
+        'salas.horario' => ['Horario de espacios', 'salas.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],
         'programacion.importar.analizar' => ['Cargar programación anterior', 'programacion.index'],
@@ -29,6 +30,7 @@ class MigaDePan
         'programacion.semestral' => 'ver programacion semestral',
         'programacion.index' => 'ver programacion anterior',
         'administracion.index' => 'administrar usuarios',
+        'salas.index' => 'gestionar salas y recursos',
     ];
 
     /** @return array<int, array{label: string, url: ?string, current: bool}> */
