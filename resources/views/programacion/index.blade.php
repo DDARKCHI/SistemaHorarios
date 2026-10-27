@@ -14,7 +14,7 @@
         <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end">
 
             <div class="min-w-0">
-                <label for="periodo_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="periodo_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Período
                 </label>
 
@@ -35,7 +35,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="version_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="version_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Versión
                 </label>
 
@@ -59,7 +59,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="sede_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="sede_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Sede
                 </label>
 
@@ -84,7 +84,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="carrera_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="carrera_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Carrera
                 </label>
 
@@ -109,7 +109,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="semestre" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="semestre" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Semestre
                 </label>
 
@@ -134,7 +134,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="seccion_numero" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="seccion_numero" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Sección
                 </label>
 
@@ -159,7 +159,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="asignatura_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="asignatura_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Ramo
                 </label>
 
@@ -184,7 +184,7 @@
             </div>
 
             <div class="min-w-0">
-                <label for="profesor_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
+                <label for="profesor_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Profesor
                 </label>
 
