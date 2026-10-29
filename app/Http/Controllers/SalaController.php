@@ -5,14 +5,122 @@ namespace App\Http\Controllers;
 use App\Models\Sala;
 use App\Models\Sede;
 use App\Models\TipoSala;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class SalaController extends Controller
 {
     private const FILTROS = ['q', 'sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'];
+
+    public function create()
+    {
+        return $this->formulario(new Sala(['capacidad' => 0, 'estado' => true, 'disponible' => true]));
+    }
+
+    public function edit(Sala $sala)
+    {
+        return $this->formulario($sala);
+    }
+
+    public function store(Request $request)
+    {
+        return $this->guardar($request, new Sala);
+    }
+
+    public function update(Request $request, Sala $sala)
+    {
+        return $this->guardar($request, $sala);
+    }
+
+    private function formulario(Sala $sala)
+    {
+        $sedes = Sede::query()->where('estado', true)
+            ->when($sala->exists, fn ($query) => $query->orWhere('id', $sala->sede_id))
+            ->orderBy('nombre')->orderBy('id')->get();
+        $tiposSala = TipoSala::query()->where('estado', true)
+            ->when($sala->exists, fn ($query) => $query->orWhere('id', $sala->tipo_sala_id))
+            ->orderBy('nombre')->orderBy('id')->get();
+
+        return view('salas.formulario', compact('sala', 'sedes', 'tiposSala'));
+    }
+
+    private function guardar(Request $request, Sala $sala)
+    {
+        $esNueva = ! $sala->exists;
+
+        try {
+            $sala = DB::transaction(function () use ($request, $sala, $esNueva) {
+                $sala = $esNueva ? $sala : Sala::query()->lockForUpdate()->findOrFail($sala->id);
+                $datos = $request->validate([
+                    'sede_id' => ['bail', 'required', 'integer', Rule::exists('sedes', 'id')->where(fn ($query) => $query
+                        ->where('estado', true)->when($sala->exists, fn ($q) => $q->orWhere('id', $sala->sede_id)))],
+                    'tipo_sala_id' => ['bail', 'required', 'integer', Rule::exists('tipos_sala', 'id')->where(fn ($query) => $query
+                        ->where('estado', true)->when($sala->exists, fn ($q) => $q->orWhere('id', $sala->tipo_sala_id)))],
+                    'codigo' => ['bail', 'required', 'string', 'max:30', Rule::unique('salas', 'codigo')
+                        ->where('sede_id', $request->integer('sede_id'))->ignore($sala->id)],
+                    'nombre' => ['nullable', 'string', 'max:100'],
+                    'capacidad' => ['required', 'integer', 'min:0', 'max:65535'],
+                    'edificio' => ['nullable', 'string', 'max:100'],
+                    'piso' => ['nullable', 'string', 'max:30'],
+                    'descripcion' => ['nullable', 'string', 'max:5000'],
+                    'estado' => ['required', 'boolean'],
+                    'disponible' => ['required', 'boolean'],
+                ], [
+                    'sede_id.*' => 'Selecciona una sede activa. Si editas una sala, también puedes conservar su sede actual.',
+                    'tipo_sala_id.*' => 'Selecciona un tipo de sala activo. Si editas una sala, también puedes conservar su tipo actual.',
+                    'codigo.required' => 'El código de la sala es obligatorio.',
+                    'codigo.string' => 'El código de la sala debe ser un texto.',
+                    'codigo.max' => 'El código no puede superar los 30 caracteres.',
+                    'codigo.unique' => 'Ya existe una sala con este código en la sede seleccionada.',
+                    'nombre.*' => 'El nombre debe ser un texto de hasta 100 caracteres.',
+                    'capacidad.*' => 'La capacidad debe ser un número entero entre 0 y 65.535.',
+                    'edificio.*' => 'El edificio debe ser un texto de hasta 100 caracteres.',
+                    'piso.*' => 'El piso debe ser un texto de hasta 30 caracteres.',
+                    'descripcion.*' => 'La descripción debe ser un texto de hasta 5.000 caracteres.',
+                    'estado.*' => 'Selecciona un estado de registro válido.',
+                    'disponible.*' => 'Selecciona una habilitación de uso válida.',
+                ]);
+
+                if ($sala->exists && (int) $datos['sede_id'] !== (int) $sala->sede_id
+                    && (DB::table('asignaciones_salas')->where('sala_id', $sala->id)->exists() || $sala->laboratorios()->exists())) {
+                    throw ValidationException::withMessages([
+                        'sede_id' => 'La sala tiene horarios o laboratorios vinculados. Conserva su sede y registra otra sala si corresponde.',
+                    ]);
+                }
+
+                $sede = Sede::query()->lockForUpdate()->findOrFail($datos['sede_id']);
+                $antes = $esNueva ? null : $sala->only($sala->getFillable());
+                // La institución se obtiene de la sede; no se acepta desde el formulario.
+                $sala->fill($datos + ['universidad_id' => $sede->universidad_id]);
+
+                if (! $esNueva && ! $sala->isDirty()) {
+                    return $sala;
+                }
+
+                $sala->save();
+                DB::table('historial_acciones')->insert([
+                    'usuario_id' => $request->user()->id,
+                    'accion' => $esNueva ? 'Crear sala' : 'Actualizar sala',
+                    'modulo' => 'Salas y recursos', 'tabla_afectada' => 'salas', 'registro_id' => $sala->id,
+                    'descripcion' => $esNueva ? 'Registro de una sala en el catálogo.' : 'Actualización de los datos de una sala.',
+                    'datos' => json_encode(['antes' => $antes, 'despues' => $sala->only($sala->getFillable())], JSON_THROW_ON_ERROR),
+                    'direccion_ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now(),
+                ]);
+
+                return $sala;
+            });
+        } catch (UniqueConstraintViolationException $error) {
+            throw ValidationException::withMessages(['codigo' => 'Ya existe una sala con este código en la sede seleccionada.']);
+        }
+
+        return redirect()->route('salas.index', ['q' => $sala->codigo, 'sede_id' => $sala->sede_id, 'estado' => 'todas'])
+            ->with('success', $esNueva ? 'Sala creada correctamente.' : 'Sala actualizada correctamente.');
+    }
 
     public function index(Request $request)
     {

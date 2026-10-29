@@ -255,6 +255,15 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission.redirect:gestionar salas y recursos')
         ->name('salas.horario');
 
+    Route::get('/salas/crear', [SalaController::class, 'create'])
+        ->middleware('permission.redirect:gestionar salas y recursos')->name('salas.create');
+    Route::post('/salas', [SalaController::class, 'store'])
+        ->middleware('permission.redirect:gestionar salas y recursos')->name('salas.store');
+    Route::get('/salas/{sala}/editar', [SalaController::class, 'edit'])
+        ->whereNumber('sala')->middleware('permission.redirect:gestionar salas y recursos')->name('salas.edit');
+    Route::put('/salas/{sala}', [SalaController::class, 'update'])
+        ->whereNumber('sala')->middleware('permission.redirect:gestionar salas y recursos')->name('salas.update');
+
     Route::get(
         '/administracion',
         [UsuarioController::class, 'index']

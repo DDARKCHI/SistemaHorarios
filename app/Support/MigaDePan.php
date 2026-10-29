@@ -16,6 +16,8 @@ class MigaDePan
         'programacion.intercambio' => ['Intercambio docente'],
         'programacion.intercambio.carga' => ['Carga docente por ramo', 'programacion.intercambio'],
         'salas.index' => ['Salas y recursos'],
+        'salas.create' => ['Crear sala', 'salas.index'],
+        'salas.edit' => ['Editar sala', 'salas.index'],
         'salas.horario' => ['Horario de espacios', 'salas.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],

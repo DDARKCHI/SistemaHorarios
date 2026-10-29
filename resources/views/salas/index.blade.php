@@ -6,10 +6,17 @@
     <header class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <div class="min-w-0 flex-1">
             <h1 class="text-base font-bold text-gray-800">Salas y recursos</h1>
-            <p class="mt-1 text-sm text-gray-600">Consulta el catálogo de salas registradas y encuentra espacios por sede, tipo o capacidad.</p>
+            <p class="mt-1 text-sm text-gray-600">Administra el catálogo de salas y encuentra espacios por sede, tipo o capacidad.</p>
         </div>
-        <a href="{{ route('salas.horario') }}" class="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:w-auto">Consultar horarios</a>
+        <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+            <a href="{{ route('salas.horario') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar horarios</a>
+            <a href="{{ route('salas.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear sala</a>
+        </div>
     </header>
+
+    @if (session('success'))
+        <div role="status" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>
+    @endif
 
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -161,6 +168,7 @@
                             </div>
                         </dl>
                         <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Ver horario</a>
+                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Editar</a>
                     </article>
                 @endforeach
             </div>
@@ -202,6 +210,7 @@
                                     <td class="px-4 py-4">
                                         <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
                                         <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-institucional hover:bg-red-100">Ver horario</a>
+                                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Editar</a>
                                         </div>
                                     </td>
                                 </tr>

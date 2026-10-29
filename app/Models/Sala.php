@@ -24,6 +24,8 @@ class Sala extends Model
 
     protected $casts = [
         'disponible' => 'boolean',
+        'estado' => 'boolean',
+        'capacidad' => 'integer',
     ];
 
     public function universidad()
