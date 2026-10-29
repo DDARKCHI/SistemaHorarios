@@ -25,6 +25,31 @@ use Tests\IsolatedDatabaseTestCase;
 
 class IntercambioReemplazoTest extends IsolatedDatabaseTestCase
 {
+    public function test_el_reemplazo_guarda_un_detalle_estable_y_el_historial_lo_consulta_sin_alterarlo(): void
+    {
+        $this->post(route('programacion.intercambio.aplicar'), $this->datos())->assertSessionHasNoErrors();
+        $fila = DB::table('historial_acciones')->sole();
+        $datos = json_decode($fila->datos, true);
+        $this->assertSame(1, $datos['detalle']['version_esquema']);
+        $this->assertSame('declarada', $datos['detalle']['disponibilidad']);
+        $this->assertSame('Ángela', $datos['detalle']['candidato']['nombre']);
+        $this->assertSame('MAT1', $datos['detalle']['clase']['asignatura_codigo']);
+        $this->assertCount(2, $datos['detalle']['modulos']);
+        $this->candidato->update(['nombre' => 'Nombre cambiado']);
+        $this->grupo->actividadSeccion->seccion->asignatura->update(['nombre' => 'Ramo cambiado']);
+        $this->primero->bloqueHorario->update(['hora_inicio' => '07:00:00']);
+        $this->usuario->update(['name' => 'Usuario cambiado']);
+        $antes = DB::table('historial_acciones')->get()->toJson();
+        $response = $this->get(route('programacion.intercambio.historial.detalle', ['registro' => $fila->id]))->assertOk()
+            ->assertSee('Ángela LÓPEZ Muñoz')->assertSee('Matemáticas')->assertSee('Gestión docente')
+            ->assertSee('08:10–09:00')->assertDontSee('Ramo cambiado')->assertDontSee('Nombre cambiado')
+            ->assertSee('Disponibilidad declarada compatible con los módulos al aplicar el reemplazo.');
+        $this->assertTrue($response->viewData('registro')['detalle_registrado']);
+        $this->get(route('programacion.intercambio.historial', ['q' => 'angela lopez']))->assertOk()
+            ->assertViewHas('registros', fn ($filas) => $filas->total() === 1);
+        $this->assertSame($antes, DB::table('historial_acciones')->get()->toJson());
+    }
+
     private User $usuario;
 
     private Profesor $origen;
@@ -162,6 +187,8 @@ class IntercambioReemplazoTest extends IsolatedDatabaseTestCase
         $this->post(route('programacion.intercambio.aplicar'), $this->datos())->assertSessionHasErrors('reemplazo');
         $this->assertDatabaseCount('historial_acciones', 0);
         $this->post(route('programacion.intercambio.aplicar'), $this->datos(['confirmar_disponibilidad' => '1']))->assertSessionHasNoErrors()->assertRedirect();
+        $historial = json_decode(DB::table('historial_acciones')->sole()->datos, true);
+        $this->assertSame('consulta_docente', $historial['detalle']['disponibilidad']);
     }
 
     public function test_aplica_solo_los_modulos_seleccionados_y_conserva_codocentes_historicos_y_horarios(): void

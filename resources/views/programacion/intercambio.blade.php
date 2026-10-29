@@ -4,7 +4,10 @@
 <div class="min-w-0 space-y-4 px-2 py-2">
     <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0"><h1 class="text-base font-bold text-gray-800">Intercambio docente</h1><p class="mt-1 text-sm text-gray-600">Elige una clase, compara candidatos y confirma el reemplazo cuando sea compatible.</p></div>
-        <a href="{{ route('programacion.intercambio.carga') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar carga por ramo</a>
+        <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <a href="{{ route('programacion.intercambio.historial') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Historial de reemplazos</a>
+            <a href="{{ route('programacion.intercambio.carga') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar carga por ramo</a>
+        </div>
     </header>
     @if (session('success'))<p role="status" class="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">{{ session('success') }}</p>@endif
     @if ($errors->any())<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><ul class="list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif

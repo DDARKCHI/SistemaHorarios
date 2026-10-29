@@ -11,6 +11,7 @@ use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\ProfesorVersion;
 use App\Models\SeccionProfesor;
+use App\Models\User;
 use App\Models\VersionPlanificacion;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -173,13 +174,28 @@ class EvaluacionReemplazoDocente
             }
             ProfesorVersion::firstOrCreate(['version_planificacion_id' => $version->id, 'profesor_id' => $candidato->id],
                 $candidato->only(['rut', 'nombre', 'apellido', 'correo_institucional', 'correo_personal', 'tipo_contrato', 'tipo_profesor', 'unidad_academica']));
+            $seccion = $grupo->actividadSeccion->seccion;
+            $detalle = [
+                'version_esquema' => 1,
+                'periodo' => $periodo->only(['nombre', 'anio', 'numero_semestre']),
+                'version' => $version->only(['nombre', 'version', 'tipo']),
+                'origen' => $origen->only(['nombre', 'apellido', 'rut']),
+                'candidato' => $candidato->only(['nombre', 'apellido', 'rut']),
+                'responsable' => User::whereKey($usuarioId)->value('name'),
+                'clase' => ['asignatura_codigo' => $seccion->asignatura?->codigo, 'asignatura_nombre' => $seccion->asignatura?->nombre,
+                    'seccion' => $seccion->codigo, 'actividad' => $grupo->actividadSeccion->tipo, 'grupo' => $grupo->codigo],
+                'disponibilidad' => $evaluacion['sin_disponibilidad'] ? 'consulta_docente' : 'declarada',
+                'modulos' => $objetivo->map(fn ($h) => ['id' => $h->id, 'dia' => $h->dia?->nombre,
+                    'bloque' => $h->bloqueHorario?->numero, 'hora_inicio' => $h->bloqueHorario?->hora_inicio,
+                    'hora_fin' => $h->bloqueHorario?->hora_fin])->values()->all(),
+            ];
             DB::table('historial_acciones')->insert([
                 'usuario_id' => $usuarioId, 'accion' => 'Reemplazo docente', 'modulo' => 'Intercambio docente',
                 'tabla_afectada' => 'grupos_seccion', 'registro_id' => $grupo->id,
                 'descripcion' => 'Sustitución del docente en los módulos activos seleccionados de la versión semestral.',
                 'datos' => json_encode(['periodo_id' => $periodo->id, 'version_id' => $version->id, 'origen_id' => $origen->id,
                     'candidato_id' => $candidato->id, 'horarios_ids' => $objetivo->pluck('id')->all(),
-                    'disponibilidad_confirmada' => (bool) ($datos['confirmar_disponibilidad'] ?? false)], JSON_THROW_ON_ERROR),
+                    'disponibilidad_confirmada' => (bool) ($datos['confirmar_disponibilidad'] ?? false), 'detalle' => $detalle], JSON_THROW_ON_ERROR),
                 'direccion_ip' => $ip, 'created_at' => now(), 'updated_at' => now(),
             ]);
 

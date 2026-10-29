@@ -629,15 +629,10 @@
 
 
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Historial de reemplazos</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                    <a href="{{ route('programacion.intercambio.historial') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
+                        <span>Historial de reemplazos</span>
+                    </a>
 
                 </div>
 
@@ -1780,11 +1775,7 @@
 
 
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Historial de reemplazos
-
-                        </div>
+                        <a href="{{ route('programacion.intercambio.historial') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Historial de reemplazos</a>
 
                     </div>
 

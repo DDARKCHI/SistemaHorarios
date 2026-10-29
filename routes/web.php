@@ -7,6 +7,7 @@ use App\Http\Controllers\ImportacionProgramacionController;
 use App\Http\Controllers\VisualizacionProgramacionController;
 use App\Http\Controllers\ProgramacionSemestralController;
 use App\Http\Controllers\IntercambioDocenteController;
+use App\Http\Controllers\HistorialReemplazoController;
 use App\Http\Controllers\PropuestaHorarioController;
 use App\Http\Controllers\AsignacionProfesorController;
 use App\Http\Controllers\AsignacionHorarioController;
@@ -242,6 +243,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/programacion/intercambio/carga', [IntercambioDocenteController::class, 'carga'])
         ->middleware('permission.redirect:ver intercambio docente')->name('programacion.intercambio.carga');
+
+    Route::get('/programacion/intercambio/historial', [HistorialReemplazoController::class, 'index'])
+        ->middleware('permission.redirect:ver intercambio docente')->name('programacion.intercambio.historial');
+    Route::get('/programacion/intercambio/historial/{registro}', [HistorialReemplazoController::class, 'show'])
+        ->whereNumber('registro')->middleware('permission.redirect:ver intercambio docente')->name('programacion.intercambio.historial.detalle');
 
     Route::post('/programacion/intercambio/aplicar', [IntercambioDocenteController::class, 'aplicar'])
         ->middleware(['permission.redirect:ver intercambio docente', 'permission.redirect:asignar profesores'])->name('programacion.intercambio.aplicar');

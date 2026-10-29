@@ -13,6 +13,17 @@ use Tests\IsolatedDatabaseTestCase;
 
 class MigaDePanTest extends IsolatedDatabaseTestCase
 {
+    public function test_el_detalle_del_reemplazo_regresa_al_historial_y_este_a_intercambio(): void
+    {
+        $usuario = $this->usuario('ver intercambio docente');
+        foreach (['programacion.intercambio.historial' => ['Intercambio docente', 'Historial de reemplazos', 'programacion.intercambio'],
+            'programacion.intercambio.historial.detalle' => ['Historial de reemplazos', 'Detalle del reemplazo', 'programacion.intercambio.historial']] as $ruta => [$padre, $actual, $enlace]) {
+            $migas = MigaDePan::para($this->solicitud($ruta), $usuario);
+            $this->assertSame([$padre, $actual], array_column($migas, 'label'));
+            $this->assertSame(route($enlace), $migas[0]['url']);
+        }
+    }
+
     public function test_los_formularios_de_laboratorio_regresan_al_catalogo_del_mismo_tipo(): void
     {
         $usuario = $this->usuario('gestionar salas y recursos');
