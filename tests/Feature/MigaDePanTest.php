@@ -13,6 +13,22 @@ use Tests\IsolatedDatabaseTestCase;
 
 class MigaDePanTest extends IsolatedDatabaseTestCase
 {
+    public function test_los_formularios_de_laboratorio_regresan_al_catalogo_del_mismo_tipo(): void
+    {
+        $usuario = $this->usuario('gestionar salas y recursos');
+        foreach (['fijo', 'movil'] as $tipo) {
+            foreach (['create' => ['/laboratorios/'.$tipo.'/crear', 'Crear laboratorio'],
+                'edit' => ['/laboratorios/'.$tipo.'/1/editar', 'Editar laboratorio']] as [$url, $etiqueta]) {
+                $request = Request::create($url);
+                $ruta = Route::getRoutes()->match($request);
+                $request->setRouteResolver(fn () => $ruta);
+                $migas = MigaDePan::para($request, $usuario);
+                $this->assertSame(['Laboratorios', $etiqueta], array_column($migas, 'label'));
+                $this->assertSame(route('laboratorios.index', ['tipo' => $tipo]), $migas[0]['url']);
+            }
+        }
+    }
+
     public function test_inicio_solo_tiene_una_pagina_actual_sin_enlace(): void
     {
         $usuario = $this->usuario('ver panel inicio');

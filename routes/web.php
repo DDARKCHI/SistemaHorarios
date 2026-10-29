@@ -13,6 +13,7 @@ use App\Http\Controllers\AsignacionHorarioController;
 use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SalaController;
+use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -263,6 +264,14 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('sala')->middleware('permission.redirect:gestionar salas y recursos')->name('salas.edit');
     Route::put('/salas/{sala}', [SalaController::class, 'update'])
         ->whereNumber('sala')->middleware('permission.redirect:gestionar salas y recursos')->name('salas.update');
+
+    Route::prefix('laboratorios')->name('laboratorios.')->middleware('permission.redirect:gestionar salas y recursos')->group(function () {
+        Route::get('/', [LaboratorioController::class, 'index'])->name('index');
+        Route::get('/{tipo}/crear', [LaboratorioController::class, 'create'])->whereIn('tipo', ['fijo', 'movil'])->name('create');
+        Route::post('/{tipo}', [LaboratorioController::class, 'store'])->whereIn('tipo', ['fijo', 'movil'])->name('store');
+        Route::get('/{tipo}/{id}/editar', [LaboratorioController::class, 'edit'])->whereIn('tipo', ['fijo', 'movil'])->whereNumber('id')->name('edit');
+        Route::put('/{tipo}/{id}', [LaboratorioController::class, 'update'])->whereIn('tipo', ['fijo', 'movil'])->whereNumber('id')->name('update');
+    });
 
     Route::get(
         '/administracion',

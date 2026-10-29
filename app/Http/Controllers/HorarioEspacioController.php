@@ -6,6 +6,7 @@ use App\Models\BloqueHorario;
 use App\Models\Dia;
 use App\Models\Horario;
 use App\Models\Laboratorio;
+use App\Models\LaboratorioMovil;
 use App\Models\PeriodoAcademico;
 use App\Models\ProfesorVersion;
 use App\Models\Sala;
@@ -23,7 +24,7 @@ class HorarioEspacioController extends Controller
     public function index(Request $request)
     {
         $validador = Validator::make($request->query(), [
-            'espacio' => ['bail', 'nullable', 'string', 'max:64', 'regex:/\A(sala|laboratorio):[1-9][0-9]*\z/'],
+            'espacio' => ['bail', 'nullable', 'string', 'max:64', 'regex:/\A(sala|laboratorio|movil):[1-9][0-9]*\z/'],
             'periodo_id' => ['bail', 'nullable', 'integer', 'min:1', Rule::exists('periodos_academicos', 'id')],
             'version_id' => ['bail', 'nullable', 'integer', 'min:1', Rule::exists('versiones_planificacion', 'id')],
             'dia_id' => ['bail', 'nullable', 'integer', 'min:1', Rule::exists('dias', 'id')],
@@ -89,6 +90,9 @@ class HorarioEspacioController extends Controller
                     if ($espacioSeleccionado['tipo'] === 'laboratorio') {
                         $query->whereHas('asignacionesLaboratorios', fn ($asignacion) => $asignacion
                             ->where('estado', true)->where('laboratorio_id', $espacioSeleccionado['id']));
+                    } elseif ($espacioSeleccionado['tipo'] === 'movil') {
+                        $query->whereHas('asignacionesLaboratoriosMoviles', fn ($asignacion) => $asignacion
+                            ->where('estado', true)->where('laboratorio_movil_id', $espacioSeleccionado['id']));
                     } else {
                         // La sala física incluye también las clases de sus laboratorios.
                         $query->whereHas('asignacionesSalas', fn ($asignacion) => $asignacion
@@ -153,23 +157,29 @@ class HorarioEspacioController extends Controller
             ->filter(fn ($laboratorio) => $laboratorio->sala !== null)
             ->map(fn ($laboratorio) => $this->datosEspacio($laboratorio, $laboratorio->sala, 'laboratorio'));
 
-        return $salas->concat($laboratorios)->values();
+        $moviles = LaboratorioMovil::with('sede:id,nombre')->orderBy('codigo')->orderBy('id')
+            ->get(['id', 'universidad_id', 'sede_id', 'codigo', 'nombre', 'capacidad', 'disponible', 'estado'])
+            ->map(fn ($movil) => $this->datosEspacio($movil, $movil, 'movil'));
+
+        return $salas->concat($laboratorios)->concat($moviles)->values();
     }
 
-    private function datosEspacio(Sala|Laboratorio $modelo, Sala $sala, string $tipo): array
+    private function datosEspacio(Sala|Laboratorio|LaboratorioMovil $modelo, Sala|LaboratorioMovil $sala, string $tipo): array
     {
         $codigo = $modelo->codigo ?: 'Sin código';
         $nombre = $modelo->nombre ?: 'Sin nombre registrado';
         $sede = $sala->sede?->nombre ?? 'Sin sede registrada';
-        $etiqueta = $codigo.' — '.$nombre.($tipo === 'laboratorio' ? ' · Sala '.$sala->codigo : '').' · '.$sede;
+        $etiqueta = $codigo.' — '.$nombre.($tipo === 'laboratorio' ? ' · Sala '.$sala->codigo : ($tipo === 'movil' ? ' · Móvil' : '')).' · '.$sede;
 
         return [
             'clave' => $tipo.':'.$modelo->id, 'tipo' => $tipo, 'id' => $modelo->id,
             'etiqueta' => $etiqueta.($modelo->estado ? '' : ' (registro inactivo)'),
             'codigo' => $codigo, 'nombre' => $nombre, 'sede' => $sede,
-            'edificio' => $sala->edificio, 'piso' => $sala->piso, 'capacidad' => $modelo->capacidad,
+            'edificio' => $sala instanceof Sala ? $sala->edificio : null,
+            'piso' => $sala instanceof Sala ? $sala->piso : null, 'capacidad' => $modelo->capacidad,
             'estado' => (bool) $modelo->estado, 'disponible' => (bool) $modelo->disponible,
-            'sala_id' => $sala->id, 'sala_codigo' => $sala->codigo, 'universidad_id' => $sala->universidad_id,
+            'sala_id' => $sala instanceof Sala ? $sala->id : null,
+            'sala_codigo' => $sala instanceof Sala ? $sala->codigo : null, 'universidad_id' => $sala->universidad_id,
         ];
     }
 

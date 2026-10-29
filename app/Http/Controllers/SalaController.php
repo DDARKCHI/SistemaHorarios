@@ -94,6 +94,12 @@ class SalaController extends Controller
                 }
 
                 $sede = Sede::query()->lockForUpdate()->findOrFail($datos['sede_id']);
+                if ($sala->exists && (int) $datos['capacidad'] > 0 && (int) $datos['capacidad'] !== $sala->capacidad
+                    && $sala->laboratorios()->where('estado', true)->where('capacidad', '>', $datos['capacidad'])->exists()) {
+                    throw ValidationException::withMessages([
+                        'capacidad' => 'La capacidad de la sala no puede ser menor que la de sus laboratorios activos. Actualiza primero la capacidad de esos laboratorios.',
+                    ]);
+                }
                 $antes = $esNueva ? null : $sala->only($sala->getFillable());
                 // La institución se obtiene de la sede; no se acepta desde el formulario.
                 $sala->fill($datos + ['universidad_id' => $sede->universidad_id]);

@@ -19,6 +19,9 @@ class MigaDePan
         'salas.create' => ['Crear sala', 'salas.index'],
         'salas.edit' => ['Editar sala', 'salas.index'],
         'salas.horario' => ['Horario de espacios', 'salas.index'],
+        'laboratorios.index' => ['Laboratorios', 'salas.index'],
+        'laboratorios.create' => ['Crear laboratorio', 'laboratorios.index'],
+        'laboratorios.edit' => ['Editar laboratorio', 'laboratorios.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],
         'programacion.importar.analizar' => ['Cargar programación anterior', 'programacion.index'],
@@ -34,6 +37,7 @@ class MigaDePan
         'programacion.index' => 'ver programacion anterior',
         'administracion.index' => 'administrar usuarios',
         'salas.index' => 'gestionar salas y recursos',
+        'laboratorios.index' => 'gestionar salas y recursos',
         'programacion.intercambio' => 'ver intercambio docente',
     ];
 
@@ -54,6 +58,9 @@ class MigaDePan
             $parametros = in_array($rutaPadre, ['programacion.semestral', 'programacion.index'], true)
                 ? self::contextoProgramacion($request)
                 : [];
+            if ($rutaPadre === 'laboratorios.index' && in_array($request->route('tipo'), ['fijo', 'movil'], true)) {
+                $parametros['tipo'] = $request->route('tipo');
+            }
 
             $migas[] = [
                 'label' => self::PAGINAS[$rutaPadre][0],

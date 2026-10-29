@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\ActividadSeccion;
 use App\Models\AsignacionLaboratorio;
+use App\Models\AsignacionLaboratorioMovil;
 use App\Models\AsignacionSala;
 use App\Models\Asignatura;
 use App\Models\BloqueHorario;
@@ -12,6 +13,7 @@ use App\Models\GrupoSeccion;
 use App\Models\Horario;
 use App\Models\HorarioProfesor;
 use App\Models\Laboratorio;
+use App\Models\LaboratorioMovil;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\ProfesorVersion;
@@ -60,6 +62,53 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
             ->assertViewHas('periodoSeleccionado', null)
             ->assertViewHas('versionSeleccionada', null)
             ->assertViewHas('sesiones', fn ($sesiones) => $sesiones->isEmpty());
+    }
+
+    public function test_consulta_el_horario_movil_por_asignaciones_activas_y_version_sin_confundir_ids_de_otros_recursos(): void
+    {
+        $datos = $this->programacion();
+        $movil = LaboratorioMovil::create(['universidad_id' => $this->universidadId, 'sede_id' => $datos['sala']->sede_id,
+            'codigo' => 'MOVIL-01', 'nombre' => 'Laboratorio transportable', 'capacidad' => 30, 'estado' => true, 'disponible' => true]);
+        foreach (['directa', 'laboratorio', 'inactiva', 'horario_importacion', 'horario_otro_periodo'] as $clave) {
+            AsignacionLaboratorioMovil::create(['horario_id' => $datos[$clave]->id, 'laboratorio_movil_id' => $movil->id, 'estado' => true]);
+        }
+        AsignacionLaboratorioMovil::create(['horario_id' => $datos['otro_laboratorio']->id, 'laboratorio_movil_id' => $movil->id, 'estado' => false]);
+        $antes = $this->snapshot();
+        $response = $this->consultar(['espacio' => 'movil:'.$movil->id])->assertOk()
+            ->assertSee('Laboratorio móvil consultado')->assertSee('Laboratorio transportable')->assertSee('Recurso móvil')
+            ->assertViewHas('espacioSeleccionado', fn ($espacio) => $espacio['tipo'] === 'movil' && $espacio['sala_id'] === null)
+            ->assertViewHas('versionSeleccionada', fn ($version) => $version->is($datos['version']));
+        $this->assertSame($this->ids($datos, ['directa', 'laboratorio']), $this->sesionesIds($response));
+        $this->assertSame(['MOVIL-01'], $response->viewData('sesiones')->firstWhere('id', $datos['directa']->id)['recursos']['Lab. móvil']);
+        $this->assertSame($antes, $this->snapshot());
+        $movil->update(['estado' => false, 'disponible' => false]);
+        $response = $this->consultar(['espacio' => 'movil:'.$movil->id])->assertOk()->assertSee('Uso deshabilitado en catálogo');
+        $this->assertSame($this->ids($datos, ['directa', 'laboratorio']), $this->sesionesIds($response));
+    }
+
+    public function test_editar_laboratorios_conserva_asignaciones_y_no_permite_mover_recursos_con_historial(): void
+    {
+        $datos = $this->programacion();
+        $fijo = $datos['lab'];
+        $movil = LaboratorioMovil::create(['universidad_id' => $this->universidadId, 'sede_id' => $datos['sala']->sede_id,
+            'codigo' => 'MOVIL-01', 'nombre' => 'Laboratorio móvil', 'capacidad' => 30, 'estado' => true, 'disponible' => true]);
+        AsignacionLaboratorioMovil::create(['horario_id' => $datos['directa']->id, 'laboratorio_movil_id' => $movil->id, 'estado' => true]);
+        $antes = collect(['horarios', 'asignaciones_salas', 'asignaciones_laboratorios', 'asignaciones_laboratorios_moviles'])
+            ->mapWithKeys(fn ($tabla) => [$tabla => DB::table($tabla)->orderBy('id')->get()->map(fn ($fila) => (array) $fila)->all()])->all();
+        $fijoDatos = ['sala_id' => $fijo->sala_id, 'codigo' => $fijo->codigo, 'nombre' => 'Laboratorio actualizado', 'capacidad' => 20, 'estado' => 0, 'disponible' => 0];
+        $movilDatos = ['sede_id' => $movil->sede_id, 'codigo' => $movil->codigo, 'nombre' => 'Móvil actualizado', 'capacidad' => 0, 'estado' => 0, 'disponible' => 0];
+        $this->put(route('laboratorios.update', ['tipo' => 'fijo', 'id' => $fijo->id]), array_replace($fijoDatos, ['sala_id' => $datos['otra_sala']->id]))
+            ->assertSessionHasErrors('sala_id');
+        $this->put(route('laboratorios.update', ['tipo' => 'movil', 'id' => $movil->id]), array_replace($movilDatos, ['sede_id' => $datos['otra_sala']->sede_id]))
+            ->assertSessionHasErrors('sede_id');
+        $this->put(route('laboratorios.update', ['tipo' => 'fijo', 'id' => $fijo->id]), $fijoDatos)->assertSessionHasNoErrors();
+        $this->put(route('laboratorios.update', ['tipo' => 'movil', 'id' => $movil->id]), $movilDatos)->assertSessionHasNoErrors();
+        $this->assertSame('Laboratorio actualizado', $fijo->fresh()->nombre);
+        $this->assertSame('Móvil actualizado', $movil->fresh()->nombre);
+        foreach ($antes as $tabla => $filas) {
+            $this->assertSame($filas, DB::table($tabla)->orderBy('id')->get()->map(fn ($fila) => (array) $fila)->all());
+        }
+        $this->assertDatabaseCount('historial_acciones', 2);
     }
 
     public function test_al_entrar_sin_espacio_no_carga_la_programacion_completa(): void
@@ -439,6 +488,8 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
             'identificador nulo' => ['espacio', 'sala:0'],
             'sala inexistente' => ['espacio', 'sala:999999'],
             'laboratorio inexistente' => ['espacio', 'laboratorio:999999'],
+            'móvil inexistente' => ['espacio', 'movil:999999'],
+            'móvil con identificador nulo' => ['espacio', 'movil:0'],
             'espacio demasiado largo' => ['espacio', str_repeat('s', 65)],
             'período compuesto' => ['periodo_id', [1]],
             'período negativo' => ['periodo_id', -1],
@@ -520,7 +571,7 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
             'periodo' => $periodo, 'otro_periodo' => $otroPeriodo, 'version' => $version,
             'importacion' => $importacion, 'historica' => $historica, 'otra_version' => $otraVersion,
             'sala' => $sala, 'otra_sala' => $otraSala, 'lab' => $lab, 'otro_lab' => $otroLab,
-            'grupo' => $grupo, 'directa' => $directa, 'laboratorio' => $laboratorio,
+            'grupo' => $grupo, 'directa' => $directa, 'laboratorio' => $laboratorio, 'inactiva' => $inactiva,
             'doble' => $doble, 'otro_laboratorio' => $otroLaboratorio, 'otra_sala_horario' => $otraSalaHorario,
             'horario_importacion' => $horarioImportacion, 'horario_otro_periodo' => $horarioOtroPeriodo,
         ];
@@ -626,6 +677,7 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
             'periodos_academicos', 'versiones_planificacion', 'salas', 'laboratorios', 'secciones',
             'actividades_seccion', 'grupos_seccion', 'horarios', 'asignaciones_salas',
             'asignaciones_laboratorios', 'horarios_profesores', 'profesores_versiones',
+            'laboratorios_moviles', 'asignaciones_laboratorios_moviles',
         ])->mapWithKeys(fn ($tabla) => [$tabla => DB::table($tabla)->orderBy('id')->get()->map(fn ($fila) => (array) $fila)->all()])->all();
     }
 }

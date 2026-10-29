@@ -39,7 +39,7 @@
             <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
             <select data-select-buscable id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona un espacio</option>
-                @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios'] as $tipoEspacio => $etiquetaGrupo)
+                @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios fijos', 'movil' => 'Laboratorios móviles'] as $tipoEspacio => $etiquetaGrupo)
                     @if ($espacios->contains('tipo', $tipoEspacio))
                         <optgroup label="{{ $etiquetaGrupo }}">
                             @foreach ($espacios->where('tipo', $tipoEspacio) as $opcion)
@@ -78,7 +78,7 @@
         <section aria-labelledby="espacio-consultado" class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
             <div class="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_auto]">
                 <div class="min-w-0">
-                    <p class="text-sm font-semibold leading-5 text-gray-700">{{ $espacioSeleccionado['tipo'] === 'laboratorio' ? 'Laboratorio consultado' : 'Sala consultada' }}</p>
+                    <p class="text-sm font-semibold leading-5 text-gray-700">{{ $espacioSeleccionado['tipo'] === 'sala' ? 'Sala consultada' : ($espacioSeleccionado['tipo'] === 'movil' ? 'Laboratorio móvil consultado' : 'Laboratorio consultado') }}</p>
                     <h2 id="espacio-consultado" class="mt-1 break-words text-lg font-bold text-gray-900">{{ $espacioSeleccionado['codigo'] ?: 'Sin código' }}</h2>
                     @if (filled($espacioSeleccionado['nombre']) && $espacioSeleccionado['nombre'] !== $espacioSeleccionado['codigo'])
                         <p class="mt-0.5 break-words text-sm text-gray-700">{{ $espacioSeleccionado['nombre'] }}</p>
@@ -92,7 +92,7 @@
                     </div>
                     <div class="min-w-0">
                         <dt class="text-sm font-semibold leading-5 text-gray-700">Ubicación</dt>
-                        <dd class="mt-1 break-words text-sm text-gray-700">{{ $espacioSeleccionado['edificio'] ?: 'Sin edificio registrado' }}{{ filled($espacioSeleccionado['piso']) ? ' · Piso '.$espacioSeleccionado['piso'] : '' }}</dd>
+                        <dd class="mt-1 break-words text-sm text-gray-700">{{ $espacioSeleccionado['tipo'] === 'movil' ? 'Recurso móvil' : ($espacioSeleccionado['edificio'] ?: 'Sin edificio registrado') }}{{ filled($espacioSeleccionado['piso']) ? ' · Piso '.$espacioSeleccionado['piso'] : '' }}</dd>
                     </div>
                 </dl>
                 <div class="flex min-w-0 flex-wrap items-start gap-2 text-[11px] sm:col-span-2 xl:col-span-1 xl:max-w-56 xl:justify-end">
@@ -105,6 +105,8 @@
                     <p class="text-xs leading-relaxed text-gray-600">Se muestran las asignaciones explícitas al laboratorio. Consulta también el uso de la sala que lo contiene.</p>
                     <a href="{{ $urlHorario(['espacio' => 'sala:'.$espacioSeleccionado['sala_id']]) }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Ver sala {{ $espacioSeleccionado['sala_codigo'] }}</a>
                 </div>
+            @elseif ($espacioSeleccionado['tipo'] === 'movil')
+                <p class="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">Se muestran las asignaciones de este laboratorio móvil en la versión seleccionada. Cada clase indica la sala cuando está registrada.</p>
             @else
                 <p class="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">Incluye las asignaciones directas a esta sala y las de los laboratorios ubicados en ella, sin repetir clases.</p>
             @endif
