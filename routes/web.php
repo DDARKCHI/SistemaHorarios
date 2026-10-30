@@ -17,6 +17,7 @@ use App\Http\Controllers\SalaController;
 use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\EquipamientoController;
 use App\Http\Controllers\EquipamientoEspacioController;
+use App\Http\Controllers\PrioridadRecursoController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Http\Controllers\ValidacionProgramacionController;
 use App\Http\Controllers\RequerimientoActividadController;
@@ -306,6 +307,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/{equipamiento}/ubicaciones/{ubicacion}', [EquipamientoEspacioController::class, 'update'])->whereNumber(['equipamiento', 'ubicacion'])->name('ubicaciones.update');
         Route::delete('/{equipamiento}/ubicaciones/{ubicacion}', [EquipamientoEspacioController::class, 'destroy'])->whereNumber(['equipamiento', 'ubicacion'])->name('ubicaciones.destroy');
         Route::put('/{equipamiento}', [EquipamientoController::class, 'update'])->whereNumber('equipamiento')->name('update');
+    });
+
+    Route::prefix('prioridades')->name('prioridades.')->middleware('permission.redirect:gestionar salas y recursos')->group(function () {
+        Route::get('/', [PrioridadRecursoController::class, 'index'])->name('index');
+        Route::get('/crear', [PrioridadRecursoController::class, 'create'])->name('create');
+        Route::post('/', [PrioridadRecursoController::class, 'store'])->name('store');
+        Route::get('/{prioridad}/editar', [PrioridadRecursoController::class, 'edit'])->whereNumber('prioridad')->name('edit');
+        Route::put('/{prioridad}', [PrioridadRecursoController::class, 'update'])->whereNumber('prioridad')->name('update');
     });
 
     Route::get(

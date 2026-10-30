@@ -33,7 +33,8 @@
 
         || request()->routeIs('laboratorios*')
 
-        || request()->routeIs('recursos*');
+        || request()->routeIs('recursos*')
+        || request()->routeIs('prioridades*');
 
 
 
@@ -802,6 +803,9 @@
                     <a href="{{ route('recursos.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
                         <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('recursos.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
                         <span>Equipamiento y recursos</span>
+                    </a>
+                    <a href="{{ route('prioridades.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('prioridades.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('prioridades.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span><span>Prioridades de recursos</span>
                     </a>
 
                 </div>
@@ -1880,6 +1884,7 @@
 
 
                         <a href="{{ route('recursos.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Equipamiento y recursos</a>
+                        <a href="{{ route('prioridades.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('prioridades.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Prioridades de recursos</a>
 
                     </div>
 

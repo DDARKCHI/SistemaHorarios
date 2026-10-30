@@ -33,7 +33,7 @@
                             <p class="mt-1 text-sm text-gray-600">{{ $requerimiento->cantidad }} {{ $requerimiento->cantidad === 1 ? 'unidad' : 'unidades' }} · {{ $requerimiento->obligatorio ? 'Obligatorio' : 'Opcional' }} · {{ $requerimiento->estado ? 'Activo' : 'Inactivo' }}</p>
                             @if ($requerimiento->tipoSala)<p class="mt-1 text-sm text-gray-600">Tipo de sala: {{ $requerimiento->tipoSala->nombre }}{{ $requerimiento->tipoSala->estado ? '' : ' (inactivo)' }}</p>@endif
                             @if ($requerimiento->capacidad_minima !== null)<p class="mt-1 text-sm text-gray-600">Capacidad mínima por recurso: {{ $requerimiento->capacidad_minima }}</p>@endif
-                            @if ($requerimiento->prioridadRecurso)<p class="mt-1 text-sm text-gray-600">Prioridad: {{ $requerimiento->prioridadRecurso->nombre }}</p>@endif
+                            @if ($requerimiento->prioridadRecurso)<p class="mt-1 text-sm text-gray-600">Prioridad: {{ $requerimiento->prioridadRecurso->nombre }}{{ $requerimiento->prioridadRecurso->estado ? '' : ' (inactiva)' }} · Nivel {{ $requerimiento->prioridadRecurso->nivel }}</p>@endif
                             @if ($requerimiento->observaciones)<p class="mt-2 break-words whitespace-pre-line text-sm text-gray-500">{{ $requerimiento->observaciones }}</p>@endif
                         </div>
                         @if ($editable && auth()->user()->can('asignar horarios'))<a href="{{ route('programacion.requerimientos.edit', ['actividad' => $actividad->id, 'requerimiento' => $requerimiento->id] + $contexto) }}" class="boton boton-secundario" aria-label="Editar requerimiento {{ $requerimiento->id }}">Editar</a>@endif

@@ -32,6 +32,9 @@ class MigaDePan
         'recursos.create' => ['Registrar equipamiento', 'recursos.index'],
         'recursos.edit' => ['Editar equipamiento', 'recursos.index'],
         'recursos.ubicaciones.index' => ['Ubicaciones del equipamiento', 'recursos.index'],
+        'prioridades.index' => ['Prioridades de recursos', 'salas.index'],
+        'prioridades.create' => ['Crear prioridad', 'prioridades.index'],
+        'prioridades.edit' => ['Editar prioridad', 'prioridades.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],
         'programacion.importar.analizar' => ['Cargar programación anterior', 'programacion.index'],
@@ -51,6 +54,7 @@ class MigaDePan
         'salas.index' => 'gestionar salas y recursos',
         'laboratorios.index' => 'gestionar salas y recursos',
         'recursos.index' => 'gestionar salas y recursos',
+        'prioridades.index' => 'gestionar salas y recursos',
         'programacion.intercambio' => 'ver intercambio docente',
         'programacion.intercambio.historial' => 'ver intercambio docente',
     ];

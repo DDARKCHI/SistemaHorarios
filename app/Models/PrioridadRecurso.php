@@ -15,6 +15,8 @@ class PrioridadRecurso extends Model
         'estado',
     ];
 
+    protected $casts = ['nivel' => 'integer', 'estado' => 'boolean'];
+
     public function requerimientosActividad()
     {
         return $this->hasMany(RequerimientoActividad::class);
