@@ -5,8 +5,8 @@
     Elige una clase, compara candidatos y confirma el reemplazo cuando sea compatible.
     <x-slot:acciones>
         <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <a href="{{ route('programacion.intercambio.historial') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Historial de reemplazos</a>
-            <a href="{{ route('programacion.intercambio.carga') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar carga por ramo</a>
+            <a href="{{ route('programacion.intercambio.historial') }}" class="boton boton-secundario">Historial de reemplazos</a>
+            <a href="{{ route('programacion.intercambio.carga') }}" class="boton boton-primario">Consultar carga por ramo</a>
         </div>
     </x-slot:acciones>
 </x-encabezado-pagina>
