@@ -297,6 +297,7 @@ class AsignacionProfesorConsistenciaTest extends IsolatedDatabaseTestCase
     {
         return [
             'grupo_seccion_id' => $this->grupo->id, 'dia_id' => $this->diaId,
+            'version_id' => $this->version->id,
             'profesores_ids' => $profesores, 'bloques_horarios' => [$this->bloqueId],
         ];
     }

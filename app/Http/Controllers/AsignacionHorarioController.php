@@ -5,17 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\BloqueHorario;
 use App\Models\Carrera;
 use App\Models\Dia;
-use App\Models\DisponibilidadProfesor;
-use App\Models\GrupoProfesor;
-use App\Models\GrupoSeccion;
 use App\Models\Horario;
-use App\Models\HorarioProfesor;
 use App\Models\PeriodoAcademico;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
+use App\Services\AsignacionModulosHorario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class AsignacionHorarioController extends Controller
 {
@@ -47,6 +43,7 @@ class AsignacionHorarioController extends Controller
         );
 
         $version = $this->obtenerVersionSemestral($periodoId);
+        $editable = $version && $version->estado === 'Borrador' && $periodos->contains('id', $periodoId);
 
         $dias = Dia::where('estado', true)
             ->orderBy('numero')
@@ -129,6 +126,7 @@ class AsignacionHorarioController extends Controller
                 'seccionesFiltro',
                 'seccionId',
                 'version',
+                'editable',
                 'dias',
                 'bloques',
                 'seccion'
@@ -190,523 +188,40 @@ class AsignacionHorarioController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, AsignacionModulosHorario $asignador)
     {
         $datos = $request->validate([
-            'grupo_seccion_id' => [
-                'required',
-                'exists:grupos_seccion,id',
-            ],
-
-            'dia_id' => [
-    'required',
-    'exists:dias,id',
-],
-
-'profesores_ids' => [
-    'required',
-    'array',
-    'min:1',
-],
-
-'profesores_ids.*' => [
-    'required',
-    'integer',
-    'distinct',
-    'exists:profesores,id',
-],
-
-'bloques_horarios' => [
-    'required',
-    'array',
-    'min:1',
-],
-
-            'bloques_horarios.*' => [
-                'required',
-                'integer',
-                'distinct',
-                'exists:bloques_horarios,id',
-            ],
-
-            'observaciones' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
+            'grupo_seccion_id' => ['required', 'integer', 'exists:grupos_seccion,id'],
+            'version_id' => ['required', 'integer', 'min:1'],
+            'dia_id' => ['required', 'integer', 'exists:dias,id'],
+            'profesores_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'profesores_ids.*' => ['required', 'integer', 'distinct', 'exists:profesores,id'],
+            'bloques_horarios' => ['required', 'array', 'min:1', 'max:255'],
+            'bloques_horarios.*' => ['required', 'integer', 'distinct', 'exists:bloques_horarios,id'],
+            'observaciones' => ['nullable', 'string', 'max:255'],
         ], [
-            'grupo_seccion_id.required'
-                => 'Debes seleccionar un grupo.',
-
-            'grupo_seccion_id.exists'
-                => 'El grupo seleccionado no es válido.',
-
-            'dia_id.required'
-                => 'Debes seleccionar un día.',
-
-            'dia_id.exists'
-                => 'El día seleccionado no es válido.',
-            
-            'profesores_ids.required'
-    => 'Debes seleccionar al menos un profesor.',
-
-'profesores_ids.array'
-    => 'Los profesores seleccionados no son válidos.',
-
-'profesores_ids.min'
-    => 'Debes seleccionar al menos un profesor.',
-
-'profesores_ids.*.exists'
-    => 'Uno de los profesores seleccionados no es válido.',
-
-'profesores_ids.*.distinct'
-    => 'No puedes seleccionar el mismo profesor más de una vez.',    
-
-            'bloques_horarios.required'
-                => 'Debes seleccionar al menos un bloque horario.',
-
-            'bloques_horarios.array'
-                => 'Los bloques seleccionados no son válidos.',
-
-            'bloques_horarios.min'
-                => 'Debes seleccionar al menos un bloque horario.',
-
-            'bloques_horarios.*.exists'
-                => 'Uno de los bloques seleccionados no es válido.',
-
-            'bloques_horarios.*.distinct'
-                => 'No puedes seleccionar el mismo bloque más de una vez.',
-
-            'observaciones.max'
-                => 'Las observaciones no pueden superar los 255 caracteres.',
+            'grupo_seccion_id.*' => 'Selecciona un grupo válido.',
+            'version_id.*' => 'Vuelve a abrir la asignación para confirmar la versión semestral vigente.',
+            'dia_id.*' => 'Selecciona un día válido.',
+            'profesores_ids.*' => 'Selecciona al menos un profesor del grupo (hasta 100).',
+            'profesores_ids.*.*' => 'Los profesores deben ser válidos y no repetirse.',
+            'bloques_horarios.*' => 'Selecciona al menos un módulo (hasta 255).',
+            'bloques_horarios.*.*' => 'Los módulos deben ser válidos y no repetirse.',
+            'observaciones.*' => 'Las observaciones admiten hasta 255 caracteres.',
         ]);
-
-        $grupo = GrupoSeccion::with([
-            'actividadSeccion.seccion',
-
-            'profesores' => function ($query) {
-                $query->where('estado', true);
-            },
-
-            'profesores.profesor',
-        ])->findOrFail(
-            $datos['grupo_seccion_id']
-        );
-
-        $seccion = $grupo
-            ->actividadSeccion
-            ->seccion;
-
-        $periodoId = $seccion->periodo_academico_id;
-
-        $version = $this->obtenerVersionSemestral(
-            $periodoId
-        );
-
-        if (!$version) {
-            throw ValidationException::withMessages([
-                'horario'
-                    => 'No existe una versión semestral actual para este período.',
-            ]);
-        }
-
-        if ($grupo->profesores->isEmpty()) {
-            throw ValidationException::withMessages([
-                'horario'
-                    => 'El grupo no tiene profesores asignados. Primero debes realizar la asignación de profesores.',
-            ]);
-        }
-
-        $profesoresIds = collect(
-    $datos['profesores_ids']
-)
-    ->map(fn ($id) => (int) $id)
-    ->unique()
-    ->values();
-
-$profesoresGrupoSeleccionados = $grupo->profesores
-    ->filter(function ($grupoProfesor) use ($profesoresIds) {
-
-        return $grupoProfesor->profesor
-            && $profesoresIds->contains(
-                (int) $grupoProfesor->profesor_id
-            );
-    })
-    ->values();
-
-if (
-    $profesoresGrupoSeleccionados->count()
-    !== $profesoresIds->count()
-) {
-    throw ValidationException::withMessages([
-        'profesores_ids'
-            => 'Uno de los profesores seleccionados no pertenece a este grupo.',
-    ]);
-}
-
-        $bloquesIds = collect(
-            $datos['bloques_horarios']
-        )
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values();
-        
-        $cantidadMaximaModulos = (int) (
-    $grupo->actividadSeccion?->cantidad_horas ?? 0
-);
-
-$cantidadModulosActuales = Horario::where(
-    'grupo_seccion_id',
-    $grupo->id
-)
-    ->where(
-        'version_planificacion_id',
-        $version->id
-    )
-    ->where('estado', true)
-    ->count();
-
-$cantidadModulosNuevos = $bloquesIds->count();
-
-if ($cantidadMaximaModulos <= 0) {
-    throw ValidationException::withMessages([
-        'horario'
-            => 'La actividad no tiene una cantidad de módulos válida.',
-    ]);
-}
-
-if (
-    $cantidadModulosActuales + $cantidadModulosNuevos
-    > $cantidadMaximaModulos
-) {
-    $modulosDisponibles = max(
-        0,
-        $cantidadMaximaModulos - $cantidadModulosActuales
-    );
-
-    throw ValidationException::withMessages([
-        'horario'
-            => 'Esta actividad permite un máximo de '
-            . $cantidadMaximaModulos
-            . ($cantidadMaximaModulos === 1
-                ? ' módulo.'
-                : ' módulos.')
-            . ' Actualmente tiene '
-            . $cantidadModulosActuales
-            . ' asignado(s) y solo puedes agregar '
-            . $modulosDisponibles
-            . ' más.',
-    ]);
-}    
-
-        $bloquesSeleccionados = BloqueHorario::whereIn(
-            'id',
-            $bloquesIds
-        )
-            ->orderBy('numero')
-            ->get()
-            ->keyBy('id');
-
-        $dia = Dia::findOrFail(
-            $datos['dia_id']
-        );
-
-        foreach ($bloquesIds as $bloqueId) {
-            $bloque = $bloquesSeleccionados->get(
-                $bloqueId
-            );
-
-            $horarioDuplicado = Horario::where(
-                'grupo_seccion_id',
-                $grupo->id
-            )
-                ->where(
-                    'version_planificacion_id',
-                    $version->id
-                )
-                ->where(
-                    'dia_id',
-                    $datos['dia_id']
-                )
-                ->where(
-                    'bloque_horario_id',
-                    $bloqueId
-                )
-                ->where('estado', true)
-                ->exists();
-
-            if ($horarioDuplicado) {
-                throw ValidationException::withMessages([
-                    'horario'
-                        => 'El grupo ya tiene asignado '
-                        . $dia->nombre
-                        . ', módulo '
-                        . ($bloque?->numero ?? $bloqueId)
-                        . '.',
-                ]);
-            }
-        }
-
-        foreach ($profesoresGrupoSeleccionados as $grupoProfesor) {
-            $profesor = $grupoProfesor->profesor;
-
-            if (!$profesor) {
-                continue;
-            }
-
-            $cantidadDisponibilidades = DisponibilidadProfesor::where(
-                'profesor_id',
-                $profesor->id
-            )
-                ->where(
-                    'periodo_academico_id',
-                    $periodoId
-                )
-                ->where('estado', true)
-                ->count();
-
-            foreach ($bloquesIds as $bloqueId) {
-                $bloque = $bloquesSeleccionados->get(
-                    $bloqueId
-                );
-
-                if ($cantidadDisponibilidades > 0) {
-                    $estaDisponible = DisponibilidadProfesor::where(
-                        'profesor_id',
-                        $profesor->id
-                    )
-                        ->where(
-                            'periodo_academico_id',
-                            $periodoId
-                        )
-                        ->where(
-                            'dia_id',
-                            $datos['dia_id']
-                        )
-                        ->where(
-                            'bloque_horario_id',
-                            $bloqueId
-                        )
-                        ->where(
-                            'tipo_disponibilidad',
-                            'Disponible'
-                        )
-                        ->where('estado', true)
-                        ->exists();
-
-                    if (!$estaDisponible) {
-                        throw ValidationException::withMessages([
-                            'horario'
-                                => 'El profesor '
-                                . trim(
-                                    $profesor->nombre
-                                    . ' '
-                                    . $profesor->apellido
-                                )
-                                . ' no tiene disponibilidad para '
-                                . $dia->nombre
-                                . ', módulo '
-                                . ($bloque?->numero ?? $bloqueId)
-                                . '.',
-                        ]);
-                    }
-                }
-
-                $conflictoProfesor = HorarioProfesor::where(
-                    'profesor_id',
-                    $profesor->id
-                )
-                    ->where('estado', true)
-                    ->whereHas(
-                        'horario',
-                        function ($query) use (
-                            $version,
-                            $datos,
-                            $bloqueId
-                        ) {
-                            $query
-                                ->where(
-                                    'version_planificacion_id',
-                                    $version->id
-                                )
-                                ->where(
-                                    'dia_id',
-                                    $datos['dia_id']
-                                )
-                                ->where(
-                                    'bloque_horario_id',
-                                    $bloqueId
-                                )
-                                ->where('estado', true);
-                        }
-                    )
-                    ->exists();
-
-                if ($conflictoProfesor) {
-                    throw ValidationException::withMessages([
-                        'horario'
-                            => 'El profesor '
-                            . trim(
-                                $profesor->nombre
-                                . ' '
-                                . $profesor->apellido
-                            )
-                            . ' ya tiene otro horario asignado el '
-                            . $dia->nombre
-                            . ' en el módulo '
-                            . ($bloque?->numero ?? $bloqueId)
-                            . '.',
-                    ]);
-                }
-            }
-        }
-
-        DB::transaction(function () use (
-            $datos,
-            $grupo,
-            $version,
-            $bloquesIds,
-            $profesoresIds
-        ) {
-            // Revalidar bajo el mismo bloqueo usado al quitar docentes del grupo.
-            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
-
-            $profesoresGrupoSeleccionados = GrupoProfesor::where('grupo_seccion_id', $grupo->id)
-                ->where('estado', true)
-                ->whereIn('profesor_id', $profesoresIds)
-                ->get();
-
-            if ($profesoresGrupoSeleccionados->count() !== $profesoresIds->count()) {
-                throw ValidationException::withMessages([
-                    'profesores_ids' => 'La asignación de profesores del grupo cambió. Revisa los docentes seleccionados antes de guardar el horario.',
-                ]);
-            }
-
-            foreach ($bloquesIds as $bloqueId) {
-                $horario = Horario::create([
-                    'actividad_seccion_id'
-                        => $grupo->actividad_seccion_id,
-
-                    'grupo_seccion_id'
-                        => $grupo->id,
-
-                    'version_planificacion_id'
-                        => $version->id,
-
-                    'dia_id'
-                        => $datos['dia_id'],
-
-                    'bloque_horario_id'
-                        => $bloqueId,
-
-                    'observaciones'
-                        => $datos['observaciones'] ?? null,
-
-                    'estado'
-                        => true,
-                ]);
-
-                foreach ($profesoresGrupoSeleccionados as $grupoProfesor) {
-                    HorarioProfesor::create([
-                        'horario_id'
-                            => $horario->id,
-
-                        'profesor_id'
-                            => $grupoProfesor->profesor_id,
-
-                        'tipo_participacion'
-                            => $grupoProfesor->tipo_participacion,
-
-                        'es_principal'
-                            => $grupoProfesor->es_principal,
-
-                        'observaciones'
-                            => $grupoProfesor->observaciones,
-
-                        'estado'
-                            => true,
-                    ]);
-                }
-            }
-        });
-
-        $cantidadBloques = $bloquesIds->count();
-
-        return redirect()
-            ->route(
-                'programacion.asignacion.horarios',
-                [
-                    'periodo_id'
-                        => $periodoId,
-
-                    'carrera_id'
-                        => $request->integer('carrera_id') ?: null,
-
-                    'semestre'
-                        => $request->input('semestre'),
-
-                    'seccion_id'
-                        => $seccion->id,
-                ]
-            )
-            ->with(
-                'success',
-                $cantidadBloques === 1
-                    ? 'Horario asignado correctamente.'
-                    : $cantidadBloques . ' módulos horarios asignados correctamente.'
-            );
+        $resultado = $asignador->guardar($datos, $request->user()->id, $request->ip());
+        return redirect()->route('programacion.asignacion.horarios', [
+            'periodo_id' => $resultado['periodo_id'], 'seccion_id' => $resultado['seccion_id'],
+            'carrera_id' => $request->integer('carrera_id') ?: null, 'semestre' => $request->integer('semestre') ?: null,
+        ])->with('success', $resultado['cantidad'] === 1 ? 'Horario asignado correctamente.' : $resultado['cantidad'].' módulos horarios asignados correctamente.');
     }
 
-    public function destroy(
-        Request $request,
-        Horario $horario
-    ) {
-        $horario->load(
-            'grupoSeccion.actividadSeccion.seccion'
-        );
-
-        $seccion = $horario
-            ->grupoSeccion
-            ->actividadSeccion
-            ->seccion;
-
-        $version = $this->obtenerVersionSemestral(
-            $seccion->periodo_academico_id
-        );
-
-        if (
-            !$version
-            || $horario->version_planificacion_id !== $version->id
-        ) {
-            throw ValidationException::withMessages([
-                'horario'
-                    => 'Solo se pueden eliminar horarios de la programación semestral actual.',
-            ]);
-        }
-
-        $horario->delete();
-
-        return redirect()
-            ->route(
-                'programacion.asignacion.horarios',
-                [
-                    'periodo_id'
-                        => $seccion->periodo_academico_id,
-
-                    'carrera_id'
-                        => $request->integer('carrera_id') ?: null,
-
-                    'semestre'
-                        => $request->input('semestre'),
-
-                    'seccion_id'
-                        => $seccion->id,
-                ]
-            )
-            ->with(
-                'success',
-                'Horario eliminado correctamente.'
-            );
+    public function destroy(Request $request, Horario $horario, AsignacionModulosHorario $asignador)
+    {
+        $contexto = $asignador->eliminar($horario, $request->user()->id, $request->ip());
+        return redirect()->route('programacion.asignacion.horarios', $contexto + [
+            'carrera_id' => $request->integer('carrera_id') ?: null, 'semestre' => $request->integer('semestre') ?: null,
+        ])->with('success', 'Horario eliminado correctamente.');
     }
 
     private function obtenerVersionSemestral(

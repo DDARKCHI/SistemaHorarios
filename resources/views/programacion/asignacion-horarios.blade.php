@@ -14,9 +14,13 @@
     @endif
 
     @if ($errors->any())
-        <div class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+        <div role="alert" class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {{ $errors->first() }}
         </div>
+    @endif
+
+    @if ($version && ! $editable)
+        <div role="status" class="mb-4 rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-600 shadow-sm sm:p-6">Esta programación está disponible para consulta. Los horarios solo se modifican en la versión actual en borrador de un período activo.</div>
     @endif
 
     @if (!$version)
@@ -241,6 +245,11 @@
         $cantidadMaximaModulos
     );
     $cantidadModulosDisponibles = $progresoModulos['faltantes'];
+    $restaurar = is_scalar(old('grupo_seccion_id')) && is_scalar(old('version_id'))
+        && (string) old('grupo_seccion_id') === (string) $grupo->id && (string) old('version_id') === (string) $version->id;
+    $idsAnteriores = static fn ($campo) => $restaurar && is_array(old($campo)) ? array_map('strval', array_filter(old($campo), 'is_scalar')) : [];
+    $diaAnterior = $restaurar && is_scalar(old('dia_id')) ? (string) old('dia_id') : '';
+    $observacionAnterior = $restaurar && is_scalar(old('observaciones')) ? (string) old('observaciones') : '';
 @endphp
 
                         <div class="px-4 py-4">
@@ -377,6 +386,7 @@
 
     @endif
 
+                                        @if ($editable)
                                         <form
                                             method="POST"
                                             action="{{ route('programacion.asignacion.horarios.eliminar', $horario) }}"
@@ -398,12 +408,13 @@
 
                                             <button
                                                 type="submit"
-                                                class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                                                class="boton boton-secundario"
                                                 onclick="return confirm('¿Eliminar este horario?')"
                                             >
                                                 Eliminar
                                             </button>
                                         </form>
+                                        @endif
 
                                     </div>
 
@@ -419,17 +430,18 @@
 
                             @if ($profesoresGrupo->isNotEmpty())
 
-    @if ($progresoModulos['puede_agregar'])
+    @if ($editable && $progresoModulos['puede_agregar'])
 
         <form
             method="POST"
             action="{{ route('programacion.asignacion.horarios.guardar') }}"
-    class="js-form-horario rounded-lg border border-gray-200 bg-white p-3"
+    class="js-form-horario rounded-lg border border-gray-200 bg-white p-5 sm:p-6"
     data-max-modulos="{{ $cantidadMaximaModulos }}"
     data-modulos-asignados="{{ $cantidadModulosAsignados }}"
     data-modulos-disponibles="{{ $cantidadModulosDisponibles }}"
 >
                                     @csrf
+                                    <input type="hidden" name="version_id" value="{{ $version->id }}">
 
                                     <input
                                         type="hidden"
@@ -466,11 +478,12 @@
                                     <div class="mb-3 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2 [&>div]:min-w-0">
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
+                                            <label for="dia-grupo-{{ $grupo->id }}" class="mb-1 block text-xs font-semibold text-gray-600">
                                                 Día
                                             </label>
 
                                             <select
+                                                id="dia-grupo-{{ $grupo->id }}"
                                                 name="dia_id"
                                                 required
                                             class="min-w-0 w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
@@ -480,7 +493,7 @@
                                                 </option>
 
                                                 @foreach ($dias as $dia)
-                                                    <option value="{{ $dia->id }}">
+                                                    <option value="{{ $dia->id }}" @selected($diaAnterior === (string) $dia->id)>
                                                         {{ $dia->nombre }}
                                                     </option>
                                                 @endforeach
@@ -488,13 +501,15 @@
                                         </div>
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
+                                            <label for="observaciones-grupo-{{ $grupo->id }}" class="mb-1 block text-xs font-semibold text-gray-600">
                                                 Observaciones
                                             </label>
 
                                             <input
+                                                id="observaciones-grupo-{{ $grupo->id }}"
                                                 type="text"
                                                 name="observaciones"
+                                                value="{{ $observacionAnterior }}"
                                                 maxlength="255"
                                                 placeholder="Opcional"
                                                 class="min-w-0 w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
@@ -552,6 +567,7 @@
                             type="checkbox"
                             name="profesores_ids[]"
                             value="{{ $grupoProfesor->profesor->id }}"
+                            @checked(in_array((string) $grupoProfesor->profesor->id, $idsAnteriores('profesores_ids'), true))
                             class="mt-0.5 shrink-0 rounded border-gray-300 text-institucional focus:ring-institucional"
                         >
 
@@ -613,6 +629,7 @@
                                                         type="checkbox"
                                                         name="bloques_horarios[]"
                                                         value="{{ $bloque->id }}"
+                                                        @checked(in_array((string) $bloque->id, $idsAnteriores('bloques_horarios'), true))
                                                         class="mt-0.5 rounded border-gray-300 text-institucional focus:ring-institucional"
                                                     >
 
@@ -648,7 +665,7 @@
 
                                         <button
                                             type="submit"
-                                            class="rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                                            class="boton boton-primario"
                                         >
                                             Agregar horario
                                         </button>
