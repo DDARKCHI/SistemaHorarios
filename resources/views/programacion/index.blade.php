@@ -12,7 +12,7 @@
         id="filtros-form"
         method="GET"
         action="{{ route('programacion.index') }}"
-        class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+        class="mb-2 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6"
     >
 
         <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end">
