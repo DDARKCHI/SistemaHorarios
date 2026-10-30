@@ -12,7 +12,7 @@ class RevisionConflictosProgramacion
     public const TIPOS = ['todos' => 'Todas las revisiones', 'profesor' => 'Docentes', 'curso' => 'Cursos o secciones',
         'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles',
         'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad de los espacios',
-        'disponibilidad' => 'Disponibilidad docente', 'datos' => 'Datos por revisar'];
+        'disponibilidad' => 'Disponibilidad docente', 'carga' => 'Módulos requeridos y asignados', 'datos' => 'Datos por revisar'];
 
     public function revisar(VersionPlanificacion $version): array
     {
@@ -115,11 +115,13 @@ class RevisionConflictosProgramacion
                 $activos[] = $actual;
             }
         }
-        $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $disponibilidad, $datos))
+        $carga = (new RevisionCargaProgramacion)->revisar($version, $horarios);
+        $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $disponibilidad, $datos, $carga['observaciones']))
             ->sortBy('orden')->map(function ($fila) { $fila['recursos'] = array_values($fila['recursos']); return $fila; })->values();
 
         return ['modulos' => $horarios->count(), 'conflictos' => count($cruces), 'asignaciones' => count($asignaciones),
-            'capacidad' => count($capacidades), 'disponibilidad' => count($disponibilidad), 'datos' => count($datos), 'observaciones' => $observaciones];
+            'capacidad' => count($capacidades), 'disponibilidad' => count($disponibilidad), 'datos' => count($datos),
+            'carga' => $carga, 'observaciones' => $observaciones];
     }
 
     private function segundos(?string $hora): ?int
