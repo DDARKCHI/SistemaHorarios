@@ -168,7 +168,6 @@
                 <h2 id="titulo-semana-espacio" class="px-1 text-sm font-bold text-gray-800">Horario semanal · {{ $espacioSeleccionado['codigo'] }}</h2>
                 <p class="mb-2 mt-1 break-words px-1 text-[11px] text-gray-500">{{ $periodoSeleccionado->nombre }} · {{ $versionSeleccionada->tipo === 'semestral' ? 'Semestral' : 'Importación anterior' }} v{{ $versionSeleccionada->version }}</p>
                 <div class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500">Desplaza la tabla para consultar todos los días si es necesario.</p>
                     <div role="region" aria-label="Horario semanal del espacio" tabindex="0" class="relative max-h-[75vh] min-w-0 max-w-full overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional">
                         <table class="w-full min-w-[1100px] table-fixed border-collapse text-left">
                             <caption class="sr-only">Clases del espacio por día y módulo horario</caption>
