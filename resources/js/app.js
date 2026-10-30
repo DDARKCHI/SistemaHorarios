@@ -1,5 +1,6 @@
 import './bootstrap';
 import './select-buscable';
+import './filtros-programacion-anterior';
 
 document.addEventListener('DOMContentLoaded', function () {
     const botonMenuMovil = document.getElementById('boton-menu-movil');
