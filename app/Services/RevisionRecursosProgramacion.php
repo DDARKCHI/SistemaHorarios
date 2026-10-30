@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Horario;
-use Illuminate\Support\Str;
+use App\Models\RequerimientoActividad;
 
 class RevisionRecursosProgramacion
 {
@@ -133,11 +133,8 @@ class RevisionRecursosProgramacion
 
     private function familia(string $tipo): ?string
     {
-        return match (Str::lower(Str::ascii(Str::squish($tipo)))) {
-            'sala', 'salas' => 'sala',
-            'laboratorio', 'laboratorios', 'laboratorio fijo', 'laboratorios fijos' => 'laboratorio',
-            'laboratorio movil', 'laboratorios moviles' => 'movil',
-            'equipamiento' => 'equipamiento',
+        return match (RequerimientoActividad::tipoNormalizado($tipo)) {
+            'Sala' => 'sala', 'Laboratorio' => 'laboratorio', 'Laboratorio móvil' => 'movil', 'Equipamiento' => 'equipamiento',
             default => null,
         };
     }

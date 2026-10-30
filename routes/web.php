@@ -18,6 +18,7 @@ use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\EquipamientoController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Http\Controllers\ValidacionProgramacionController;
+use App\Http\Controllers\RequerimientoActividadController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -61,6 +62,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/programacion/validacion', [ValidacionProgramacionController::class, 'index'])
         ->middleware('permission.redirect:gestionar conflictos')->name('programacion.validacion');
+
+    Route::get('/programacion/requerimientos', [RequerimientoActividadController::class, 'index'])
+        ->middleware('permission.redirect:gestionar conflictos')->name('programacion.requerimientos.index');
+    Route::scopeBindings()->prefix('programacion/actividades/{actividad}/requerimientos')->whereNumber('actividad')
+        ->middleware(['permission.redirect:gestionar conflictos', 'permission.redirect:asignar horarios'])->name('programacion.requerimientos.')->group(function () {
+            Route::get('/crear', [RequerimientoActividadController::class, 'create'])->name('create');
+            Route::post('/', [RequerimientoActividadController::class, 'store'])->name('store');
+            Route::get('/{requerimiento}/editar', [RequerimientoActividadController::class, 'edit'])->whereNumber('requerimiento')->name('edit');
+            Route::put('/{requerimiento}', [RequerimientoActividadController::class, 'update'])->whereNumber('requerimiento')->name('update');
+        });
 
     Route::get(
         '/programacion/semestral',

@@ -4,6 +4,7 @@
 <x-encabezado-pagina titulo="Revisión de conflictos">
     Revisa los conflictos y el cumplimiento de las asignaciones de una versión semestral.
     <x-slot:acciones>
+        <a href="{{ route('programacion.requerimientos.index', array_filter(['periodo_id' => $periodoId, 'version_id' => $version?->id])) }}" class="boton boton-secundario">Configurar requerimientos</a>
         @can('ver programacion semestral')
         <a href="{{ route('programacion.semestral', array_filter(['periodo_id' => $periodoId, 'version_id' => $version?->id])) }}" class="boton boton-secundario">Volver a programación</a>
         @endcan

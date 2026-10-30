@@ -11,6 +11,9 @@ class MigaDePan
         'inicio' => ['Inicio'],
         'programacion.semestral' => ['Programación semestral'],
         'programacion.validacion' => ['Revisión de conflictos', 'programacion.semestral'],
+        'programacion.requerimientos.index' => ['Requerimientos de actividades', 'programacion.validacion'],
+        'programacion.requerimientos.create' => ['Agregar requerimiento', 'programacion.requerimientos.index'],
+        'programacion.requerimientos.edit' => ['Editar requerimiento', 'programacion.requerimientos.index'],
         'programacion.asignacion.profesores' => ['Asignación de profesores', 'programacion.semestral'],
         'programacion.asignacion.horarios' => ['Asignación de horarios', 'programacion.semestral'],
         'programacion.propuesta' => ['Propuesta de horario', 'programacion.semestral'],
@@ -40,6 +43,8 @@ class MigaDePan
     private const PERMISOS = [
         'inicio' => 'ver panel inicio',
         'programacion.semestral' => 'ver programacion semestral',
+        'programacion.validacion' => 'gestionar conflictos',
+        'programacion.requerimientos.index' => 'gestionar conflictos',
         'programacion.index' => 'ver programacion anterior',
         'administracion.index' => 'administrar usuarios',
         'salas.index' => 'gestionar salas y recursos',
@@ -63,9 +68,12 @@ class MigaDePan
         if (isset($pagina[1])) {
             $rutaPadre = $pagina[1];
             $puedeConsultar = $usuario?->can(self::PERMISOS[$rutaPadre]);
-            $parametros = in_array($rutaPadre, ['programacion.semestral', 'programacion.index'], true)
+            $parametros = in_array($rutaPadre, ['programacion.semestral', 'programacion.index', 'programacion.validacion', 'programacion.requerimientos.index'], true)
                 ? self::contextoProgramacion($request)
                 : [];
+            if ($rutaPadre === 'programacion.requerimientos.index' && $request->route('actividad') instanceof \App\Models\ActividadSeccion) {
+                $parametros['periodo_id'] = $request->route('actividad')->seccion->periodo_academico_id;
+            }
             if ($rutaPadre === 'laboratorios.index' && in_array($request->route('tipo'), ['fijo', 'movil'], true)) {
                 $parametros['tipo'] = $request->route('tipo');
             }

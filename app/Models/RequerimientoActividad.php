@@ -3,9 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class RequerimientoActividad extends Model
 {
+    public const TIPOS = ['Sala' => 'Sala', 'Laboratorio' => 'Laboratorio', 'Laboratorio móvil' => 'Laboratorio móvil', 'Equipamiento' => 'Equipamiento'];
+
+    public static function tipoNormalizado(string $tipo): ?string
+    {
+        return match (Str::lower(Str::ascii(Str::squish($tipo)))) {
+            'sala', 'salas' => 'Sala',
+            'laboratorio', 'laboratorios', 'laboratorio fijo', 'laboratorios fijos' => 'Laboratorio',
+            'laboratorio movil', 'laboratorios moviles' => 'Laboratorio móvil',
+            'equipamiento' => 'Equipamiento',
+            default => null,
+        };
+    }
+
     protected $table = 'requerimientos_actividad';
 
     protected $fillable = [
@@ -23,6 +37,7 @@ class RequerimientoActividad extends Model
 
     protected $casts = [
         'obligatorio' => 'boolean',
+        'estado' => 'boolean', 'cantidad' => 'integer', 'capacidad_minima' => 'integer',
     ];
 
     public function actividadSeccion()
