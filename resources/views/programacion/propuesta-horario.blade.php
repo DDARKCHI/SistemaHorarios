@@ -16,17 +16,11 @@
     $diaInicial = $diaRestaurado?->id ?? $dias->first()?->id;
 @endphp
 
-<div class="min-w-0 w-full px-2 py-2">
+<x-encabezado-pagina titulo="Propuesta de horario">
+    Selecciona los bloques horarios en los que tienes disponibilidad para realizar clases.
+</x-encabezado-pagina>
 
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <h1 class="text-base font-bold text-gray-800">
-            Propuesta de horario
-        </h1>
-
-        <p class="mt-0.5 text-xs text-gray-500">
-            Selecciona los bloques horarios en los que tienes disponibilidad para realizar clases.
-        </p>
-    </div>
+<div class="min-w-0 w-full">
 
     @if (session('success'))
         <div class="mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs font-medium text-green-700">

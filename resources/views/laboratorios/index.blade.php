@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="w-full min-w-0 space-y-3 px-2 py-2">
-    <header class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-        <div class="min-w-0 flex-1">
-            <h1 class="text-base font-bold text-gray-800">Laboratorios</h1>
-            <p class="mt-1 text-sm text-gray-600">Administra los laboratorios fijos y móviles, su capacidad y habilitación de uso.</p>
-        </div>
+<x-encabezado-pagina titulo="Laboratorios">
+    Administra los laboratorios fijos y móviles, su capacidad y habilitación de uso.
+    <x-slot:acciones>
         <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
             <a href="{{ route('laboratorios.create', ['tipo' => 'fijo']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear laboratorio fijo</a>
             <a href="{{ route('laboratorios.create', ['tipo' => 'movil']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Crear laboratorio móvil</a>
         </div>
-    </header>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="w-full min-w-0 space-y-3">
 
     @if (session('success'))<div role="status" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>@endif
     @if ($errors->any())

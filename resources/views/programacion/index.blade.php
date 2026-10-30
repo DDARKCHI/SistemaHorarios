@@ -2,17 +2,11 @@
 
 @section('content')
 
+<x-encabezado-pagina titulo="Consultar programación anterior">
+    Revisa una programación anterior y consulta sus cursos, docentes y horarios mediante los filtros.
+</x-encabezado-pagina>
+
 <div class="min-w-0 w-full">
-
-    <header class="mb-6">
-        <h1 class="text-2xl font-semibold text-gray-800">
-            Consultar programación anterior
-        </h1>
-
-        <p class="mt-1 text-sm text-gray-500">
-            Revisa una programación anterior y consulta sus cursos, docentes y horarios mediante los filtros.
-        </p>
-    </header>
 
     <form
         id="filtros-form"

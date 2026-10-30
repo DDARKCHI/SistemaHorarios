@@ -4,8 +4,15 @@
     $campo = 'h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm';
     $hayFiltros = filled($filtros['universidad_id']) || filled($filtros['tipo']) || filled($filtros['cantidad_minima']) || $filtros['estado'] !== 'activos' || filled($filtros['uso']);
 @endphp
-<div class="w-full min-w-0 space-y-3 px-2 py-2">
-    <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"><div class="min-w-0 flex-1"><h1 class="text-base font-bold text-gray-800">Equipamiento y recursos</h1><p class="mt-1 text-sm text-gray-600">Administra el inventario institucional, sus tipos y cantidades registradas.</p></div><a href="{{ route('recursos.create') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Registrar equipamiento</a></header>
+<x-encabezado-pagina titulo="Equipamiento y recursos">
+    Administra el inventario institucional, sus tipos y cantidades registradas.
+    <x-slot:acciones>
+        <a href="{{ route('recursos.create') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Registrar equipamiento</a>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="w-full min-w-0 space-y-3">
+
     @if (session('success'))<div role="status" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>@endif
     @if ($errors->any())<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Revisa los filtros de búsqueda.</p><ul class="mt-1 list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <section aria-labelledby="resumen-recursos">

@@ -1,10 +1,14 @@
 @extends('layouts.app')
 @section('content')
-<div class="mx-auto w-full min-w-0 max-w-5xl space-y-3 px-2 py-2">
-    <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0"><h1 class="text-base font-bold text-gray-800">Detalle del reemplazo #{{ $registro['id'] }}</h1><p class="mt-1 text-sm text-gray-600">{{ $registro['fecha'] ?: 'Sin fecha registrada' }} · Realizado por {{ $registro['responsable'] }}</p></div>
+<x-encabezado-pagina titulo="Detalle del reemplazo #{{ $registro['id'] }}">
+    {{ $registro['fecha'] ?: 'Sin fecha registrada' }} · Realizado por {{ $registro['responsable'] }}
+    <x-slot:acciones>
         <a href="{{ route('programacion.intercambio.historial') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Volver al historial</a>
-    </header>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="mx-auto w-full min-w-0 max-w-5xl space-y-3">
+
     @if (! $registro['detalle_registrado'])
         <p role="note" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">Este registro es anterior al detalle completo o conserva información parcial. Los nombres y datos de la clase que se muestran como referencia pueden provenir de la versión o de las fichas actuales. Los campos sin referencias disponibles se muestran como información no disponible.</p>
     @else

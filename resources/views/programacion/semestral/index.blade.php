@@ -2,17 +2,11 @@
 
 @section('content')
 
-<div class="min-w-0 w-full px-2 py-2">
+<x-encabezado-pagina titulo="Programación semestral">
+    Consulta y gestiona la nueva programación semestral generada por PROSEC.
+</x-encabezado-pagina>
 
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <h1 class="text-base font-bold text-gray-800">
-            Programación semestral
-        </h1>
-
-        <p class="mt-0.5 text-xs text-gray-500">
-            Consulta y gestiona la nueva programación semestral generada por PROSEC.
-        </p>
-    </div>
+<div class="min-w-0 w-full">
 
     @if (session('success'))
         <div class="mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs font-medium text-green-700">

@@ -2,18 +2,17 @@
 
 @section('content')
 
-<div class="min-w-0 w-full space-y-3 px-2 py-2">
-    <header class="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-        <div class="min-w-0 flex-1">
-            <h1 class="text-base font-bold text-gray-800">Salas y recursos</h1>
-            <p class="mt-1 text-sm text-gray-600">Administra el catálogo de salas y encuentra espacios por sede, tipo o capacidad.</p>
-        </div>
+<x-encabezado-pagina titulo="Salas y recursos">
+    Administra el catálogo de salas y encuentra espacios por sede, tipo o capacidad.
+    <x-slot:acciones>
         <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
             <a href="{{ route('salas.horario') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar horarios</a>
             <a href="{{ route('salas.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear sala</a>
         </div>
-    </header>
+    </x-slot:acciones>
+</x-encabezado-pagina>
 
+<div class="min-w-0 w-full space-y-3">
     @if (session('success'))
         <div role="status" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>
     @endif

@@ -37,32 +37,11 @@
 
                 </div>
 
-                <div
-                    style="margin-top: 24px; margin-bottom: 24px;"
-                >
-
-                    <h1
-                        class="text-center font-semibold text-texto"
-                        style="
-                            font-size: 21px;
-                            line-height: 1.25;
-                        "
-                    >
-                        Recuperar contraseña
-                    </h1>
-
-                    <p
-                        class="text-texto-secundario"
-                        style="
-                            margin-top: 8px;
-                            font-size: 13.5px;
-                            line-height: 1.55;
-                        "
-                    >
+                <div class="mt-6">
+                    <x-encabezado-pagina titulo="Recuperar contraseña">
                         Ingresa tu RUT y enviaremos un enlace de recuperación
                         al correo asociado a tu cuenta.
-                    </p>
-
+                    </x-encabezado-pagina>
                 </div>
 
                 @if (session('status'))

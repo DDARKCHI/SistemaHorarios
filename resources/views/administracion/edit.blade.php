@@ -2,17 +2,11 @@
 
 @section('content')
 
-<div class="min-w-0 w-full px-2 py-2">
+<x-encabezado-pagina titulo="Editar usuario">
+    Modifica los datos del usuario y el rol asignado.
+</x-encabezado-pagina>
 
-    <div class="mb-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <h1 class="text-base font-bold text-gray-800">
-            Editar usuario
-        </h1>
-
-        <p class="mt-0.5 text-xs text-gray-500">
-            Modifica los datos del usuario y el rol asignado.
-        </p>
-    </div>
+<div class="min-w-0 w-full">
 
     <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
 

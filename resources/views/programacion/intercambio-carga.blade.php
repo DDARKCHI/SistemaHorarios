@@ -2,44 +2,23 @@
 
 @section('content')
 
-<div class="min-w-0 w-full px-2 py-2">
-
-    {{-- ENCABEZADO --}}
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-
-        <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
-            <div class="min-w-0 flex-1">
-                <h1 class="text-base font-bold text-gray-800">
-                    Intercambio Docente
-                </h1>
-
-                <p class="mt-0.5 text-xs text-gray-500">
-                    Consulta profesores que actualmente imparten una asignatura
-                    y revisa su carga, ubicación y horarios para evaluar posibles reemplazos.
-                </p>
-            </div>
-
-            @if ($asignatura)
-
-                <div class="min-w-0 break-words rounded-md bg-gray-100 px-3 py-2 sm:max-w-[50%] sm:text-right">
-
-                    <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                        Asignatura seleccionada
-                    </div>
-
-                    <div class="text-xs font-bold text-gray-800">
-                        {{ $asignatura->codigo }} — {{ $asignatura->nombre }}
-                    </div>
-
+<x-encabezado-pagina titulo="Intercambio Docente">
+    Consulta profesores que actualmente imparten una asignatura y revisa su carga, ubicación y horarios para evaluar posibles reemplazos.
+    <x-slot:acciones>
+        @if ($asignatura)
+            <div class="min-w-0 break-words rounded-md bg-gray-100 px-3 py-2 xl:text-right">
+                <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                    Asignatura seleccionada
                 </div>
+                <div class="text-xs font-bold text-gray-800">
+                    {{ $asignatura->codigo }} — {{ $asignatura->nombre }}
+                </div>
+            </div>
+        @endif
+    </x-slot:acciones>
+</x-encabezado-pagina>
 
-            @endif
-
-        </div>
-
-    </div>
-
+<div class="min-w-0 w-full">
 
     {{-- BUSCADOR --}}
     <form

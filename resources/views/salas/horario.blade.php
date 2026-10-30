@@ -14,14 +14,14 @@
     $sesionesDia = $diaSeleccionado ? $sesiones->where('dia_id', $diaSeleccionado->id) : collect();
 @endphp
 
-<div class="min-w-0 w-full space-y-3 px-2 py-2">
-    <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-start sm:justify-between">
-        <div class="min-w-0">
-            <h1 class="text-base font-bold text-gray-800">Horario de espacios</h1>
-            <p class="mt-1 text-sm leading-relaxed text-gray-600">Consulta las clases registradas en una sala o laboratorio, por día y semana.</p>
-        </div>
+<x-encabezado-pagina titulo="Horario de espacios">
+    Consulta las clases registradas en una sala o laboratorio, por día y semana.
+    <x-slot:acciones>
         <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Catálogo de salas</a>
-    </header>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="min-w-0 w-full space-y-3">
 
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

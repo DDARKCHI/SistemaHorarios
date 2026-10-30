@@ -8,8 +8,12 @@
         return is_scalar($anterior) || $anterior === null ? $anterior : $predeterminado;
     };
 @endphp
-<div class="mx-auto w-full min-w-0 max-w-4xl space-y-3 px-2 py-2">
-    <header class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"><h1 class="text-base font-bold text-gray-800">{{ $editando ? 'Editar equipamiento' : 'Registrar equipamiento' }}</h1><p class="mt-1 text-sm text-gray-600">{{ $editando ? 'Actualiza el registro y su cantidad en el inventario institucional.' : 'Registra un recurso y la cantidad de unidades que tiene la institución.' }}</p></header>
+<x-encabezado-pagina :titulo="$editando ? 'Editar equipamiento' : 'Registrar equipamiento'">
+    {{ $editando ? 'Actualiza el registro y su cantidad en el inventario institucional.' : 'Registra un recurso y la cantidad de unidades que tiene la institución.' }}
+</x-encabezado-pagina>
+
+<div class="mx-auto w-full min-w-0 max-w-4xl space-y-3">
+
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Revisa los datos del equipamiento.</p><ul class="mt-1 list-inside list-disc space-y-1">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif

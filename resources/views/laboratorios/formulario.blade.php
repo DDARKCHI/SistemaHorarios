@@ -12,11 +12,11 @@
     };
 @endphp
 
-<div class="mx-auto w-full min-w-0 max-w-4xl space-y-3 px-2 py-2">
-    <header class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-        <h1 class="text-base font-bold text-gray-800">{{ $titulo }}</h1>
-        <p class="mt-1 text-sm text-gray-600">{{ $tipo === 'fijo' ? 'Registra el laboratorio y la sala física que lo contiene.' : 'Registra el recurso móvil y su sede de origen.' }}</p>
-    </header>
+<x-encabezado-pagina :titulo="$titulo">
+    {{ $tipo === 'fijo' ? 'Registra el laboratorio y la sala física que lo contiene.' : 'Registra el recurso móvil y su sede de origen.' }}
+</x-encabezado-pagina>
+
+<div class="mx-auto w-full min-w-0 max-w-4xl space-y-3">
 
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

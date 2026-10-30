@@ -4,11 +4,15 @@
     $campo = 'h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm';
     $hayFiltros = collect($filtros)->except('q')->contains(fn ($valor) => filled($valor));
 @endphp
-<div class="w-full min-w-0 space-y-3 px-2 py-2">
-    <header class="flex min-w-0 flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0"><h1 class="text-base font-bold text-gray-800">Historial de reemplazos</h1><p class="mt-1 text-sm text-gray-600">Consulta los reemplazos aplicados, sus docentes, módulos y el usuario que realizó la operación.</p></div>
+<x-encabezado-pagina titulo="Historial de reemplazos">
+    Consulta los reemplazos aplicados, sus docentes, módulos y el usuario que realizó la operación.
+    <x-slot:acciones>
         <a href="{{ route('programacion.intercambio') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar reemplazo</a>
-    </header>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="w-full min-w-0 space-y-3">
+
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Revisa los filtros de búsqueda.</p><ul class="mt-1 list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif

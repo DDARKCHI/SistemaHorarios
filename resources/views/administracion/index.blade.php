@@ -2,26 +2,19 @@
 
 @section('content')
 
-<div class="min-w-0 w-full px-2 py-2">
-
-    <div class="mb-3 flex flex-col gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-base font-bold text-gray-800">
-                Administración
-            </h1>
-
-            <p class="mt-0.5 text-xs text-gray-500">
-                Administra los usuarios que tendrán acceso al sistema y sus roles.
-            </p>
-        </div>
-
+<x-encabezado-pagina titulo="Administración">
+    Administra los usuarios que tendrán acceso al sistema y sus roles.
+    <x-slot:acciones>
         <a
             href="{{ route('usuarios.create') }}"
             class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
         >
             Nuevo usuario
         </a>
-    </div>
+    </x-slot:acciones>
+</x-encabezado-pagina>
+
+<div class="min-w-0 w-full">
 
     @if (session('success'))
         <div class="mb-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
