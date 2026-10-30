@@ -107,8 +107,6 @@
                 </div>
             @elseif ($espacioSeleccionado['tipo'] === 'movil')
                 <p class="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">Se muestran las asignaciones de este laboratorio móvil en la versión seleccionada. Cada clase indica la sala cuando está registrada.</p>
-            @else
-                <p class="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">Incluye las asignaciones directas a esta sala y las de los laboratorios ubicados en ella, sin repetir clases.</p>
             @endif
         </section>
     @endif
