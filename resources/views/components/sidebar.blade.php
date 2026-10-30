@@ -13,6 +13,7 @@
         || request()->routeIs('programacion.asignacion*')
 
         || request()->routeIs('programacion.conflictos*')
+        || request()->routeIs('programacion.validacion*')
 
         || request()->routeIs('programacion.visualizar*')
         || request()->routeIs('programacion.propuesta*');
@@ -441,15 +442,10 @@
 
                     @can('gestionar conflictos')
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Gestión de conflictos</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                    <a href="{{ route('programacion.validacion') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('programacion.validacion') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
+                        <span class="h-1.5 w-1.5 rounded-full {{ request()->routeIs('programacion.validacion') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
+                        <span>Revisión de conflictos</span>
+                    </a>
 
                     @endcan
 
@@ -1642,11 +1638,7 @@
 
                         @can('gestionar conflictos')
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Gestión de conflictos
-
-                        </div>
+                        <a href="{{ route('programacion.validacion') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('programacion.validacion') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Revisión de conflictos</a>
 
                         @endcan
 

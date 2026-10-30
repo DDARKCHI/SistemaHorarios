@@ -4,6 +4,11 @@
 
 <x-encabezado-pagina titulo="Programación semestral">
     Consulta y gestiona la nueva programación semestral generada por PROSEC.
+    <x-slot:acciones>
+        @can('gestionar conflictos')
+        <a href="{{ route('programacion.validacion', array_filter(['periodo_id' => $periodoId, 'version_id' => $versionId])) }}" class="boton boton-secundario">Revisar conflictos</a>
+        @endcan
+    </x-slot:acciones>
 </x-encabezado-pagina>
 
 <div class="min-w-0 w-full">

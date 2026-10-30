@@ -10,6 +10,7 @@ class MigaDePan
     private const PAGINAS = [
         'inicio' => ['Inicio'],
         'programacion.semestral' => ['Programación semestral'],
+        'programacion.validacion' => ['Revisión de conflictos', 'programacion.semestral'],
         'programacion.asignacion.profesores' => ['Asignación de profesores', 'programacion.semestral'],
         'programacion.asignacion.horarios' => ['Asignación de horarios', 'programacion.semestral'],
         'programacion.propuesta' => ['Propuesta de horario', 'programacion.semestral'],

@@ -17,6 +17,7 @@ use App\Http\Controllers\SalaController;
 use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\EquipamientoController;
 use App\Http\Controllers\HorarioEspacioController;
+use App\Http\Controllers\ValidacionProgramacionController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -57,6 +58,9 @@ Route::get('/', [InicioController::class, 'index'])
     ->name('inicio');
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/programacion/validacion', [ValidacionProgramacionController::class, 'index'])
+        ->middleware('permission.redirect:gestionar conflictos')->name('programacion.validacion');
 
     Route::get(
         '/programacion/semestral',
