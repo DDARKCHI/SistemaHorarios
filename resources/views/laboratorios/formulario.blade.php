@@ -3,8 +3,7 @@
 @section('content')
 @php
     $editando = $laboratorio->exists;
-    $etiquetaTipo = $tipo === 'fijo' ? 'fijo' : 'móvil';
-    $titulo = ($editando ? 'Editar' : 'Crear').' laboratorio '.$etiquetaTipo;
+    $titulo = ($editando ? 'Editar' : 'Crear').' laboratorio'.($tipo === 'movil' ? ' móvil' : '');
     $campo = 'h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional sm:text-sm';
     $valor = static function ($nombre, $predeterminado = null) {
         $anterior = old($nombre, $predeterminado);

@@ -29,7 +29,7 @@ class LaboratorioController extends Controller
             'uso' => ['bail', 'nullable', Rule::in(['habilitados', 'deshabilitados'])],
             'page' => ['bail', 'nullable', 'integer', 'min:1'],
         ], [
-            'tipo.*' => 'Selecciona laboratorios fijos o móviles.',
+            'tipo.*' => 'Selecciona laboratorios o laboratorios móviles.',
             'q.*' => 'La búsqueda debe ser un texto de hasta 100 caracteres.',
             'sede_id.*' => 'Selecciona una sede registrada.',
             'capacidad_minima.*' => 'La capacidad mínima debe ser un número entero entre 0 y 65.535.',

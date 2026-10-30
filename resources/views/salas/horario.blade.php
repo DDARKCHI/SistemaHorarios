@@ -39,7 +39,7 @@
             <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
             <select data-select-buscable id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona un espacio</option>
-                @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios fijos', 'movil' => 'Laboratorios móviles'] as $tipoEspacio => $etiquetaGrupo)
+                @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles'] as $tipoEspacio => $etiquetaGrupo)
                     @if ($espacios->contains('tipo', $tipoEspacio))
                         <optgroup label="{{ $etiquetaGrupo }}">
                             @foreach ($espacios->where('tipo', $tipoEspacio) as $opcion)

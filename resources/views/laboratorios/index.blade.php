@@ -2,10 +2,10 @@
 
 @section('content')
 <x-encabezado-pagina titulo="Laboratorios">
-    Administra los laboratorios fijos y móviles, su capacidad y habilitación de uso.
+    Administra los laboratorios, su capacidad y habilitación de uso.
     <x-slot:acciones>
         <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <a href="{{ route('laboratorios.create', ['tipo' => 'fijo']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear laboratorio fijo</a>
+            <a href="{{ route('laboratorios.create', ['tipo' => 'fijo']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear laboratorio</a>
             <a href="{{ route('laboratorios.create', ['tipo' => 'movil']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Crear laboratorio móvil</a>
         </div>
     </x-slot:acciones>
@@ -27,7 +27,7 @@
             <p class="text-[11px] text-gray-500">Los filtros se aplican al listado.</p>
         </div>
         <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            @foreach (['fijos' => 'Laboratorios fijos', 'moviles' => 'Laboratorios móviles', 'activos' => 'Registros activos'] as $clave => $etiqueta)
+            @foreach (['fijos' => 'Laboratorios', 'moviles' => 'Laboratorios móviles', 'activos' => 'Registros activos'] as $clave => $etiqueta)
                 <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">
                     <dt class="text-sm font-semibold text-gray-700">{{ $etiqueta }}</dt>
                     <dd class="text-xl font-bold text-gray-800 sm:mt-1">{{ $resumen[$clave] }}</dd>
@@ -37,7 +37,7 @@
     </section>
 
     <nav aria-label="Tipo de laboratorio" class="flex gap-2">
-        @foreach (['fijo' => 'Laboratorios fijos', 'movil' => 'Laboratorios móviles'] as $opcion => $etiqueta)
+        @foreach (['fijo' => 'Laboratorios', 'movil' => 'Laboratorios móviles'] as $opcion => $etiqueta)
             <a href="{{ route('laboratorios.index', array_replace($filtros, ['tipo' => $opcion])) }}" @if ($tipo === $opcion) aria-current="page" @endif @class(['inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-3 py-2 text-center text-sm font-semibold sm:flex-none', 'border-red-200 bg-red-50 text-institucional' => $tipo === $opcion, 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' => $tipo !== $opcion])>{{ $etiqueta }}</a>
         @endforeach
     </nav>
@@ -90,7 +90,7 @@
 
     <section aria-labelledby="listado-laboratorios" class="min-w-0">
         <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2 px-1">
-            <h2 id="listado-laboratorios" class="text-sm font-bold text-gray-800">{{ $tipo === 'fijo' ? 'Laboratorios fijos' : 'Laboratorios móviles' }}</h2>
+            <h2 id="listado-laboratorios" class="text-sm font-bold text-gray-800">{{ $tipo === 'fijo' ? 'Laboratorios' : 'Laboratorios móviles' }}</h2>
             <p class="text-xs text-gray-500">{{ $laboratorios->total() > 0 ? 'Mostrando '.$laboratorios->firstItem().'–'.$laboratorios->lastItem().' de '.$laboratorios->total() : '0 registros' }}</p>
         </div>
         @if ($laboratorios->isEmpty())
