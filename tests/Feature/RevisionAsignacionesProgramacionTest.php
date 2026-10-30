@@ -7,6 +7,7 @@ use App\Models\AsignacionLaboratorio;
 use App\Models\AsignacionLaboratorioMovil;
 use App\Models\AsignacionSala;
 use App\Models\Asignatura;
+use App\Models\DisponibilidadProfesor;
 use App\Models\GrupoSeccion;
 use App\Models\Horario;
 use App\Models\HorarioProfesor;
@@ -73,6 +74,8 @@ class RevisionAsignacionesProgramacionTest extends IsolatedDatabaseTestCase
         $this->laboratorio($h, 30); $this->movil($h, 30);
         $this->assertSame(0, $this->reporte()['capacidad']);
         $this->assertSame(0, $this->reporte()['asignaciones']);
+        DisponibilidadProfesor::create(['profesor_id' => $this->profesor->id, 'periodo_academico_id' => $this->version->periodo_academico_id,
+            'dia_id' => $h->dia_id, 'bloque_horario_id' => $h->bloque_horario_id]);
         $this->get($this->url())->assertOk()->assertSee('Sin observaciones detectadas');
     }
 

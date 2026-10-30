@@ -8,6 +8,7 @@ use App\Models\AsignacionLaboratorioMovil;
 use App\Models\AsignacionSala;
 use App\Models\Asignatura;
 use App\Models\BloqueHorario;
+use App\Models\DisponibilidadProfesor;
 use App\Models\GrupoProfesor;
 use App\Models\GrupoSeccion;
 use App\Models\Horario;
@@ -162,7 +163,12 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
 
     public function test_pagina_y_filtra_las_observaciones_conservando_el_contexto(): void
     {
-        for ($n = 0; $n < 7; $n++) HorarioProfesor::create(['horario_id' => $this->modulo()->id, 'profesor_id' => $this->profesor->id]);
+        for ($n = 0; $n < 7; $n++) {
+            $h = $this->modulo();
+            HorarioProfesor::create(['horario_id' => $h->id, 'profesor_id' => $this->profesor->id]);
+            DisponibilidadProfesor::create(['profesor_id' => $this->profesor->id, 'periodo_academico_id' => $this->version->periodo_academico_id,
+                'dia_id' => $h->dia_id, 'bloque_horario_id' => $h->bloque_horario_id]);
+        }
         $this->get($this->url(['tipo' => 'profesor']))->assertOk()->assertViewHas('observaciones', fn ($p) => $p->total() === 21 && $p->count() === 20)
             ->assertSee('Siguiente');
         $this->get($this->url(['tipo' => 'profesor', 'page' => 2]))->assertOk()->assertViewHas('observaciones', fn ($p) => $p->count() === 1 && str_contains($p->previousPageUrl(), 'tipo=profesor'));
