@@ -111,8 +111,8 @@
         </fieldset>
 
         <div class="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
-            <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancelar</a>
-            <button type="submit" @disabled($sedes->isEmpty() || $tiposSala->isEmpty()) class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro disabled:cursor-not-allowed disabled:opacity-50">{{ $editando ? 'Guardar cambios' : 'Crear sala' }}</button>
+            <a href="{{ route('salas.index') }}" class="boton boton-secundario">Cancelar</a>
+            <button type="submit" @disabled($sedes->isEmpty() || $tiposSala->isEmpty()) class="boton boton-primario">{{ $editando ? 'Guardar cambios' : 'Crear sala' }}</button>
         </div>
     </form>
 </div>

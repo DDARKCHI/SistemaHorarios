@@ -5,8 +5,8 @@
     Administra los laboratorios, su capacidad y habilitación de uso.
     <x-slot:acciones>
         <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <a href="{{ route('laboratorios.create', ['tipo' => 'fijo']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear laboratorio</a>
-            <a href="{{ route('laboratorios.create', ['tipo' => 'movil']) }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Crear laboratorio móvil</a>
+            <a href="{{ route('laboratorios.create', ['tipo' => 'fijo']) }}" class="boton boton-primario">Crear laboratorio</a>
+            <a href="{{ route('laboratorios.create', ['tipo' => 'movil']) }}" class="boton boton-secundario">Crear laboratorio móvil</a>
         </div>
     </x-slot:acciones>
 </x-encabezado-pagina>
@@ -38,7 +38,7 @@
 
     <nav aria-label="Tipo de laboratorio" class="flex gap-2">
         @foreach (['fijo' => 'Laboratorios', 'movil' => 'Laboratorios móviles'] as $opcion => $etiqueta)
-            <a href="{{ route('laboratorios.index', array_replace($filtros, ['tipo' => $opcion])) }}" @if ($tipo === $opcion) aria-current="page" @endif @class(['inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-3 py-2 text-center text-sm font-semibold sm:flex-none', 'border-red-200 bg-red-50 text-institucional' => $tipo === $opcion, 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' => $tipo !== $opcion])>{{ $etiqueta }}</a>
+            <a href="{{ route('laboratorios.index', array_replace($filtros, ['tipo' => $opcion])) }}" @if ($tipo === $opcion) aria-current="page" @endif @class(['boton flex-1 sm:flex-none', 'boton-primario' => $tipo === $opcion, 'boton-secundario' => $tipo !== $opcion])>{{ $etiqueta }}</a>
         @endforeach
     </nav>
 
@@ -53,11 +53,11 @@
             <input id="busqueda-laboratorios" name="q" type="search" maxlength="100" value="{{ $filtros['q'] }}" placeholder="{{ $tipo === 'fijo' ? 'Código, nombre o sala física' : 'Código o nombre' }}" class="{{ $campo }}">
         </div>
         <div class="flex gap-2 sm:col-start-2 sm:row-start-1">
-            <button type="submit" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro sm:flex-none">Buscar</button>
-            <a href="{{ route('laboratorios.index', ['tipo' => $tipo]) }}" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 sm:flex-none">Limpiar</a>
+            <button type="submit" class="boton boton-primario flex-1 sm:flex-none">Buscar</button>
+            <a href="{{ route('laboratorios.index', ['tipo' => $tipo]) }}" class="boton boton-secundario flex-1 sm:flex-none">Limpiar</a>
         </div>
         <details data-filtros-salas class="contents" @if ($hayFiltros) open @endif>
-            <summary class="min-h-11 cursor-pointer rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-sm font-semibold text-gray-700 marker:text-institucional sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1">Filtrar laboratorios</summary>
+            <summary class="boton boton-secundario sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1">Filtrar laboratorios</summary>
             <div data-panel-filtros-salas class="grid min-w-0 grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-3 xl:grid-cols-4">
                 <div>
                     <label for="sede-laboratorios" class="mb-1.5 block text-sm font-semibold text-gray-700">Sede</label>
@@ -135,9 +135,9 @@
         @endif
         @if ($laboratorios->hasPages())
             <nav aria-label="Paginación de laboratorios" class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 text-sm shadow-sm">
-                @if ($laboratorios->onFirstPage())<span aria-disabled="true" class="px-3 py-2 text-gray-400">Anterior</span>@else<a href="{{ $laboratorios->previousPageUrl() }}" rel="prev" class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-3 py-2 text-gray-700 hover:bg-gray-50">Anterior</a>@endif
+                @if ($laboratorios->onFirstPage())<span aria-disabled="true" class="boton boton-secundario">Anterior</span>@else<a href="{{ $laboratorios->previousPageUrl() }}" rel="prev" class="boton boton-secundario">Anterior</a>@endif
                 <span class="text-xs text-gray-600">Página {{ $laboratorios->currentPage() }} de {{ $laboratorios->lastPage() }}</span>
-                @if ($laboratorios->hasMorePages())<a href="{{ $laboratorios->nextPageUrl() }}" rel="next" class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-3 py-2 text-gray-700 hover:bg-gray-50">Siguiente</a>@else<span aria-disabled="true" class="px-3 py-2 text-gray-400">Siguiente</span>@endif
+                @if ($laboratorios->hasMorePages())<a href="{{ $laboratorios->nextPageUrl() }}" rel="next" class="boton boton-secundario">Siguiente</a>@else<span aria-disabled="true" class="boton boton-secundario">Siguiente</span>@endif
             </nav>
         @endif
     </section>

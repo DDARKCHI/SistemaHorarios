@@ -22,6 +22,70 @@
     --color-borde: #e5e7eb;
 }
 
+/* Dos estilos comunes para las acciones de salas y recursos. */
+@utility boton {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-center text-sm font-semibold leading-5 transition-colors;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:focus-visible {
+        outline: 2px solid var(--color-institucional);
+        outline-offset: 2px;
+    }
+
+    &:disabled,
+    &[aria-disabled='true'] {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+}
+
+@utility boton-primario {
+    border-color: var(--color-institucional);
+    background-color: var(--color-institucional);
+    color: white;
+
+    &:hover:not(:disabled):not([aria-disabled='true']) {
+        border-color: var(--color-institucional-oscuro);
+        background-color: var(--color-institucional-oscuro);
+    }
+}
+
+@utility boton-secundario {
+    border-color: var(--color-gray-300);
+    background-color: white;
+    color: var(--color-gray-700);
+
+    &:hover:not(:disabled):not([aria-disabled='true']) {
+        border-color: var(--color-gray-400);
+        background-color: var(--color-gray-50);
+    }
+}
+
+@layer components {
+    summary.boton {
+        list-style: none;
+    }
+
+    summary.boton::-webkit-details-marker {
+        display: none;
+    }
+
+    summary.boton::before {
+        content: '';
+        width: 0;
+        height: 0;
+        flex-shrink: 0;
+        border-block: 0.3rem solid transparent;
+        border-left: 0.35rem solid currentColor;
+        transition: transform 150ms;
+    }
+
+    details[open] > summary.boton::before {
+        transform: rotate(90deg);
+    }
+}
+
 /* Tamaño común para las etiquetas de campos en todos los formularios. */
 label {
     font-size: 0.875rem;

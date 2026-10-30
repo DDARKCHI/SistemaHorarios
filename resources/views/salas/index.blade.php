@@ -6,8 +6,8 @@
     Administra el catálogo de salas y encuentra espacios por sede, tipo o capacidad.
     <x-slot:acciones>
         <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
-            <a href="{{ route('salas.horario') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Consultar horarios</a>
-            <a href="{{ route('salas.create') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro">Crear sala</a>
+            <a href="{{ route('salas.horario') }}" class="boton boton-secundario">Consultar horarios</a>
+            <a href="{{ route('salas.create') }}" class="boton boton-primario">Crear sala</a>
         </div>
     </x-slot:acciones>
 </x-encabezado-pagina>
@@ -60,11 +60,11 @@
             <input id="busqueda-salas" type="search" name="q" maxlength="100" value="{{ $filtros['q'] ?? '' }}" placeholder="Código, nombre o edificio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
         </div>
         <div class="flex gap-2 sm:col-start-2 sm:row-start-1">
-            <button type="submit" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white transition hover:bg-institucional-oscuro sm:flex-none">Buscar</button>
-            <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:flex-none">Limpiar</a>
+            <button type="submit" class="boton boton-primario flex-1 sm:flex-none">Buscar</button>
+            <a href="{{ route('salas.index') }}" class="boton boton-secundario flex-1 sm:flex-none">Limpiar</a>
         </div>
         <details data-filtros-salas class="contents" @if ($hayFiltrosAvanzados || $errors->hasAny(['sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'])) open @endif>
-            <summary class="min-h-11 cursor-pointer rounded-lg border border-gray-300 bg-gray-50 px-3 py-3 text-sm font-semibold text-gray-700 marker:text-institucional sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1" title="Sede, tipo, capacidad, estado y uso">
+            <summary class="boton boton-secundario sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1" title="Sede, tipo, capacidad, estado y uso">
                 Filtrar salas
                 @if ($hayFiltrosAvanzados)<span class="ml-1 text-[11px] font-medium text-institucional">Filtros aplicados</span>@endif
             </summary>
@@ -128,7 +128,7 @@
                 <h3 class="text-sm font-semibold text-gray-700">{{ (int) $resumen['total'] === 0 ? 'No hay salas registradas' : 'No se encontraron salas' }}</h3>
                 <p class="mx-auto mt-2 max-w-md text-sm text-gray-500">{{ (int) $resumen['total'] === 0 ? 'Las salas que se registren aparecerán en este catálogo.' : 'Prueba con otro código, nombre o combinación de filtros.' }}</p>
                 @if ((int) $resumen['total'] > 0)
-                    <a href="{{ route('salas.index', ['estado' => 'todas']) }}" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Ver todas las salas</a>
+                    <a href="{{ route('salas.index', ['estado' => 'todas']) }}" class="boton boton-secundario mt-4">Ver todas las salas</a>
                 @endif
             </div>
         @else
@@ -166,8 +166,8 @@
                                 <dd class="mt-0.5 break-words text-gray-800">{{ $sala->edificio ?: 'Sin edificio registrado' }}{{ filled($sala->piso) ? ' · Piso '.$sala->piso : '' }}</dd>
                             </div>
                         </dl>
-                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-institucional hover:bg-red-100">Ver horario</a>
-                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Editar</a>
+                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="boton boton-secundario mt-3 w-full">Ver horario</a>
+                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="boton boton-secundario mt-2 w-full">Editar</a>
                     </article>
                 @endforeach
             </div>
@@ -208,8 +208,8 @@
                                     </td>
                                     <td class="px-4 py-4">
                                         <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
-                                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-institucional hover:bg-red-100">Ver horario</a>
-                                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Editar</a>
+                                        <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="boton boton-secundario">Ver horario</a>
+                                        <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="boton boton-secundario">Editar</a>
                                         </div>
                                     </td>
                                 </tr>
@@ -223,15 +223,15 @@
         @if ($salas->hasPages())
             <nav aria-label="Paginación de salas" class="mt-3 grid grid-cols-2 items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:flex sm:justify-between">
                 @if ($salas->onFirstPage())
-                    <span aria-disabled="true" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-400">Anterior</span>
+                    <span aria-disabled="true" class="boton boton-secundario">Anterior</span>
                 @else
-                    <a href="{{ $salas->previousPageUrl() }}" rel="prev" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Anterior</a>
+                    <a href="{{ $salas->previousPageUrl() }}" rel="prev" class="boton boton-secundario">Anterior</a>
                 @endif
                 <p class="order-first col-span-2 text-center text-xs text-gray-600 sm:order-none">Página <span class="font-semibold">{{ $salas->currentPage() }}</span> de {{ $salas->lastPage() }}</p>
                 @if ($salas->hasMorePages())
-                    <a href="{{ $salas->nextPageUrl() }}" rel="next" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Siguiente</a>
+                    <a href="{{ $salas->nextPageUrl() }}" rel="next" class="boton boton-secundario">Siguiente</a>
                 @else
-                    <span aria-disabled="true" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-400">Siguiente</span>
+                    <span aria-disabled="true" class="boton boton-secundario">Siguiente</span>
                 @endif
             </nav>
         @endif

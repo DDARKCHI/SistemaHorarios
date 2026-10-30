@@ -17,7 +17,7 @@
 <x-encabezado-pagina titulo="Horario de espacios">
     Consulta las clases registradas en una sala o laboratorio, por día y semana.
     <x-slot:acciones>
-        <a href="{{ route('salas.index') }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Catálogo de salas</a>
+        <a href="{{ route('salas.index') }}" class="boton boton-secundario shrink-0">Catálogo de salas</a>
     </x-slot:acciones>
 </x-encabezado-pagina>
 
@@ -33,7 +33,7 @@
     @endif
 
     <details class="min-w-0 rounded-lg border border-gray-200 bg-white p-3 shadow-sm" @if (! $espacioSeleccionado || ! $periodoSeleccionado || ! $versionSeleccionada || $errors->any()) open @endif>
-    <summary class="min-h-11 cursor-pointer px-1 py-3 text-sm font-semibold text-gray-700 marker:text-institucional">{{ $espacioSeleccionado && $periodoSeleccionado && $versionSeleccionada ? 'Cambiar espacio o programación' : 'Seleccionar espacio y programación' }}</summary>
+    <summary class="boton boton-secundario">{{ $espacioSeleccionado && $periodoSeleccionado && $versionSeleccionada ? 'Cambiar espacio o programación' : 'Seleccionar espacio y programación' }}</summary>
     <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="mt-2 grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
         <div class="min-w-0 sm:col-span-2 xl:col-span-1">
             <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
@@ -70,7 +70,7 @@
         </div>
         @if ($vista)<input type="hidden" name="vista" value="{{ $vista }}">@endif
         @if ($diaSeleccionado)<input type="hidden" name="dia_id" value="{{ $diaSeleccionado->id }}">@endif
-        <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro sm:col-span-2 xl:col-span-1">Consultar</button>
+        <button type="submit" class="boton boton-primario sm:col-span-2 xl:col-span-1">Consultar</button>
     </form>
     </details>
 
@@ -103,7 +103,7 @@
             @if ($espacioSeleccionado['tipo'] === 'laboratorio')
                 <div class="mt-3 flex min-w-0 flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-xs leading-relaxed text-gray-600">Se muestran las asignaciones explícitas al laboratorio. Consulta también el uso de la sala que lo contiene.</p>
-                    <a href="{{ $urlHorario(['espacio' => 'sala:'.$espacioSeleccionado['sala_id']]) }}" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">Ver sala {{ $espacioSeleccionado['sala_codigo'] }}</a>
+                    <a href="{{ $urlHorario(['espacio' => 'sala:'.$espacioSeleccionado['sala_id']]) }}" class="boton boton-secundario shrink-0">Ver sala {{ $espacioSeleccionado['sala_codigo'] }}</a>
                 </div>
             @elseif ($espacioSeleccionado['tipo'] === 'movil')
                 <p class="mt-3 border-t border-gray-100 pt-3 text-xs leading-relaxed text-gray-500">Se muestran las asignaciones de este laboratorio móvil en la versión seleccionada. Cada clase indica la sala cuando está registrada.</p>
@@ -155,8 +155,8 @@
             <div class="flex min-w-0 flex-col gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-xs text-gray-600">Consulta diaria o semana completa</p>
                 <nav aria-label="Vista del horario" class="flex gap-2">
-                    <a href="{{ $urlHorario(['vista' => 'dia']) }}" @if ($vista === 'dia') aria-current="page" @endif @class(['inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 py-2 text-xs font-semibold sm:flex-none', 'border-institucional bg-institucional text-white' => $vista === 'dia', 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' => $vista === 'semana', 'border-institucional bg-institucional text-white xl:border-gray-300 xl:bg-white xl:text-gray-700' => $vista === null])>Por día</a>
-                    <a href="{{ $urlHorario(['vista' => 'semana']) }}" @if ($vista === 'semana') aria-current="page" @endif @class(['inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border px-4 py-2 text-xs font-semibold sm:flex-none', 'border-institucional bg-institucional text-white' => $vista === 'semana', 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50' => $vista === 'dia', 'border-gray-300 bg-white text-gray-700 xl:border-institucional xl:bg-institucional xl:text-white' => $vista === null])>Semana</a>
+                    <a href="{{ $urlHorario(['vista' => 'dia']) }}" @if ($vista === 'dia') aria-current="page" @endif @class(['boton flex-1 sm:flex-none', 'boton-primario' => $vista === 'dia', 'boton-secundario' => $vista === 'semana', 'boton-primario xl:boton-secundario' => $vista === null])>Por día</a>
+                    <a href="{{ $urlHorario(['vista' => 'semana']) }}" @if ($vista === 'semana') aria-current="page" @endif @class(['boton flex-1 sm:flex-none', 'boton-primario' => $vista === 'semana', 'boton-secundario' => $vista === 'dia', 'boton-secundario xl:boton-primario' => $vista === null])>Semana</a>
                 </nav>
             </div>
 
@@ -219,19 +219,19 @@
                     <label for="dia-horario-espacio" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Día a consultar</label>
                     <div class="flex min-w-0 flex-wrap items-center gap-2">
                         @if ($diaAnterior)
-                            <a href="{{ $urlHorario(['dia_id' => $diaAnterior->id]) }}" aria-label="Día anterior" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"><span aria-hidden="true">←</span></a>
+                            <a href="{{ $urlHorario(['dia_id' => $diaAnterior->id]) }}" aria-label="Día anterior" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">←</span></a>
                         @else
-                            <span aria-disabled="true" aria-label="Día anterior" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-300"><span aria-hidden="true">←</span></span>
+                            <span aria-disabled="true" aria-label="Día anterior" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">←</span></span>
                         @endif
                         <select id="dia-horario-espacio" name="dia_id" class="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                             @foreach ($dias as $dia)<option value="{{ $dia->id }}" @selected($diaSeleccionado?->id === $dia->id)>{{ $dia->nombre }}{{ $dia->estado ? '' : ' · Inactivo' }}</option>@endforeach
                         </select>
                         @if ($diaSiguiente)
-                            <a href="{{ $urlHorario(['dia_id' => $diaSiguiente->id]) }}" aria-label="Día siguiente" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"><span aria-hidden="true">→</span></a>
+                            <a href="{{ $urlHorario(['dia_id' => $diaSiguiente->id]) }}" aria-label="Día siguiente" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">→</span></a>
                         @else
-                            <span aria-disabled="true" aria-label="Día siguiente" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-300"><span aria-hidden="true">→</span></span>
+                            <span aria-disabled="true" aria-label="Día siguiente" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">→</span></span>
                         @endif
-                        <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-institucional px-4 py-2 text-xs font-semibold text-white hover:bg-institucional-oscuro sm:w-auto">Ver día</button>
+                        <button type="submit" class="boton boton-primario w-full sm:w-auto">Ver día</button>
                     </div>
                 </form>
                 <div class="flex flex-wrap items-baseline justify-between gap-2 px-1">

@@ -46,7 +46,7 @@
             </div>
             <p class="mt-4 text-xs leading-5 text-gray-600">Los registros inactivos se conservan en el inventario. La cantidad registrada corresponde al stock general de la institución.</p>
         </fieldset>
-        <div class="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end"><a href="{{ route('recursos.index') }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancelar</a><button type="submit" @disabled($instituciones->isEmpty()) class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-5 py-2 text-sm font-semibold text-white hover:bg-institucional-oscuro disabled:cursor-not-allowed disabled:opacity-50">{{ $editando ? 'Guardar cambios' : 'Registrar equipamiento' }}</button></div>
+        <div class="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end"><a href="{{ route('recursos.index') }}" class="boton boton-secundario">Cancelar</a><button type="submit" @disabled($instituciones->isEmpty()) class="boton boton-primario">{{ $editando ? 'Guardar cambios' : 'Registrar equipamiento' }}</button></div>
     </form>
 </div>
 @endsection
