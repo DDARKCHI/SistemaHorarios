@@ -21,11 +21,7 @@
         </div>
     @endif
 
-    <section aria-labelledby="resumen-laboratorios">
-        <div class="mb-2 flex flex-wrap items-baseline justify-between gap-1 px-1">
-            <h2 id="resumen-laboratorios" class="text-sm font-semibold text-gray-700">Resumen del catálogo</h2>
-            <p class="text-[11px] text-gray-500">Los filtros se aplican al listado.</p>
-        </div>
+    <section aria-label="Resumen del catálogo de laboratorios">
         <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">
             @foreach (['fijos' => 'Laboratorios', 'moviles' => 'Laboratorios móviles', 'activos' => 'Registros activos'] as $clave => $etiqueta)
                 <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">

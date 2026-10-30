@@ -15,8 +15,7 @@
 
     @if (session('success'))<div role="status" class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{{ session('success') }}</div>@endif
     @if ($errors->any())<div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"><p class="font-semibold">Revisa los filtros de búsqueda.</p><ul class="mt-1 list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-    <section aria-labelledby="resumen-recursos">
-        <div class="mb-2 flex flex-wrap items-baseline justify-between gap-1 px-1"><h2 id="resumen-recursos" class="text-sm font-semibold text-gray-700">Resumen del inventario</h2><p class="text-[11px] text-gray-500">Los filtros se aplican al listado.</p></div>
+    <section aria-label="Resumen del inventario">
         <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">@foreach (['total' => 'Registros de equipamiento', 'activos' => 'Registros activos', 'unidades' => 'Unidades en registros activos'] as $clave => $etiqueta)<div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block"><dt class="text-sm font-semibold text-gray-700">{{ $etiqueta }}</dt><dd class="text-xl font-bold text-gray-800 sm:mt-1">{{ $resumen[$clave] }}</dd></div>@endforeach</dl>
         <p class="mt-2 px-1 text-xs leading-5 text-gray-500">Las cantidades corresponden al inventario general. Para planificar una clase, revisa también la disponibilidad del espacio y los recursos necesarios.</p>
     </section>

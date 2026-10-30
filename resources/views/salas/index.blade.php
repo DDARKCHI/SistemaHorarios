@@ -28,11 +28,7 @@
         </div>
     @endif
 
-    <section aria-labelledby="resumen-salas">
-        <div class="mb-2 flex flex-wrap items-baseline justify-between gap-1 px-1">
-            <h2 id="resumen-salas" class="text-sm font-semibold leading-5 text-gray-700">Resumen del catálogo</h2>
-            <p class="text-[11px] text-gray-500">Los filtros se aplican al listado.</p>
-        </div>
+    <section aria-label="Resumen del catálogo de salas">
         <dl class="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:block">
                 <dt class="text-sm font-semibold leading-5 text-gray-700">Salas registradas</dt>

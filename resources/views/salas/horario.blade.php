@@ -32,9 +32,12 @@
         </div>
     @endif
 
-    <details class="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6" @if (! $espacioSeleccionado || ! $periodoSeleccionado || ! $versionSeleccionada || $errors->any()) open @endif>
-    <summary class="boton boton-secundario">{{ $espacioSeleccionado && $periodoSeleccionado && $versionSeleccionada ? 'Cambiar espacio o programación' : 'Seleccionar espacio y programación' }}</summary>
-    <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="mt-4 grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
+    <div data-selector-espacio class="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+    @if ($espacioSeleccionado)
+        <details class="min-w-0" @if (! $periodoSeleccionado || ! $versionSeleccionada || $errors->any()) open @endif>
+        <summary class="boton boton-secundario">Cambiar espacio o programación</summary>
+    @endif
+    <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] {{ $espacioSeleccionado ? 'mt-4' : '' }}">
         <div class="min-w-0 sm:col-span-2 xl:col-span-1">
             <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
             <select data-select-buscable id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
@@ -72,7 +75,10 @@
         @if ($diaSeleccionado)<input type="hidden" name="dia_id" value="{{ $diaSeleccionado->id }}">@endif
         <button type="submit" class="boton boton-primario sm:col-span-2 xl:col-span-1">Consultar</button>
     </form>
-    </details>
+    @if ($espacioSeleccionado)
+        </details>
+    @endif
+    </div>
 
     @if ($espacioSeleccionado)
         <section aria-labelledby="espacio-consultado" class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">

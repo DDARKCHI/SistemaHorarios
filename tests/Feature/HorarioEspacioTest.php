@@ -35,6 +35,29 @@ use Tests\IsolatedDatabaseTestCase;
 
 class HorarioEspacioTest extends IsolatedDatabaseTestCase
 {
+    public function test_los_filtros_iniciales_permanecen_visibles_y_el_desplegable_aparece_al_elegir_un_espacio(): void
+    {
+        $datos = $this->programacion();
+        $inicial = $this->consultar()->assertOk();
+        $dom = new DOMDocument;
+        @$dom->loadHTML($inicial->getContent());
+        $xpath = new DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//*[@data-selector-espacio]/form[@aria-label="Seleccionar espacio y programación"]')->length);
+        $this->assertSame(0, $xpath->query('//*[@data-selector-espacio]//details | //*[@data-selector-espacio]//summary')->length);
+
+        $seleccionado = $this->paraSala($datos['sala'])->assertOk()->assertSee('Cambiar espacio o programación');
+        @$dom->loadHTML($seleccionado->getContent());
+        $xpath = new DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//*[@data-selector-espacio]/details[not(@open)]/summary')->length);
+        $this->assertSame(1, $xpath->query('//*[@data-selector-espacio]/details/form')->length);
+
+        $periodoVacio = $this->periodo(['nombre' => '2024-2', 'anio' => 2024, 'estado' => false]);
+        $sinVersion = $this->paraSala($datos['sala'], ['periodo_id' => $periodoVacio->id])->assertOk();
+        @$dom->loadHTML($sinVersion->getContent());
+        $xpath = new DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//*[@data-selector-espacio]/details[@open]/form')->length);
+    }
+
     #[DataProvider('espaciosConCalendario')]
     public function test_el_calendario_semanal_solo_muestra_sabado_con_clases_del_espacio_y_version_consultados(string $tipo): void
     {
