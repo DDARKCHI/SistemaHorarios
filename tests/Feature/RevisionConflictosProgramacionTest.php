@@ -62,7 +62,7 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
         $reporte = $this->reporte();
         $this->assertSame(2, $reporte['modulos']);
         $this->assertSame(1, $reporte['conflictos']);
-        $fila = $reporte['observaciones']->sole();
+        $fila = $reporte['observaciones']->where('tipo', 'conflicto')->sole();
         $this->assertContains($tipo, array_column($fila['recursos'], 'tipo'));
         $this->assertSame('09:30–10:00', $fila['intervalo']);
         $this->assertSame([$a->id, $b->id], array_column($fila['horarios'], 'id'));
@@ -87,7 +87,7 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
         $a = $this->modulo('09:00:10', '10:00:00');
         $b = $this->modulo('09:00:20', '09:00:40');
         $this->compartir($a, $b, 'profesor');
-        $this->assertSame('09:00:20–09:00:40', $this->reporte()['observaciones']->sole()['intervalo']);
+        $this->assertSame('09:00:20–09:00:40', $this->reporte()['observaciones']->where('tipo', 'conflicto')->sole()['intervalo']);
     }
 
     public function test_la_ocupacion_del_laboratorio_tambien_ocupa_la_sala_fisica(): void
@@ -96,7 +96,7 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
         AsignacionSala::create(['horario_id' => $a->id, 'sala_id' => $this->sala->id]);
         $lab = Laboratorio::create(['sala_id' => $this->sala->id, 'nombre' => 'Laboratorio']);
         AsignacionLaboratorio::create(['horario_id' => $b->id, 'laboratorio_id' => $lab->id]);
-        $this->assertSame(['sala'], array_column($this->reporte()['observaciones']->sole()['recursos'], 'tipo'));
+        $this->assertSame(['sala'], array_column($this->reporte()['observaciones']->where('tipo', 'conflicto')->sole()['recursos'], 'tipo'));
     }
 
     public function test_agrupa_los_recursos_compartidos_sin_duplicar_el_cruce_ni_la_sala(): void
@@ -105,7 +105,7 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
         foreach (['profesor', 'sala', 'laboratorio'] as $tipo) $this->compartir($a, $b, $tipo);
         $reporte = $this->reporte();
         $this->assertSame(1, $reporte['conflictos']);
-        $this->assertEqualsCanonicalizing(['profesor', 'sala', 'laboratorio'], array_column($reporte['observaciones']->sole()['recursos'], 'tipo'));
+        $this->assertEqualsCanonicalizing(['profesor', 'sala', 'laboratorio'], array_column($reporte['observaciones']->where('tipo', 'conflicto')->sole()['recursos'], 'tipo'));
     }
 
     public function test_ignora_asignaciones_y_modulos_inactivos_y_otras_versiones(): void
@@ -146,7 +146,7 @@ class RevisionConflictosProgramacionTest extends IsolatedDatabaseTestCase
         $reporte = $this->reporte();
         $this->assertSame(2, $reporte['datos']);
         $this->assertSame(0, $reporte['conflictos']);
-        $this->assertTrue($reporte['observaciones']->every(fn ($fila) => $fila['tipo'] === 'datos'));
+        $this->assertSame(2, $reporte['observaciones']->where('tipo', 'datos')->count());
     }
 
     public function test_usa_el_nombre_conservado_en_la_version_y_no_escribe_resultados_en_la_base(): void

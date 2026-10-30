@@ -9,12 +9,14 @@ use App\Models\VersionPlanificacion;
 class RevisionConflictosProgramacion
 {
     public const TIPOS = ['todos' => 'Todas las revisiones', 'profesor' => 'Docentes', 'curso' => 'Cursos o secciones',
-        'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles', 'datos' => 'Datos por revisar'];
+        'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles',
+        'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad de los espacios', 'datos' => 'Datos por revisar'];
 
     public function revisar(VersionPlanificacion $version): array
     {
         $horarios = Horario::where('version_planificacion_id', $version->id)->where('estado', true)->with([
             'dia', 'bloqueHorario', 'actividadSeccion.seccion.asignatura', 'grupoSeccion',
+            'actividadSeccion.grupos' => fn ($query) => $query->where('estado_activo', true),
             'profesores' => fn ($query) => $query->where('estado', true), 'profesores.profesor',
             'grupoSeccion.profesores' => fn ($query) => $query->where('estado', true), 'grupoSeccion.profesores.profesor',
             'actividadSeccion.seccion.profesores' => fn ($query) => $query->where('estado', true),
@@ -24,7 +26,8 @@ class RevisionConflictosProgramacion
             'asignacionesLaboratoriosMoviles' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratoriosMoviles.laboratorioMovil',
         ])->orderBy('id')->get();
         $docentesVersion = ProfesorVersion::where('version_planificacion_id', $version->id)->get()->keyBy('profesor_id');
-        $grupos = $cruces = $datos = [];
+        $grupos = $cruces = $datos = $asignaciones = $capacidades = [];
+        $revisionAsignaciones = new RevisionAsignacionesProgramacion;
 
         foreach ($horarios as $horario) {
             $seccion = $horario->actividadSeccion?->seccion;
@@ -47,6 +50,12 @@ class RevisionConflictosProgramacion
                 $problemas[] = 'La sección no corresponde al período de esta versión.';
             }
             if ($problemas) $datos[] = $base + ['tipo' => 'datos', 'mensaje' => implode(' ', $problemas), 'recursos' => [], 'intervalo' => $presentacion['hora']];
+            $docentes = $horario->profesores;
+            if ($docentes->isEmpty()) $docentes = $horario->grupoSeccion?->profesores ?? collect();
+            if ($docentes->isEmpty()) $docentes = $seccion?->profesores ?? collect();
+            $revision = $revisionAsignaciones->revisar($horario, $docentes);
+            if ($revision['asignaciones']) $asignaciones[] = $base + ['tipo' => 'asignaciones', 'intervalo' => $presentacion['hora']] + $revision['asignaciones'];
+            if ($revision['capacidad']) $capacidades[] = $base + ['tipo' => 'capacidad', 'intervalo' => $presentacion['hora']] + $revision['capacidad'];
             if (! $valido) continue;
 
             $recursos = [];
@@ -54,9 +63,6 @@ class RevisionConflictosProgramacion
                 if ($id) $recursos[$tipo.':'.$id] = ['tipo' => $tipo, 'id' => (int) $id, 'nombre' => $nombre];
             };
             if ($seccion) $agregar('curso', $seccion->id, ($seccion->asignatura?->codigo ?: 'Curso').' · Sección '.$seccion->codigo);
-            $docentes = $horario->profesores;
-            if ($docentes->isEmpty()) $docentes = $horario->grupoSeccion?->profesores ?? collect();
-            if ($docentes->isEmpty()) $docentes = $seccion?->profesores ?? collect();
             foreach ($docentes as $asignacion) {
                 $profesor = $docentesVersion->get($asignacion->profesor_id) ?? $asignacion->profesor;
                 $nombre = trim(($profesor?->nombre ?? '').' '.($profesor?->apellido ?? ''));
@@ -97,10 +103,11 @@ class RevisionConflictosProgramacion
                 $activos[] = $actual;
             }
         }
-        $observaciones = collect(array_merge(array_values($cruces), $datos))
+        $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $datos))
             ->sortBy('orden')->map(function ($fila) { $fila['recursos'] = array_values($fila['recursos']); return $fila; })->values();
 
-        return ['modulos' => $horarios->count(), 'conflictos' => count($cruces), 'datos' => count($datos), 'observaciones' => $observaciones];
+        return ['modulos' => $horarios->count(), 'conflictos' => count($cruces), 'asignaciones' => count($asignaciones),
+            'capacidad' => count($capacidades), 'datos' => count($datos), 'observaciones' => $observaciones];
     }
 
     private function segundos(?string $hora): ?int
