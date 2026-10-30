@@ -10,6 +10,10 @@ use App\Models\VersionPlanificacion;
 
 class RevisionConflictosProgramacion
 {
+    public const ETIQUETAS = ['conflicto' => 'Tope horario', 'asignaciones' => 'Asignaciones incompletas',
+        'capacidad' => 'Capacidad por revisar', 'disponibilidad' => 'Disponibilidad por revisar',
+        'recursos' => 'Compatibilidad por revisar', 'carga' => 'Carga por revisar', 'datos' => 'Datos por revisar'];
+
     public const TIPOS = ['todos' => 'Todas las revisiones', 'profesor' => 'Docentes', 'curso' => 'Cursos o secciones',
         'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles', 'equipamiento' => 'Equipamiento',
         'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad de los espacios',

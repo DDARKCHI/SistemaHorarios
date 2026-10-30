@@ -65,11 +65,15 @@
                 <p class="mt-2 text-sm text-gray-500">{{ $reporte['modulos'] === 0 ? 'Los módulos que se incorporen a esta versión podrán revisarse aquí.' : 'Puedes revisar otra versión o cambiar el tipo de revisión.' }}</p>
             </div>
         @else
-            <p class="text-sm text-gray-500">{{ $observaciones->total() }} {{ $observaciones->total() === 1 ? 'observación' : 'observaciones' }} · Página {{ $observaciones->currentPage() }} de {{ $observaciones->lastPage() }}</p>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <p class="text-sm text-gray-500">{{ $observaciones->total() }} {{ $observaciones->total() === 1 ? 'observación' : 'observaciones' }} · Página {{ $observaciones->currentPage() }} de {{ $observaciones->lastPage() }}</p>
+                <a class="boton boton-secundario" href="{{ route('programacion.validacion.exportar', ['periodo_id' => $periodoId, 'version_id' => $version->id, 'tipo' => $tipo]) }}">Exportar a Excel</a>
+            </div>
+            <p class="text-sm text-gray-500">La descarga incluye todas las páginas del filtro aplicado.</p>
             <div class="space-y-3">
                 @foreach ($observaciones as $observacion)
                     <article class="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-                        <p class="mb-2 text-sm font-semibold text-gray-500">{{ ['conflicto' => 'Tope horario', 'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad por revisar', 'disponibilidad' => 'Disponibilidad por revisar', 'recursos' => 'Compatibilidad por revisar', 'carga' => 'Carga por revisar', 'datos' => 'Datos por revisar'][$observacion['tipo']] }}</p>
+                        <p class="mb-2 text-sm font-semibold text-gray-500">{{ $etiquetasObservacion[$observacion['tipo']] }}</p>
                         <h2 class="text-base font-semibold text-gray-800">{{ $observacion['titulo'] ?? ($observacion['dia'].' · '.$observacion['intervalo']) }}</h2>
                         <p class="mt-1 text-sm text-gray-600">{{ $observacion['mensaje'] }}</p>
                         @if ($observacion['recursos'])<ul class="mt-3 flex flex-wrap gap-2" aria-label="Asignaciones involucradas">@foreach ($observacion['recursos'] as $recurso)<li class="max-w-full break-words rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700">{{ $tipos[$recurso['tipo']] }}: {{ $recurso['nombre'] }}</li>@endforeach</ul>@endif

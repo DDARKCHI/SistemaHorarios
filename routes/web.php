@@ -64,6 +64,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/programacion/validacion', [ValidacionProgramacionController::class, 'index'])
         ->middleware('permission.redirect:gestionar conflictos')->name('programacion.validacion');
+    Route::get('/programacion/validacion/exportar', [ValidacionProgramacionController::class, 'exportar'])
+        ->middleware('permission.redirect:gestionar conflictos')->name('programacion.validacion.exportar');
 
     Route::get('/programacion/requerimientos', [RequerimientoActividadController::class, 'index'])
         ->middleware('permission.redirect:gestionar conflictos')->name('programacion.requerimientos.index');

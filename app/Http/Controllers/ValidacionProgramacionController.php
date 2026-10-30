@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\PeriodoAcademico;
 use App\Models\VersionPlanificacion;
+use App\Services\ExportacionRevisionProgramacion;
 use App\Services\RevisionConflictosProgramacion;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +15,35 @@ use Illuminate\Validation\Rule;
 class ValidacionProgramacionController extends Controller
 {
     public function index(Request $request, RevisionConflictosProgramacion $revision)
+    {
+        $contexto = $this->prepararRevision($request, $revision);
+        if ($contexto instanceof RedirectResponse) return $contexto;
+
+        $filas = $contexto['filas'];
+        $pagina = $contexto['pagina'];
+        $observaciones = new LengthAwarePaginator($filas->forPage($pagina, 20)->values(), $filas->count(), 20, $pagina,
+            ['path' => route('programacion.validacion'), 'query' => array_filter([
+                'periodo_id' => $contexto['periodoId'], 'version_id' => $contexto['version']?->id, 'tipo' => $contexto['tipo'],
+            ])]);
+        if ($pagina > $observaciones->lastPage()) return redirect()->to($observaciones->url($observaciones->lastPage()));
+        unset($contexto['filas'], $contexto['pagina']);
+
+        return view('programacion.validacion', $contexto + ['observaciones' => $observaciones]);
+    }
+
+    public function exportar(Request $request, RevisionConflictosProgramacion $revision, ExportacionRevisionProgramacion $exportacion)
+    {
+        $contexto = $this->prepararRevision($request, $revision);
+        if ($contexto instanceof RedirectResponse) return $contexto;
+        if (! $contexto['version']) {
+            return redirect()->route('programacion.validacion', array_filter(['periodo_id' => $contexto['periodoId']]))
+                ->withErrors(['version_id' => 'Selecciona una versión semestral para exportar su revisión.']);
+        }
+
+        return $exportacion->descargar($contexto['version'], $contexto['tipo'], $contexto['reporte'], $contexto['filas']);
+    }
+
+    private function prepararRevision(Request $request, RevisionConflictosProgramacion $revision): array|RedirectResponse
     {
         $validador = Validator::make($request->query(), [
             'periodo_id' => ['nullable', 'integer', 'min:1', 'exists:periodos_academicos,id'],
@@ -40,11 +71,9 @@ class ValidacionProgramacionController extends Controller
         $filas = ($reporte['observaciones'] ?? collect())->filter(fn ($fila) => $tipo === 'todos'
             || (in_array($tipo, ['datos', 'asignaciones', 'capacidad', 'disponibilidad', 'carga', 'recursos'], true) ? $fila['tipo'] === $tipo : collect($fila['recursos'])->contains('tipo', $tipo)))->values();
         $pagina = (int) ($datos['page'] ?? 1);
-        $observaciones = new LengthAwarePaginator($filas->forPage($pagina, 20)->values(), $filas->count(), 20, $pagina,
-            ['path' => route('programacion.validacion'), 'query' => array_filter(['periodo_id' => $periodoId, 'version_id' => $version?->id, 'tipo' => $tipo])]);
-        if ($pagina > $observaciones->lastPage()) return redirect()->to($observaciones->url($observaciones->lastPage()));
         $tipos = RevisionConflictosProgramacion::TIPOS;
+        $etiquetasObservacion = RevisionConflictosProgramacion::ETIQUETAS;
 
-        return view('programacion.validacion', compact('periodos', 'periodoId', 'versiones', 'version', 'tipo', 'tipos', 'reporte', 'observaciones'));
+        return compact('periodos', 'periodoId', 'versiones', 'version', 'tipo', 'tipos', 'etiquetasObservacion', 'reporte', 'filas', 'pagina');
     }
 }
