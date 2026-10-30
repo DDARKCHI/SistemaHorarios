@@ -15,6 +15,7 @@ use App\Http\Controllers\RecuperarContrasenaController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\LaboratorioController;
+use App\Http\Controllers\EquipamientoController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Imports\PruebaImport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -277,6 +278,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/{tipo}', [LaboratorioController::class, 'store'])->whereIn('tipo', ['fijo', 'movil'])->name('store');
         Route::get('/{tipo}/{id}/editar', [LaboratorioController::class, 'edit'])->whereIn('tipo', ['fijo', 'movil'])->whereNumber('id')->name('edit');
         Route::put('/{tipo}/{id}', [LaboratorioController::class, 'update'])->whereIn('tipo', ['fijo', 'movil'])->whereNumber('id')->name('update');
+    });
+
+    Route::prefix('recursos')->name('recursos.')->middleware('permission.redirect:gestionar salas y recursos')->group(function () {
+        Route::get('/', [EquipamientoController::class, 'index'])->name('index');
+        Route::get('/crear', [EquipamientoController::class, 'create'])->name('create');
+        Route::post('/', [EquipamientoController::class, 'store'])->name('store');
+        Route::get('/{equipamiento}/editar', [EquipamientoController::class, 'edit'])->whereNumber('equipamiento')->name('edit');
+        Route::put('/{equipamiento}', [EquipamientoController::class, 'update'])->whereNumber('equipamiento')->name('update');
     });
 
     Route::get(

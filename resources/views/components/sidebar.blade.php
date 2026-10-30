@@ -799,15 +799,10 @@
 
 
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Equipamiento y recursos</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                    <a href="{{ route('recursos.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('recursos.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
+                        <span>Equipamiento y recursos</span>
+                    </a>
 
                 </div>
 
@@ -1887,11 +1882,7 @@
 
 
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Equipamiento y recursos
-
-                        </div>
+                        <a href="{{ route('recursos.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Equipamiento y recursos</a>
 
                     </div>
 

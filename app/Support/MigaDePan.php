@@ -24,6 +24,9 @@ class MigaDePan
         'laboratorios.index' => ['Laboratorios', 'salas.index'],
         'laboratorios.create' => ['Crear laboratorio', 'laboratorios.index'],
         'laboratorios.edit' => ['Editar laboratorio', 'laboratorios.index'],
+        'recursos.index' => ['Equipamiento y recursos', 'salas.index'],
+        'recursos.create' => ['Registrar equipamiento', 'recursos.index'],
+        'recursos.edit' => ['Editar equipamiento', 'recursos.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],
         'programacion.importar.analizar' => ['Cargar programación anterior', 'programacion.index'],
@@ -40,6 +43,7 @@ class MigaDePan
         'administracion.index' => 'administrar usuarios',
         'salas.index' => 'gestionar salas y recursos',
         'laboratorios.index' => 'gestionar salas y recursos',
+        'recursos.index' => 'gestionar salas y recursos',
         'programacion.intercambio' => 'ver intercambio docente',
         'programacion.intercambio.historial' => 'ver intercambio docente',
     ];

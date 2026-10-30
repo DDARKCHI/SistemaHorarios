@@ -20,6 +20,8 @@ class Equipamiento extends Model
 
     protected $casts = [
         'disponible' => 'boolean',
+        'estado' => 'boolean',
+        'cantidad' => 'integer',
     ];
 
     public function universidad()

@@ -13,6 +13,19 @@ use Tests\IsolatedDatabaseTestCase;
 
 class MigaDePanTest extends IsolatedDatabaseTestCase
 {
+    public function test_los_formularios_de_equipamiento_regresan_a_su_inventario(): void
+    {
+        $usuario = $this->usuario('gestionar salas y recursos');
+        foreach (['recursos.create' => 'Registrar equipamiento', 'recursos.edit' => 'Editar equipamiento'] as $ruta => $etiqueta) {
+            $migas = MigaDePan::para($this->solicitud($ruta), $usuario);
+            $this->assertSame(['Equipamiento y recursos', $etiqueta], array_column($migas, 'label'));
+            $this->assertSame(route('recursos.index'), $migas[0]['url']);
+        }
+        $migas = MigaDePan::para($this->solicitud('recursos.index'), $usuario);
+        $this->assertSame(['Salas y recursos', 'Equipamiento y recursos'], array_column($migas, 'label'));
+        $this->assertSame(route('salas.index'), $migas[0]['url']);
+    }
+
     public function test_el_detalle_del_reemplazo_regresa_al_historial_y_este_a_intercambio(): void
     {
         $usuario = $this->usuario('ver intercambio docente');
