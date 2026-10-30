@@ -101,7 +101,7 @@ class RequerimientosActividadTest extends IsolatedDatabaseTestCase
         $this->post($this->guardar(), $this->datos(['tipo_requerimiento' => 'Laboratorio móvil', 'tipo_sala_id' => null]))->assertSessionHasErrors('tipo_sala_id');
         $this->post($this->guardar(), $this->datos(['tipo_requerimiento' => 'Equipamiento', 'tipo_sala_id' => null, 'nombre_recurso' => null]))->assertSessionHasErrors('nombre_recurso');
         $this->post($this->guardar(), $this->datos(['tipo_requerimiento' => 'Equipamiento', 'nombre_recurso' => 'Proyector']))->assertSessionHasErrors('tipo_sala_id');
-        $this->post($this->guardar(), $this->datos(['tipo_requerimiento' => 'Equipamiento', 'nombre_recurso' => 'Proyector', 'tipo_sala_id' => null]))->assertRedirect();
+        $this->post($this->guardar(), $this->datos(['tipo_requerimiento' => 'Equipamiento', 'nombre_recurso' => 'Proyector', 'tipo_sala_id' => null, 'capacidad_minima' => null]))->assertRedirect();
         $this->assertSame('Equipamiento', Models\RequerimientoActividad::sole()->tipo_requerimiento);
     }
 

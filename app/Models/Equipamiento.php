@@ -28,4 +28,6 @@ class Equipamiento extends Model
     {
         return $this->belongsTo(Universidad::class);
     }
+
+    public function ubicaciones() { return $this->hasMany(EquipamientoEspacio::class); }
 }

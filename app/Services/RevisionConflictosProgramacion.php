@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DisponibilidadProfesor;
+use App\Models\Equipamiento;
 use App\Models\Horario;
 use App\Models\ProfesorVersion;
 use App\Models\VersionPlanificacion;
@@ -10,7 +11,7 @@ use App\Models\VersionPlanificacion;
 class RevisionConflictosProgramacion
 {
     public const TIPOS = ['todos' => 'Todas las revisiones', 'profesor' => 'Docentes', 'curso' => 'Cursos o secciones',
-        'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles',
+        'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles', 'equipamiento' => 'Equipamiento',
         'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad de los espacios',
         'disponibilidad' => 'Disponibilidad docente', 'recursos' => 'Compatibilidad de recursos',
         'carga' => 'Módulos requeridos y asignados', 'datos' => 'Datos por revisar'];
@@ -22,6 +23,7 @@ class RevisionConflictosProgramacion
             'actividadSeccion.grupos' => fn ($query) => $query->where('estado_activo', true),
             'actividadSeccion.requerimientos' => fn ($query) => $query->where('estado', true)->where('obligatorio', true)->orderBy('id'),
             'actividadSeccion.requerimientos.tipoSala',
+            'actividadSeccion.requerimientos.equipamiento',
             'profesores' => fn ($query) => $query->where('estado', true), 'profesores.profesor',
             'grupoSeccion.profesores' => fn ($query) => $query->where('estado', true), 'grupoSeccion.profesores.profesor',
             'actividadSeccion.seccion.profesores' => fn ($query) => $query->where('estado', true),
@@ -43,7 +45,9 @@ class RevisionConflictosProgramacion
         $revisionDisponibilidad = new RevisionDisponibilidadProgramacion($declaradas, $docentesVersion);
         $grupos = $cruces = $datos = $asignaciones = $capacidades = $disponibilidad = $compatibilidad = [];
         $revisionAsignaciones = new RevisionAsignacionesProgramacion;
-        $revisionRecursos = new RevisionRecursosProgramacion((int) $version->periodoAcademico->universidad_id);
+        $universidadId = (int) $version->periodoAcademico->universidad_id;
+        $inventario = Equipamiento::where('universidad_id', $universidadId)->with('ubicaciones')->get()->keyBy('id');
+        $revisionRecursos = new RevisionRecursosProgramacion($universidadId, new RevisionEquipamientoProgramacion($inventario));
 
         foreach ($horarios as $horario) {
             $seccion = $horario->actividadSeccion?->seccion;

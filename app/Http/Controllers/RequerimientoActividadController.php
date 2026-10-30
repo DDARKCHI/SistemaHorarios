@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActividadSeccion;
+use App\Models\Equipamiento;
 use App\Models\PeriodoAcademico;
 use App\Models\PrioridadRecurso;
 use App\Models\RequerimientoActividad;
@@ -30,7 +31,7 @@ class RequerimientoActividadController extends Controller
         $q = trim($datos['q'] ?? '');
         $consulta = ActividadSeccion::whereHas('seccion', fn ($query) => $query->where('periodo_academico_id', $periodoId))
             ->with(['seccion.asignatura', 'seccion.periodoAcademico', 'requerimientos' => fn ($query) => $query->orderByDesc('estado')->orderBy('id'),
-                'requerimientos.tipoSala', 'requerimientos.prioridadRecurso']);
+                'requerimientos.tipoSala', 'requerimientos.prioridadRecurso', 'requerimientos.equipamiento']);
         if ($q !== '') {
             $literal = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $q).'%';
             $consulta->where(fn ($query) => $query->whereRaw("tipo LIKE ? ESCAPE '!'", [$literal])
@@ -73,7 +74,10 @@ class RequerimientoActividadController extends Controller
         if ($actual && ! isset($tipos[$actual])) $tipos[$actual] = $actual.' (tipo anterior)';
         $tiposSala = TipoSala::where('estado', true)->when($requerimiento->tipo_sala_id, fn ($q) => $q->orWhere('id', $requerimiento->tipo_sala_id))->orderBy('nombre')->get();
         $prioridades = PrioridadRecurso::where('estado', true)->when($requerimiento->prioridad_recurso_id, fn ($q) => $q->orWhere('id', $requerimiento->prioridad_recurso_id))->orderBy('nivel')->orderBy('nombre')->get();
-        return view('programacion.requerimientos.formulario', compact('actividad', 'requerimiento', 'tipos', 'tiposSala', 'prioridades', 'contexto'));
+        $equipamientos = Equipamiento::where('universidad_id', $actividad->seccion->periodoAcademico->universidad_id)
+            ->where(fn ($q) => $q->where(fn ($activo) => $activo->where('estado', true)->where('disponible', true))
+                ->when($requerimiento->equipamiento_id, fn ($actual) => $actual->orWhere('id', $requerimiento->equipamiento_id)))->orderBy('nombre')->get();
+        return view('programacion.requerimientos.formulario', compact('actividad', 'requerimiento', 'tipos', 'tiposSala', 'prioridades', 'equipamientos', 'contexto'));
     }
 
     private function guardar(Request $request, ActividadSeccion $actividad, RequerimientoActividad $requerimiento)
@@ -94,12 +98,14 @@ class RequerimientoActividadController extends Controller
                 'tipo_requerimiento' => ['required', 'string', Rule::in($tipos)],
                 'tipo_sala_id' => ['nullable', Rule::requiredIf($normalizado === 'Laboratorio móvil'), 'integer', Rule::exists('tipos_sala', 'id')],
                 'prioridad_recurso_id' => ['nullable', 'integer', Rule::exists('prioridades_recursos', 'id')],
-                'nombre_recurso' => [Rule::requiredIf($normalizado === 'Equipamiento'), 'nullable', 'string', 'max:100'],
+                'equipamiento_id' => ['nullable', 'integer', Rule::exists('equipamientos', 'id')],
+                'nombre_recurso' => [Rule::requiredIf($normalizado === 'Equipamiento' && ! $request->filled('equipamiento_id')), 'nullable', 'string', 'max:100'],
                 'cantidad' => ['required', 'integer', 'min:1', 'max:65535'], 'capacidad_minima' => ['nullable', 'integer', 'min:1', 'max:65535'],
                 'obligatorio' => ['required', 'boolean'], 'estado' => ['required', 'boolean'], 'observaciones' => ['nullable', 'string', 'max:2000'],
             ], [
                 'tipo_requerimiento.*' => 'Selecciona un tipo de requerimiento disponible.', 'tipo_sala_id.*' => 'Selecciona un tipo de sala registrado; es obligatorio para un laboratorio móvil.',
                 'prioridad_recurso_id.*' => 'Selecciona una prioridad registrada.', 'nombre_recurso.*' => 'Indica el recurso solicitado (hasta 100 caracteres); es obligatorio para equipamiento.',
+                'equipamiento_id.*' => 'Selecciona un equipo del inventario.',
                 'cantidad.*' => 'La cantidad debe ser un entero entre 1 y 65.535.', 'capacidad_minima.*' => 'La capacidad mínima debe ser un entero entre 1 y 65.535, o quedar vacía.',
                 'obligatorio.*' => 'Selecciona si el requerimiento es obligatorio.', 'estado.*' => 'Selecciona un estado válido.', 'observaciones.*' => 'Las observaciones admiten hasta 2.000 caracteres.',
             ]);
@@ -112,6 +118,19 @@ class RequerimientoActividadController extends Controller
             }
             if ($normalizado === 'Equipamiento' && ! empty($datos['tipo_sala_id'])) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['tipo_sala_id' => 'El tipo de sala corresponde a espacios; déjalo vacío para equipamiento.']);
+            }
+            if ($normalizado === 'Equipamiento') {
+                if (isset($datos['capacidad_minima'])) throw \Illuminate\Validation\ValidationException::withMessages(['capacidad_minima' => 'La capacidad mínima corresponde a espacios; déjala vacía para equipamiento.']);
+                $datos['capacidad_minima'] = null;
+            }
+            $datos['equipamiento_id'] = $datos['equipamiento_id'] ?? null;
+            if ($datos['equipamiento_id']) {
+                if ($normalizado !== 'Equipamiento') throw \Illuminate\Validation\ValidationException::withMessages(['equipamiento_id' => 'El vínculo al inventario corresponde a requerimientos de equipamiento.']);
+                $equipo = Equipamiento::lockForUpdate()->findOrFail($datos['equipamiento_id']);
+                if ((int) $equipo->universidad_id !== (int) $periodo->universidad_id || ((! $equipo->estado || ! $equipo->disponible) && ($nuevo || (int) $requerimiento->equipamiento_id !== (int) $equipo->id))) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['equipamiento_id' => 'Elige un equipo activo y habilitado de la institución del período. Al editar puedes conservar el actual.']);
+                }
+                $datos['nombre_recurso'] = $equipo->nombre;
             }
             $contexto = $this->contexto($request, $periodo->id);
             if ($contexto === null) throw \Illuminate\Validation\ValidationException::withMessages(['version_id' => 'La versión de regreso debe ser semestral y pertenecer al período de esta actividad.']);

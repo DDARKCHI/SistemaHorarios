@@ -16,6 +16,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\LaboratorioController;
 use App\Http\Controllers\EquipamientoController;
+use App\Http\Controllers\EquipamientoEspacioController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Http\Controllers\ValidacionProgramacionController;
 use App\Http\Controllers\RequerimientoActividadController;
@@ -300,6 +301,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/crear', [EquipamientoController::class, 'create'])->name('create');
         Route::post('/', [EquipamientoController::class, 'store'])->name('store');
         Route::get('/{equipamiento}/editar', [EquipamientoController::class, 'edit'])->whereNumber('equipamiento')->name('edit');
+        Route::get('/{equipamiento}/ubicaciones', [EquipamientoEspacioController::class, 'index'])->whereNumber('equipamiento')->name('ubicaciones.index');
+        Route::post('/{equipamiento}/ubicaciones', [EquipamientoEspacioController::class, 'store'])->whereNumber('equipamiento')->name('ubicaciones.store');
+        Route::put('/{equipamiento}/ubicaciones/{ubicacion}', [EquipamientoEspacioController::class, 'update'])->whereNumber(['equipamiento', 'ubicacion'])->name('ubicaciones.update');
+        Route::delete('/{equipamiento}/ubicaciones/{ubicacion}', [EquipamientoEspacioController::class, 'destroy'])->whereNumber(['equipamiento', 'ubicacion'])->name('ubicaciones.destroy');
         Route::put('/{equipamiento}', [EquipamientoController::class, 'update'])->whereNumber('equipamiento')->name('update');
     });
 

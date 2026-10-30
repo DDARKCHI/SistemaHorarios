@@ -119,7 +119,7 @@ class EquipamientoController extends Controller
     {
         $esNuevo = ! $equipamiento->exists;
         $equipamiento = DB::transaction(function () use ($request, $equipamiento, $esNuevo) {
-            $equipamiento = $esNuevo ? $equipamiento : Equipamiento::query()->lockForUpdate()->findOrFail($equipamiento->id);
+            $equipamiento = $esNuevo ? new Equipamiento : Equipamiento::query()->lockForUpdate()->findOrFail($equipamiento->id);
             $datos = $request->validate([
                 'universidad_id' => ['bail', 'required', 'integer', Rule::exists('universidades', 'id')],
                 'nombre' => ['required', 'string', 'max:100'],
@@ -139,6 +139,10 @@ class EquipamientoController extends Controller
             $institucion = Universidad::query()->lockForUpdate()->findOrFail($datos['universidad_id']);
             if (! $institucion->estado && ($esNuevo || (int) $equipamiento->universidad_id !== (int) $institucion->id)) {
                 throw ValidationException::withMessages(['universidad_id' => 'Selecciona una institución activa. Al editar puedes conservar la institución actual.']);
+            }
+            if (! $esNuevo && $equipamiento->ubicaciones()->exists()) {
+                if ((int) $datos['cantidad'] < (int) $equipamiento->ubicaciones()->sum('cantidad')) throw ValidationException::withMessages(['cantidad' => 'La cantidad no puede ser menor que las unidades ya ubicadas. Ajusta primero su distribución.']);
+                if ((int) $datos['universidad_id'] !== (int) $equipamiento->universidad_id) throw ValidationException::withMessages(['universidad_id' => 'Retira primero las ubicaciones antes de cambiar la institución del equipo.']);
             }
             $antes = $esNuevo ? null : $equipamiento->only($equipamiento->getFillable());
             $equipamiento->fill($datos);

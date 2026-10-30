@@ -7,7 +7,7 @@ use App\Models\RequerimientoActividad;
 
 class RevisionRecursosProgramacion
 {
-    public function __construct(private int $universidadId) {}
+    public function __construct(private int $universidadId, private RevisionEquipamientoProgramacion $equipamiento) {}
 
     public function revisar(Horario $horario): ?array
     {
@@ -44,7 +44,7 @@ class RevisionRecursosProgramacion
                 $recurso['apto'] = false;
                 $senalar($recurso['nombre'].': '.implode('; ', $motivos).'.', [$clave]);
             }
-            if ($recurso['tipo'] === 'sala' && $tipoSala?->requiere_equipamiento) {
+            if ($recurso['tipo'] === 'sala' && $tipoSala?->requiere_equipamiento && ! $this->equipamiento->equipadoEnSala($modelo->id)) {
                 $senalar($recurso['nombre'].': su tipo de sala exige equipamiento; falta vincular los equipos del inventario con este espacio para comprobarlo.', [$clave]);
             }
         }
@@ -74,11 +74,17 @@ class RevisionRecursosProgramacion
         unset($recurso);
 
         $reglas = [];
+        $revisionEquipos = $this->equipamiento->revisar($horario, $recursos);
+        if ($revisionEquipos) {
+            $problemas[] = $revisionEquipos['mensaje'];
+            foreach ($revisionEquipos['recursos'] as $r) $afectados[$r['tipo'].':'.$r['id']] = $r;
+        }
         foreach ($requerimientos as $r) {
             $familia = $this->familia($r->tipo_requerimiento);
+            if ($familia === 'equipamiento') continue;
             $etiqueta = 'Requerimiento #'.$r->id.' ('.$r->tipo_requerimiento.(filled($r->nombre_recurso) ? ' · '.$r->nombre_recurso : '').')';
-            if (! $familia || $familia === 'equipamiento') {
-                $problemas[] = $etiqueta.($familia ? ': el equipamiento solicitado no está vinculado a las asignaciones; requiere revisión.' : ': tipo sin regla de comprobación; requiere revisión.');
+            if (! $familia) {
+                $problemas[] = $etiqueta.': tipo sin regla de comprobación; requiere revisión.';
                 continue;
             }
             $candidatos = array_filter($recursos, fn ($recurso) => $recurso['tipo'] === $familia);

@@ -22,7 +22,8 @@
             <div><label for="cantidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de recursos *</label><input id="cantidad-requerimiento" name="cantidad" type="number" min="1" max="65535" step="1" inputmode="numeric" required value="{{ $valor('cantidad', $requerimiento->cantidad) }}" class="{{ $campo }}"></div>
             <div><label for="sala-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Tipo de sala</label><select id="sala-requerimiento" name="tipo_sala_id" data-select-buscable class="{{ $campo }}"><option value="">Sin tipo específico</option>@foreach ($tiposSala as $tipo)<option value="{{ $tipo->id }}" @selected((string) $valor('tipo_sala_id', $requerimiento->tipo_sala_id) === (string) $tipo->id)>{{ $tipo->nombre }}{{ $tipo->estado ? '' : ' (inactivo)' }}</option>@endforeach</select><p class="mt-1 text-xs text-gray-500">Es obligatorio para laboratorio móvil e indica el tipo de sala física que necesita.</p></div>
             <div><label for="capacidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Capacidad mínima por recurso</label><input id="capacidad-requerimiento" name="capacidad_minima" type="number" min="1" max="65535" step="1" inputmode="numeric" value="{{ $valor('capacidad_minima', $requerimiento->capacidad_minima) }}" class="{{ $campo }}"><p class="mt-1 text-xs text-gray-500">Déjala vacía si no hay un mínimo adicional.</p></div>
-            <div class="sm:col-span-2"><label for="nombre-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Recurso específico</label><input id="nombre-requerimiento" name="nombre_recurso" type="text" maxlength="100" value="{{ $valor('nombre_recurso', $requerimiento->nombre_recurso) }}" class="{{ $campo }}"><p class="mt-1 text-xs leading-5 text-gray-500">Obligatorio para equipamiento. Los recursos solicitados por nombre requieren revisión manual mientras no tengan un vínculo con las asignaciones.</p></div>
+            <div class="sm:col-span-2"><label for="equipo-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Equipamiento del inventario</label><select id="equipo-requerimiento" name="equipamiento_id" data-select-buscable class="{{ $campo }}"><option value="">Sin vínculo: revisar por nombre</option>@foreach ($equipamientos as $equipo)<option value="{{ $equipo->id }}" data-nombre="{{ $equipo->nombre }}" @selected((string) $valor('equipamiento_id', $requerimiento->equipamiento_id) === (string) $equipo->id)>{{ $equipo->nombre }} · {{ $equipo->tipo }}{{ $equipo->estado && $equipo->disponible ? '' : ' (inactivo o no habilitado)' }}</option>@endforeach</select><p class="mt-1 text-xs text-gray-500">La revisión contará las unidades de este equipo ubicadas en los espacios asignados al módulo.</p></div>
+            <div class="sm:col-span-2"><label for="nombre-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Recurso específico</label><input id="nombre-requerimiento" name="nombre_recurso" type="text" maxlength="100" value="{{ $valor('nombre_recurso', $requerimiento->nombre_recurso) }}" class="{{ $campo }}"><p class="mt-1 text-xs leading-5 text-gray-500">Al vincular un equipo se utiliza su nombre del inventario. Los recursos solicitados solo por nombre requieren revisión manual.</p></div>
             <div><label for="prioridad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Prioridad</label><select id="prioridad-requerimiento" name="prioridad_recurso_id" data-select-buscable class="{{ $campo }}"><option value="">Sin prioridad</option>@foreach ($prioridades as $prioridad)<option value="{{ $prioridad->id }}" @selected((string) $valor('prioridad_recurso_id', $requerimiento->prioridad_recurso_id) === (string) $prioridad->id)>{{ $prioridad->nombre }}{{ $prioridad->estado ? '' : ' (inactiva)' }}</option>@endforeach</select><p class="mt-1 text-xs text-gray-500">Se registra como preferencia; su aplicación automática sigue pendiente.</p></div>
             <div><label for="obligatorio-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Exigencia *</label><select id="obligatorio-requerimiento" name="obligatorio" class="{{ $campo }}"><option value="1" @selected((string) $valor('obligatorio', (int) $requerimiento->obligatorio) === '1')>Obligatorio</option><option value="0" @selected((string) $valor('obligatorio', (int) $requerimiento->obligatorio) === '0')>Opcional</option></select></div>
             <div><label for="estado-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Estado del registro *</label><select id="estado-requerimiento" name="estado" class="{{ $campo }}"><option value="1" @selected((string) $valor('estado', (int) $requerimiento->estado) === '1')>Activo</option><option value="0" @selected((string) $valor('estado', (int) $requerimiento->estado) === '0')>Inactivo</option></select><p class="mt-1 text-xs text-gray-500">Al desactivarlo se conserva el registro y deja de exigirse en la revisión.</p></div>
@@ -36,19 +37,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipo = document.getElementById('tipo-requerimiento');
     const sala = document.getElementById('sala-requerimiento');
     const nombre = document.getElementById('nombre-requerimiento');
+    const equipo = document.getElementById('equipo-requerimiento');
+    const capacidad = document.getElementById('capacidad-requerimiento');
+    let nombreDelInventario = false;
     const actualizar = () => {
         const elegido = tipo.selectedOptions[0]?.dataset.tipoNormalizado || tipo.value;
         const movil = elegido === 'Laboratorio móvil';
         sala.required = movil && !sala.hidden;
         sala.disabled = elegido === 'Equipamiento';
-        nombre.required = elegido === 'Equipamiento';
+        equipo.disabled = elegido !== 'Equipamiento';
+        capacidad.disabled = elegido === 'Equipamiento';
+        nombre.disabled = elegido === 'Equipamiento' && !!equipo.value;
+        nombre.required = elegido === 'Equipamiento' && !equipo.value;
+        if (nombre.disabled) { nombre.value = equipo.selectedOptions[0]?.dataset.nombre || ''; nombreDelInventario = true; }
+        else if (nombreDelInventario && elegido !== 'Equipamiento') { nombre.value = ''; nombreDelInventario = false; }
         const buscador = document.getElementById('sala-requerimiento-busqueda');
         if (buscador) {
             buscador.setAttribute('aria-required', String(movil));
             buscador.setCustomValidity(movil && !sala.value ? 'Selecciona un tipo de sala para el laboratorio móvil.' : '');
         }
     };
-    tipo.addEventListener('change', actualizar); sala.addEventListener('change', actualizar);
+    tipo.addEventListener('change', actualizar); sala.addEventListener('change', actualizar); equipo.addEventListener('change', actualizar);
     actualizar(); requestAnimationFrame(actualizar);
 });
 </script>

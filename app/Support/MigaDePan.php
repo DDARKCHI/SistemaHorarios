@@ -31,6 +31,7 @@ class MigaDePan
         'recursos.index' => ['Equipamiento y recursos', 'salas.index'],
         'recursos.create' => ['Registrar equipamiento', 'recursos.index'],
         'recursos.edit' => ['Editar equipamiento', 'recursos.index'],
+        'recursos.ubicaciones.index' => ['Ubicaciones del equipamiento', 'recursos.index'],
         'programacion.index' => ['Programación anterior'],
         'programacion.importar' => ['Cargar programación anterior', 'programacion.index'],
         'programacion.importar.analizar' => ['Cargar programación anterior', 'programacion.index'],

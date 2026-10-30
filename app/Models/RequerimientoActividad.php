@@ -24,6 +24,7 @@ class RequerimientoActividad extends Model
 
     protected $fillable = [
         'actividad_seccion_id',
+        'equipamiento_id',
         'tipo_sala_id',
         'prioridad_recurso_id',
         'tipo_requerimiento',
@@ -49,6 +50,8 @@ class RequerimientoActividad extends Model
     {
         return $this->belongsTo(TipoSala::class);
     }
+
+    public function equipamiento() { return $this->belongsTo(Equipamiento::class); }
 
     public function prioridadRecurso()
     {
