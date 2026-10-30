@@ -38,7 +38,7 @@ class ValidacionProgramacionController extends Controller
         $tipo = $datos['tipo'] ?? 'todos';
         $reporte = $version ? $revision->revisar($version) : null;
         $filas = ($reporte['observaciones'] ?? collect())->filter(fn ($fila) => $tipo === 'todos'
-            || (in_array($tipo, ['datos', 'asignaciones', 'capacidad', 'disponibilidad', 'carga'], true) ? $fila['tipo'] === $tipo : collect($fila['recursos'])->contains('tipo', $tipo)))->values();
+            || (in_array($tipo, ['datos', 'asignaciones', 'capacidad', 'disponibilidad', 'carga', 'recursos'], true) ? $fila['tipo'] === $tipo : collect($fila['recursos'])->contains('tipo', $tipo)))->values();
         $pagina = (int) ($datos['page'] ?? 1);
         $observaciones = new LengthAwarePaginator($filas->forPage($pagina, 20)->values(), $filas->count(), 20, $pagina,
             ['path' => route('programacion.validacion'), 'query' => array_filter(['periodo_id' => $periodoId, 'version_id' => $version?->id, 'tipo' => $tipo])]);

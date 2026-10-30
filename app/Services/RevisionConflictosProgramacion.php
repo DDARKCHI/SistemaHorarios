@@ -12,19 +12,22 @@ class RevisionConflictosProgramacion
     public const TIPOS = ['todos' => 'Todas las revisiones', 'profesor' => 'Docentes', 'curso' => 'Cursos o secciones',
         'sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles',
         'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad de los espacios',
-        'disponibilidad' => 'Disponibilidad docente', 'carga' => 'Módulos requeridos y asignados', 'datos' => 'Datos por revisar'];
+        'disponibilidad' => 'Disponibilidad docente', 'recursos' => 'Compatibilidad de recursos',
+        'carga' => 'Módulos requeridos y asignados', 'datos' => 'Datos por revisar'];
 
     public function revisar(VersionPlanificacion $version): array
     {
         $horarios = Horario::where('version_planificacion_id', $version->id)->where('estado', true)->with([
             'dia', 'bloqueHorario', 'actividadSeccion.seccion.asignatura', 'grupoSeccion',
             'actividadSeccion.grupos' => fn ($query) => $query->where('estado_activo', true),
+            'actividadSeccion.requerimientos' => fn ($query) => $query->where('estado', true)->where('obligatorio', true)->orderBy('id'),
+            'actividadSeccion.requerimientos.tipoSala',
             'profesores' => fn ($query) => $query->where('estado', true), 'profesores.profesor',
             'grupoSeccion.profesores' => fn ($query) => $query->where('estado', true), 'grupoSeccion.profesores.profesor',
             'actividadSeccion.seccion.profesores' => fn ($query) => $query->where('estado', true),
             'actividadSeccion.seccion.profesores.profesor',
-            'asignacionesSalas' => fn ($query) => $query->where('estado', true), 'asignacionesSalas.sala',
-            'asignacionesLaboratorios' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratorios.laboratorio.sala',
+            'asignacionesSalas' => fn ($query) => $query->where('estado', true), 'asignacionesSalas.sala.tipoSala',
+            'asignacionesLaboratorios' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratorios.laboratorio.sala.tipoSala',
             'asignacionesLaboratoriosMoviles' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratoriosMoviles.laboratorioMovil',
         ])->orderBy('id')->get();
         $docentesVersion = ProfesorVersion::where('version_planificacion_id', $version->id)->get()->keyBy('profesor_id');
@@ -38,8 +41,9 @@ class RevisionConflictosProgramacion
             ->whereIn('profesor_id', $docentesPorHorario->flatten(1)->pluck('profesor_id')->unique())
             ->with('bloqueHorario')->get()->groupBy('profesor_id');
         $revisionDisponibilidad = new RevisionDisponibilidadProgramacion($declaradas, $docentesVersion);
-        $grupos = $cruces = $datos = $asignaciones = $capacidades = $disponibilidad = [];
+        $grupos = $cruces = $datos = $asignaciones = $capacidades = $disponibilidad = $compatibilidad = [];
         $revisionAsignaciones = new RevisionAsignacionesProgramacion;
+        $revisionRecursos = new RevisionRecursosProgramacion((int) $version->periodoAcademico->universidad_id);
 
         foreach ($horarios as $horario) {
             $seccion = $horario->actividadSeccion?->seccion;
@@ -68,6 +72,8 @@ class RevisionConflictosProgramacion
             if ($revision['capacidad']) $capacidades[] = $base + ['tipo' => 'capacidad', 'intervalo' => $presentacion['hora']] + $revision['capacidad'];
             $revisionDocente = $revisionDisponibilidad->revisar($horario, $docentes);
             if ($revisionDocente) $disponibilidad[] = $base + ['tipo' => 'disponibilidad', 'intervalo' => $presentacion['hora']] + $revisionDocente;
+            $revisionRecurso = $revisionRecursos->revisar($horario);
+            if ($revisionRecurso) $compatibilidad[] = $base + ['tipo' => 'recursos', 'intervalo' => $presentacion['hora']] + $revisionRecurso;
             if (! $valido) continue;
 
             $recursos = [];
@@ -116,12 +122,12 @@ class RevisionConflictosProgramacion
             }
         }
         $carga = (new RevisionCargaProgramacion)->revisar($version, $horarios);
-        $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $disponibilidad, $datos, $carga['observaciones']))
+        $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $disponibilidad, $compatibilidad, $datos, $carga['observaciones']))
             ->sortBy('orden')->map(function ($fila) { $fila['recursos'] = array_values($fila['recursos']); return $fila; })->values();
 
         return ['modulos' => $horarios->count(), 'conflictos' => count($cruces), 'asignaciones' => count($asignaciones),
             'capacidad' => count($capacidades), 'disponibilidad' => count($disponibilidad), 'datos' => count($datos),
-            'carga' => $carga, 'observaciones' => $observaciones];
+            'recursos' => count($compatibilidad), 'carga_observaciones' => count($carga['observaciones']), 'carga' => $carga, 'observaciones' => $observaciones];
     }
 
     private function segundos(?string $hora): ?int

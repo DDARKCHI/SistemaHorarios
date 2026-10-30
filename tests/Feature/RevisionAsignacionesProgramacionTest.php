@@ -15,6 +15,7 @@ use App\Models\Laboratorio;
 use App\Models\LaboratorioMovil;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
+use App\Models\RequerimientoActividad;
 use App\Models\Sala;
 use App\Models\Seccion;
 use App\Models\Sede;
@@ -76,6 +77,8 @@ class RevisionAsignacionesProgramacionTest extends IsolatedDatabaseTestCase
         $this->assertSame(0, $this->reporte()['asignaciones']);
         DisponibilidadProfesor::create(['profesor_id' => $this->profesor->id, 'periodo_academico_id' => $this->version->periodo_academico_id,
             'dia_id' => $h->dia_id, 'bloque_horario_id' => $h->bloque_horario_id]);
+        RequerimientoActividad::create(['actividad_seccion_id' => $h->actividad_seccion_id, 'tipo_requerimiento' => 'Sala',
+            'tipo_sala_id' => $this->sala->tipo_sala_id, 'obligatorio' => true]);
         $this->get($this->url())->assertOk()->assertSee('Sin observaciones detectadas');
     }
 
@@ -199,6 +202,8 @@ class RevisionAsignacionesProgramacionTest extends IsolatedDatabaseTestCase
     public function test_los_filtros_solo_muestran_los_recursos_afectados(): void
     {
         $h = $this->modulo(); $this->movil($h, 20);
+        RequerimientoActividad::create(['actividad_seccion_id' => $h->actividad_seccion_id, 'tipo_requerimiento' => 'Sala',
+            'tipo_sala_id' => $this->sala->tipo_sala_id, 'obligatorio' => true]);
         $this->get($this->url(['tipo' => 'capacidad']))->assertOk()->assertViewHas('observaciones', fn ($p) => $p->total() === 1);
         $this->get($this->url(['tipo' => 'movil']))->assertOk()->assertViewHas('observaciones', fn ($p) => $p->total() === 1);
         $this->get($this->url(['tipo' => 'sala']))->assertOk()->assertViewHas('observaciones', fn ($p) => $p->total() === 0);

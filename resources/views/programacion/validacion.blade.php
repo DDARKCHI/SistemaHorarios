@@ -2,7 +2,7 @@
 @section('title', 'Revisión de conflictos | PROSEC')
 @section('content')
 <x-encabezado-pagina titulo="Revisión de conflictos">
-    Revisa topes, asignaciones, capacidades, disponibilidad docente y módulos requeridos en una versión semestral.
+    Revisa los conflictos y el cumplimiento de las asignaciones de una versión semestral.
     <x-slot:acciones>
         @can('ver programacion semestral')
         <a href="{{ route('programacion.semestral', array_filter(['periodo_id' => $periodoId, 'version_id' => $version?->id])) }}" class="boton boton-secundario">Volver a programación</a>
@@ -36,8 +36,8 @@
     @if (! $reporte)
         <div class="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm"><h2 class="text-base font-semibold text-gray-800">Sin programación semestral para revisar</h2><p class="mt-2 text-sm text-gray-500">Elige un período que tenga una versión semestral.</p></div>
     @else
-        <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-            @foreach (['modulos' => 'Módulos revisados', 'conflictos' => 'Cruces detectados', 'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidades por revisar', 'disponibilidad' => 'Disponibilidad por revisar', 'datos' => 'Datos por revisar'] as $clave => $etiqueta)
+        <dl class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            @foreach (['modulos' => 'Módulos revisados', 'conflictos' => 'Cruces detectados', 'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidades por revisar', 'disponibilidad' => 'Disponibilidad por revisar', 'recursos' => 'Recursos por revisar', 'carga_observaciones' => 'Carga por revisar', 'datos' => 'Datos por revisar'] as $clave => $etiqueta)
                 <div class="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:block"><dt class="text-sm font-semibold text-gray-700">{{ $etiqueta }}</dt><dd class="text-2xl font-semibold text-gray-800 sm:mt-1">{{ number_format($reporte[$clave], 0, ',', '.') }}</dd></div>
             @endforeach
         </dl>
@@ -57,7 +57,7 @@
             @endif
             <p class="mt-4 text-sm leading-6 text-gray-500">{{ count($reporte['carga']['observaciones']) }} {{ count($reporte['carga']['observaciones']) === 1 ? 'observación de carga' : 'observaciones de carga' }}. La carga se mide en módulos según la actividad, sin convertirlos a horas de 60 minutos.</p>
         </section>
-        <p class="text-sm leading-6 text-gray-500">Se compara la disponibilidad registrada para el período por intervalos reales. La aprobación formal de disponibilidades y la compatibilidad de recursos aún requieren sus controles correspondientes.</p>
+        <p class="text-sm leading-6 text-gray-500">Se comprueba el catálogo y los requerimientos obligatorios configurados. La aprobación formal de disponibilidades, los equipos sin vínculo con un espacio y las prioridades de uso requieren revisión adicional.</p>
         @if ($observaciones->isEmpty())
             <div class="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
                 <h2 class="text-base font-semibold text-gray-800">{{ $reporte['modulos'] === 0 ? 'Esta versión no tiene módulos activos' : ($tipo === 'todos' ? 'Sin observaciones detectadas' : 'Sin observaciones para este filtro') }}</h2>
@@ -68,7 +68,7 @@
             <div class="space-y-3">
                 @foreach ($observaciones as $observacion)
                     <article class="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-                        <p class="mb-2 text-sm font-semibold text-gray-500">{{ ['conflicto' => 'Tope horario', 'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad por revisar', 'disponibilidad' => 'Disponibilidad por revisar', 'carga' => 'Carga por revisar', 'datos' => 'Datos por revisar'][$observacion['tipo']] }}</p>
+                        <p class="mb-2 text-sm font-semibold text-gray-500">{{ ['conflicto' => 'Tope horario', 'asignaciones' => 'Asignaciones incompletas', 'capacidad' => 'Capacidad por revisar', 'disponibilidad' => 'Disponibilidad por revisar', 'recursos' => 'Compatibilidad por revisar', 'carga' => 'Carga por revisar', 'datos' => 'Datos por revisar'][$observacion['tipo']] }}</p>
                         <h2 class="text-base font-semibold text-gray-800">{{ $observacion['titulo'] ?? ($observacion['dia'].' · '.$observacion['intervalo']) }}</h2>
                         <p class="mt-1 text-sm text-gray-600">{{ $observacion['mensaje'] }}</p>
                         @if ($observacion['recursos'])<ul class="mt-3 flex flex-wrap gap-2" aria-label="Asignaciones involucradas">@foreach ($observacion['recursos'] as $recurso)<li class="max-w-full break-words rounded-lg bg-gray-100 px-3 py-1.5 text-sm text-gray-700">{{ $tipos[$recurso['tipo']] }}: {{ $recurso['nombre'] }}</li>@endforeach</ul>@endif
