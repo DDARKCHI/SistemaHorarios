@@ -26,6 +26,25 @@ use Tests\IsolatedDatabaseTestCase;
 
 class FiltrosProgramacionAnteriorTest extends IsolatedDatabaseTestCase
 {
+    public function test_sabado_depende_de_los_horarios_activos_de_la_consulta_actual(): void
+    {
+        $parametros = $this->contexto + ['asignatura_id' => $this->filas[1]['asignatura_id']];
+        $this->get(route('programacion.index', $parametros))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+        $sabado = DB::table('dias')->where('numero', 6)->value('id');
+        $horario = Horario::findOrFail($this->filas[1]['horario_id'])->replicate();
+        $horario->dia_id = $sabado;
+        $horario->estado = false;
+        $horario->save();
+        $this->get(route('programacion.index', $parametros))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+        $horario->update(['estado' => true]);
+        $this->get(route('programacion.index', $parametros))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => $dias->contains('numero', 6));
+        $this->get(route('programacion.index', $this->contexto + ['asignatura_id' => $this->filas[0]['asignatura_id']]))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+    }
+
     private PeriodoAcademico $periodo;
     private VersionPlanificacion $version;
     private VersionPlanificacion $otraVersion;

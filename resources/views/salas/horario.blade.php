@@ -171,11 +171,11 @@
                     <div role="region" aria-label="Horario semanal del espacio" tabindex="0" class="relative max-h-[75vh] min-w-0 max-w-full overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional">
                         <table class="w-full min-w-[1100px] table-fixed border-collapse text-left">
                             <caption class="sr-only">Clases del espacio por día y módulo horario</caption>
-                            <colgroup><col class="w-28">@foreach ($dias as $dia)<col>@endforeach</colgroup>
+                            <colgroup><col class="w-28">@foreach ($diasVisualizacion as $dia)<col>@endforeach</colgroup>
                             <thead class="bg-gray-100">
                                 <tr>
                                     <th scope="col" class="sticky top-0 left-0 z-30 border-b border-r border-gray-200 bg-gray-100 px-3 py-3 text-xs font-bold text-gray-700">Horario</th>
-                                    @foreach ($dias as $dia)
+                                    @foreach ($diasVisualizacion as $dia)
                                         <th scope="col" class="sticky top-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-2 py-3 text-center text-xs font-bold text-gray-700 last:border-r-0">{{ $dia->nombre }} @if (! $dia->estado)<span class="mt-1 block text-[10px] font-normal text-gray-500">Registro inactivo</span>@endif</th>
                                     @endforeach
                                 </tr>
@@ -189,7 +189,7 @@
                                             @if ($bloque->es_almuerzo)<span class="mt-1 block text-[10px] text-gray-500">Almuerzo</span>@endif
                                             @if (! $bloque->estado)<span class="mt-1 block text-[10px] text-gray-500">Bloque inactivo</span>@endif
                                         </th>
-                                        @foreach ($dias as $dia)
+                                        @foreach ($diasVisualizacion as $dia)
                                             @php($clases = $celdas->get($dia->id.'-'.$bloque->id, collect()))
                                             <td class="border-b border-r border-gray-200 p-2 last:border-r-0">
                                                 @if ($clases->count() > 1)<p class="mb-2 rounded-md bg-amber-50 px-2 py-1.5 text-[10px] font-semibold text-amber-800">Varias clases registradas en este bloque</p>@endif

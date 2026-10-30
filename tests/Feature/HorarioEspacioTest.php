@@ -35,6 +35,43 @@ use Tests\IsolatedDatabaseTestCase;
 
 class HorarioEspacioTest extends IsolatedDatabaseTestCase
 {
+    #[DataProvider('espaciosConCalendario')]
+    public function test_el_calendario_semanal_solo_muestra_sabado_con_clases_del_espacio_y_version_consultados(string $tipo): void
+    {
+        $datos = $this->programacion();
+        $sabado = Dia::where('numero', 6)->firstOrFail();
+        $movil = $tipo === 'movil' ? LaboratorioMovil::create([
+            'universidad_id' => $this->universidadId, 'sede_id' => $datos['sala']->sede_id,
+            'codigo' => 'MOV-SAB', 'nombre' => 'Laboratorio móvil', 'estado' => true,
+        ]) : null;
+        if ($movil) AsignacionLaboratorioMovil::create(['horario_id' => $datos['directa']->id, 'laboratorio_movil_id' => $movil->id]);
+        $id = $tipo === 'sala' ? $datos['sala']->id : ($movil?->id ?? $datos['lab']->id);
+        $parametros = ['espacio' => $tipo.':'.$id, 'periodo_id' => $datos['periodo']->id, 'version_id' => $datos['version']->id, 'vista' => 'semana'];
+        $response = $this->consultar($parametros)->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+        preg_match('/<thead\b[^>]*>(.*?)<\/thead>/s', $response->getContent(), $cabecera);
+        $this->assertStringNotContainsString($sabado->nombre, $cabecera[1]);
+
+        $horario = $this->horario($datos['version'], $datos['grupo'], 6, 1);
+        if ($tipo === 'sala') $this->asignarSala($horario, $datos['sala']);
+        elseif ($movil) AsignacionLaboratorioMovil::create(['horario_id' => $horario->id, 'laboratorio_movil_id' => $movil->id]);
+        else $this->asignarLab($horario, $datos['lab']);
+        $response = $this->consultar($parametros)->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => $dias->contains('numero', 6));
+        preg_match('/<thead\b[^>]*>(.*?)<\/thead>/s', $response->getContent(), $cabecera);
+        $this->assertStringContainsString($sabado->nombre, $cabecera[1]);
+
+        $horario->update(['estado' => false]);
+        $this->consultar($parametros)->assertOk()->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+        $horario->update(['estado' => true, 'version_planificacion_id' => $datos['importacion']->id]);
+        $this->consultar($parametros)->assertOk()->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+    }
+
+    public static function espaciosConCalendario(): array
+    {
+        return [['sala'], ['laboratorio'], ['movil']];
+    }
+
     private User $usuario;
 
     private int $universidadId;
@@ -279,6 +316,7 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
 
         $this->assertContains($horario->id, $this->sesionesIds($response));
         $this->assertTrue($response->viewData('dias')->contains('id', $domingo->id));
+        $this->assertTrue($response->viewData('diasVisualizacion')->contains('id', $domingo->id));
         $this->assertTrue($response->viewData('bloques')->contains('id', $bloque->id));
         $this->assertCount(1, $response->viewData('celdas')->get($domingo->id.'-'.$bloque->id));
     }

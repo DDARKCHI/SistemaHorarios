@@ -10,6 +10,7 @@ use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\VersionPlanificacion;
 use App\Services\EvaluacionReemplazoDocente;
+use App\Support\DiasCalendario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -188,6 +189,7 @@ class IntercambioDocenteController extends Controller
                         $comparacion = $evaluador->evaluar($candidato, $objetivo, $periodoActual, $versionActual);
                         $todos = $objetivo->concat($comparacion['carga']);
                         $dias = Dia::where(fn ($query) => $query->where('estado', true)->orWhereIn('id', $todos->pluck('dia_id')))->orderBy('numero')->get();
+                        $dias = DiasCalendario::conClases($dias, $todos);
                         $bloques = BloqueHorario::where(fn ($query) => $query->where('estado', true)->orWhereIn('id', $todos->pluck('bloque_horario_id')))->orderBy('hora_inicio')->orderBy('id')->get();
                     }
                 }

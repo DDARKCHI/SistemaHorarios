@@ -14,6 +14,7 @@ use App\Models\Sede;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
 use App\Services\ProgramacionSemestralService;
+use App\Support\DiasCalendario;
 use Illuminate\Http\Request;
 
 class ProgramacionSemestralController extends Controller
@@ -222,25 +223,9 @@ class ProgramacionSemestralController extends Controller
             return $horario->dia_id . '-' . $horario->bloque_horario_id;
         });
 
-        $diasSemana = $dias->filter(function ($dia) {
-            return $dia->numero >= 1 && $dia->numero <= 5;
-        })->values();
-
-        $sabado = $dias->first(function ($dia) {
-            return $dia->numero == 6;
-        });
-
-        $tieneProgramacionSabado = $sabado
-            ? $horarios->contains('dia_id', $sabado->id)
-            : false;
-
-        $diasVisualizacion = $diasSemana;
-
-        if ($sabado && $tieneProgramacionSabado) {
-            $diasVisualizacion = $diasVisualizacion
-                ->push($sabado)
-                ->values();
-        }
+        $diasVisualizacion = DiasCalendario::conClases(
+            $dias->filter(fn ($dia) => $dia->numero >= 1 && $dia->numero <= 6), $horarios
+        );
 
         return view('programacion.semestral.index', [
             'periodos' => $periodos,

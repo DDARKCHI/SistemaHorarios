@@ -11,6 +11,7 @@ use App\Models\PeriodoAcademico;
 use App\Models\ProfesorVersion;
 use App\Models\Sala;
 use App\Models\VersionPlanificacion;
+use App\Support\DiasCalendario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -121,6 +122,7 @@ class HorarioEspacioController extends Controller
             ->orWhereIn('id', $horarios->pluck('dia_id'))
             ->when(! empty($datos['dia_id']), fn ($query) => $query->orWhere('id', $datos['dia_id'])))
             ->orderBy('numero')->orderBy('id')->get();
+        $diasVisualizacion = DiasCalendario::conClases($dias, $horarios);
         $bloques = BloqueHorario::query()->where(fn ($query) => $query->where('estado', true)
             ->orWhereIn('id', $horarios->pluck('bloque_horario_id')))
             ->orderBy('hora_inicio')->orderBy('numero')->orderBy('id')->get();
@@ -144,7 +146,7 @@ class HorarioEspacioController extends Controller
         ], fn ($valor) => $valor !== null && $valor !== '');
 
         return view('salas.horario', compact('espacios', 'espacioSeleccionado', 'periodos', 'periodoSeleccionado',
-            'versiones', 'versionSeleccionada', 'dias', 'bloques', 'diaSeleccionado', 'sesiones', 'celdas', 'resumen', 'vista', 'parametros'));
+            'versiones', 'versionSeleccionada', 'dias', 'diasVisualizacion', 'bloques', 'diaSeleccionado', 'sesiones', 'celdas', 'resumen', 'vista', 'parametros'));
     }
 
     private function espacios(): Collection

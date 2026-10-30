@@ -6,6 +6,7 @@ use App\Models\ActividadSeccion;
 use App\Models\Asignatura;
 use App\Models\BloqueHorario;
 use App\Models\DisponibilidadProfesor;
+use App\Models\Dia;
 use App\Models\GrupoProfesor;
 use App\Models\GrupoSeccion;
 use App\Models\Horario;
@@ -25,6 +26,28 @@ use Tests\IsolatedDatabaseTestCase;
 
 class IntercambioReemplazoTest extends IsolatedDatabaseTestCase
 {
+    #[DataProvider('fuentesSabado')]
+    public function test_la_comparacion_incluye_sabado_solo_si_la_clase_o_la_carga_del_candidato_lo_necesitan(string $fuente): void
+    {
+        $sabado = Dia::where('numero', 6)->firstOrFail();
+        DisponibilidadProfesor::create(['profesor_id' => $this->candidato->id, 'periodo_academico_id' => $this->periodo->id,
+            'dia_id' => $sabado->id, 'bloque_horario_id' => $this->primero->bloque_horario_id, 'estado' => true]);
+        $this->get($this->url(['candidato_id' => $this->candidato->id]))->assertOk()
+            ->assertViewHas('dias', fn ($dias) => ! $dias->contains('numero', 6));
+        $horario = $this->modulo($this->grupo, $sabado->id, $this->primero->bloque_horario_id);
+        $this->asignar($horario, $fuente === 'origen' ? $this->origen : $this->candidato);
+        $this->get($this->url(['candidato_id' => $this->candidato->id]))->assertOk()
+            ->assertViewHas('dias', fn ($dias) => $dias->contains('numero', 6));
+        $horario->update(['estado' => false]);
+        $this->get($this->url(['candidato_id' => $this->candidato->id]))->assertOk()
+            ->assertViewHas('dias', fn ($dias) => ! $dias->contains('numero', 6));
+    }
+
+    public static function fuentesSabado(): array
+    {
+        return [['origen'], ['candidato']];
+    }
+
     public function test_el_reemplazo_guarda_un_detalle_estable_y_el_historial_lo_consulta_sin_alterarlo(): void
     {
         $this->post(route('programacion.intercambio.aplicar'), $this->datos())->assertSessionHasNoErrors();

@@ -21,6 +21,21 @@ use Tests\IsolatedDatabaseTestCase;
 
 class ProgramacionSemestralTest extends IsolatedDatabaseTestCase
 {
+    public function test_sabado_sin_clases_en_los_filtros_actuales_permanece_oculto(): void
+    {
+        $datos = $this->crearProgramacion();
+        $horario = Horario::findOrFail($datos['horario_id'])->replicate();
+        $horario->dia_id = DB::table('dias')->where('numero', 6)->value('id');
+        $horario->estado = false;
+        $horario->save();
+        $this->get(route('programacion.semestral', ['asignatura_id' => $datos['asignatura_id']]))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+        $horario->update(['estado' => true]);
+        $otraAsignatura = Asignatura::whereKeyNot($datos['asignatura_id'])->firstOrFail();
+        $this->get(route('programacion.semestral', ['asignatura_id' => $otraAsignatura->id]))->assertOk()
+            ->assertViewHas('diasVisualizacion', fn ($dias) => ! $dias->contains('numero', 6));
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

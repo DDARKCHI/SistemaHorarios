@@ -8,6 +8,7 @@ use App\Models\Horario;
 use App\Models\Profesor;
 use App\Models\ProfesorVersion;
 use App\Services\FiltrosProgramacionAnterior;
+use App\Support\DiasCalendario;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -38,11 +39,9 @@ class VisualizacionProgramacionController extends Controller
         }
 
         $horariosPorBloque = $horarios->groupBy(fn ($horario) => $horario->dia_id.'-'.$horario->bloque_horario_id);
-        $diasVisualizacion = $dias->filter(fn ($dia) => $dia->numero >= 1 && $dia->numero <= 5)->values();
-        $sabado = $dias->firstWhere('numero', 6);
-        if ($sabado && $horarios->contains('dia_id', $sabado->id)) {
-            $diasVisualizacion->push($sabado);
-        }
+        $diasVisualizacion = DiasCalendario::conClases(
+            $dias->filter(fn ($dia) => $dia->numero >= 1 && $dia->numero <= 6), $horarios
+        );
 
         return view('programacion.index', $opciones + [
             'dias' => $dias, 'diasVisualizacion' => $diasVisualizacion, 'bloques' => $bloques,
