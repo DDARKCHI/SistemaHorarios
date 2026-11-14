@@ -165,6 +165,7 @@
 
 
         <nav class="flex-1 overflow-y-auto px-4 py-5">
+            @include('components.enlace-disponibilidad')
 
 
 
@@ -1471,6 +1472,7 @@
 
 
             <nav class="flex-1 overflow-y-auto px-4 py-5">
+            @include('components.enlace-disponibilidad')
 
 
 

@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Equipamiento;
 use App\Models\Universidad;
+use App\Models\Sede;
+use App\Models\Sala;
+use App\Models\LaboratorioMovil;
+use App\Models\EquipamientoEspacio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +116,12 @@ class EquipamientoController extends Controller
             ->orderBy('nombre')->orderBy('id')->get();
         $tipos = Equipamiento::query()->select('tipo')->distinct()->orderBy('tipo')->pluck('tipo');
 
-        return view('recursos.formulario', compact('equipamiento', 'instituciones', 'tipos'));
+        $sedes = Sede::where('estado', true)->orderBy('nombre')->get();
+        $espacios = Sala::where('estado', true)->where('disponible', true)->whereHas('sede', fn ($q) => $q->where('estado', true))->with('sede')->orderBy('codigo')->get()
+            ->map(fn ($s) => ['clave' => 'sala:'.$s->id, 'sede_id' => $s->sede_id, 'universidad_id' => $s->universidad_id, 'nombre' => 'Sala '.$s->codigo.' · '.$s->sede?->nombre])
+            ->concat(LaboratorioMovil::where('estado', true)->where('disponible', true)->whereHas('sede', fn ($q) => $q->where('estado', true))->with('sede')->orderBy('codigo')->get()
+                ->map(fn ($m) => ['clave' => 'movil:'.$m->id, 'sede_id' => $m->sede_id, 'universidad_id' => $m->universidad_id, 'nombre' => 'Laboratorio móvil '.$m->codigo.' · '.$m->sede?->nombre]));
+        return view('recursos.formulario', compact('equipamiento', 'instituciones', 'tipos', 'sedes', 'espacios'));
     }
 
     private function guardar(Request $request, Equipamiento $equipamiento)
@@ -127,6 +136,11 @@ class EquipamientoController extends Controller
                 'descripcion' => ['nullable', 'string', 'max:255'],
                 'cantidad' => ['required', 'integer', 'min:0', 'max:65535'],
                 'estado' => ['required', 'boolean'], 'disponible' => ['required', 'boolean'],
+                'ubicaciones' => ['nullable', 'array', 'max:100'],
+                'ubicaciones.*' => ['array:sede_id,espacio,cantidad'],
+                'ubicaciones.*.sede_id' => ['nullable', 'integer', 'exists:sedes,id'],
+                'ubicaciones.*.espacio' => ['nullable', 'string', 'regex:/^(sala|movil):[1-9]\d*$/D'],
+                'ubicaciones.*.cantidad' => ['nullable', 'integer', 'min:1', 'max:65535'],
             ], [
                 'universidad_id.*' => 'Selecciona una institución registrada.',
                 'nombre.*' => 'El nombre es obligatorio y no puede superar los 100 caracteres.',
@@ -136,6 +150,11 @@ class EquipamientoController extends Controller
                 'estado.*' => 'Selecciona un estado de registro válido.',
                 'disponible.*' => 'Selecciona una habilitación de uso válida.',
             ]);
+            $ubicaciones = $datos['ubicaciones'] ?? [];
+            unset($datos['ubicaciones']);
+            if (!$esNuevo && collect($ubicaciones)->contains(fn ($u) => filled($u['espacio'] ?? null) || filled($u['cantidad'] ?? null) || filled($u['sede_id'] ?? null))) {
+                throw ValidationException::withMessages(['ubicaciones' => 'Usa Distribuir entre sedes para modificar las ubicaciones del equipo.']);
+            }
             $institucion = Universidad::query()->lockForUpdate()->findOrFail($datos['universidad_id']);
             if (! $institucion->estado && ($esNuevo || (int) $equipamiento->universidad_id !== (int) $institucion->id)) {
                 throw ValidationException::withMessages(['universidad_id' => 'Selecciona una institución activa. Al editar puedes conservar la institución actual.']);
@@ -150,6 +169,7 @@ class EquipamientoController extends Controller
                 return $equipamiento;
             }
             $equipamiento->save();
+            if ($esNuevo) $this->ubicarIniciales($request, $equipamiento, $ubicaciones);
             DB::table('historial_acciones')->insert([
                 'usuario_id' => $request->user()->id, 'accion' => $esNuevo ? 'Crear equipamiento' : 'Actualizar equipamiento',
                 'modulo' => 'Equipamiento y recursos', 'tabla_afectada' => 'equipamientos', 'registro_id' => $equipamiento->id,
@@ -163,5 +183,33 @@ class EquipamientoController extends Controller
 
         return redirect()->route('recursos.index', ['q' => $equipamiento->nombre, 'universidad_id' => $equipamiento->universidad_id, 'estado' => 'todos'])
             ->with('success', $esNuevo ? 'Equipamiento registrado correctamente.' : 'Equipamiento actualizado correctamente.');
+    }
+
+    private function ubicarIniciales(Request $request, Equipamiento $equipo, array $ubicaciones): void
+    {
+        $total = 0; $vistos = [];
+        foreach ($ubicaciones as $indice => $ubicacion) {
+            $clave = $ubicacion['espacio'] ?? null; $cantidad = $ubicacion['cantidad'] ?? null;
+            if (!filled($clave) && !filled($cantidad) && !filled($ubicacion['sede_id'] ?? null)) continue;
+            if (!filled($clave) || !filled($cantidad)) throw ValidationException::withMessages(['ubicaciones.'.$indice.'.espacio' => 'Selecciona un espacio y su cantidad de unidades, o elimina esta fila.']);
+            if (isset($vistos[$clave])) throw ValidationException::withMessages(['ubicaciones.'.$indice.'.espacio' => 'Este espacio está repetido. Reúne sus unidades en una sola fila.']);
+            $vistos[$clave] = true;
+            [$tipo, $id] = explode(':', $clave);
+            $modelo = $tipo === 'sala' ? Sala::class : LaboratorioMovil::class;
+            $espacio = $modelo::with('sede')->lockForUpdate()->find($id);
+            if (!$espacio || !$equipo->estado || !$equipo->disponible || !$espacio->estado || !$espacio->disponible || !$espacio->sede?->estado
+                || (int) $espacio->universidad_id !== (int) $equipo->universidad_id
+                || (filled($ubicacion['sede_id'] ?? null) && (int) $ubicacion['sede_id'] !== (int) $espacio->sede_id)) {
+                throw ValidationException::withMessages(['ubicaciones.'.$indice.'.espacio' => 'Elige un espacio activo y habilitado de la sede y la institución seleccionadas.']);
+            }
+            $total += (int) $cantidad;
+            if ($total > $equipo->cantidad) throw ValidationException::withMessages(['ubicaciones' => 'La distribución entre sedes supera las '.$equipo->cantidad.' unidades del inventario.']);
+            $registro = EquipamientoEspacio::create(['equipamiento_id' => $equipo->id, $tipo === 'sala' ? 'sala_id' : 'laboratorio_movil_id' => $id, 'cantidad' => $cantidad]);
+            DB::table('historial_acciones')->insert(['usuario_id' => $request->user()->id, 'accion' => 'Ubicar equipamiento',
+                'modulo' => 'Equipamiento y recursos', 'tabla_afectada' => 'equipamientos_espacios', 'registro_id' => $registro->id,
+                'descripcion' => 'Distribución inicial de unidades entre sedes y espacios.',
+                'datos' => json_encode(['antes' => null, 'despues' => $registro->only(['equipamiento_id', 'sala_id', 'laboratorio_movil_id', 'cantidad'])], JSON_THROW_ON_ERROR),
+                'direccion_ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now()]);
+        }
     }
 }

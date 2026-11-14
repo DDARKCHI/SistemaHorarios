@@ -58,7 +58,7 @@
             @endif
             <p class="mt-4 text-sm leading-6 text-gray-500">{{ count($reporte['carga']['observaciones']) }} {{ count($reporte['carga']['observaciones']) === 1 ? 'observación de carga' : 'observaciones de carga' }}. La carga se mide en módulos según la actividad, sin convertirlos a horas de 60 minutos.</p>
         </section>
-        <p class="text-sm leading-6 text-gray-500">Se comprueba el catálogo y los requerimientos obligatorios configurados. La aprobación formal de disponibilidades, los equipos sin vínculo con un espacio y las prioridades de uso requieren revisión adicional.</p>
+        <p class="text-sm leading-6 text-gray-500">Se comprueba el catálogo y los requerimientos obligatorios configurados. La prioridad por curso se indica en los cruces de recursos. La aprobación formal de disponibilidades y los equipos sin vínculo con un espacio requieren revisión adicional.</p>
         @if ($observaciones->isEmpty())
             <div class="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
                 <h2 class="text-base font-semibold text-gray-800">{{ $reporte['modulos'] === 0 ? 'Esta versión no tiene módulos activos' : ($tipo === 'todos' ? 'Sin observaciones detectadas' : 'Sin observaciones para este filtro') }}</h2>

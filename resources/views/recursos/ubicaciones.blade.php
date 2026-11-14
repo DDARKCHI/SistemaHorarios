@@ -13,13 +13,14 @@
         <p class="mt-4 text-sm leading-6 text-gray-500">Las unidades ubicadas pertenecen al inventario. Los laboratorios utilizan el equipamiento de su sala física; las unidades de un laboratorio móvil viajan con él.</p>
     </section>
     @if ($seleccionada || ($equipamiento->estado && $equipamiento->disponible && $ubicadas < $equipamiento->cantidad))
-        <form method="POST" action="{{ $seleccionada ? route('recursos.ubicaciones.update', ['equipamiento' => $equipamiento->id, 'ubicacion' => $seleccionada->id]) : route('recursos.ubicaciones.store', $equipamiento) }}" aria-label="Distribuir unidades" class="grid min-w-0 items-end gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 lg:grid-cols-[2fr_1fr_auto]">
+        <form method="POST" action="{{ $seleccionada ? route('recursos.ubicaciones.update', ['equipamiento' => $equipamiento->id, 'ubicacion' => $seleccionada->id]) : route('recursos.ubicaciones.store', $equipamiento) }}" aria-label="Distribuir unidades" class="grid min-w-0 items-end gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6 lg:grid-cols-[1fr_2fr_1fr_auto]">
             @csrf
             @if ($seleccionada)
                 @method('PUT')
                 <div><h2 class="text-sm font-semibold text-gray-700">Modificar cantidad ubicada</h2><p class="mt-2 break-words text-sm">{{ $seleccionada->sala ? 'Sala '.$seleccionada->sala->codigo : 'Laboratorio móvil '.$seleccionada->laboratorioMovil?->codigo }}</p></div>
             @else
-                <div><label for="espacio-equipamiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Sala o laboratorio móvil</label><select id="espacio-equipamiento" name="espacio" data-select-buscable class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"><option value="">Selecciona un espacio</option>@foreach ($espacios as $espacio)<option value="{{ $espacio['id'] }}" @selected(is_string(old('espacio')) && old('espacio') === $espacio['id'])>{{ $espacio['nombre'] }}</option>@endforeach</select></div>
+                <div><label for="sede-ubicacion" class="mb-1.5 block text-sm font-semibold text-gray-700">Sede</label><select id="sede-ubicacion" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"><option value="">Todas las sedes</option>@foreach ($sedes as $sede)<option value="{{ $sede->id }}">{{ $sede->nombre }}</option>@endforeach</select></div>
+                <div><label for="espacio-equipamiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Sala o laboratorio móvil</label><select id="espacio-equipamiento" name="espacio" data-select-buscable class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"><option value="">Selecciona un espacio</option>@foreach ($espacios as $espacio)<option data-sede="{{ $espacio['sede_id'] }}" value="{{ $espacio['id'] }}" @selected(is_string(old('espacio')) && old('espacio') === $espacio['id'])>{{ $espacio['nombre'] }}</option>@endforeach</select></div>
             @endif
             <div><label for="cantidad-ubicacion" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de unidades</label><input id="cantidad-ubicacion" name="cantidad" type="number" min="1" max="65535" step="1" required value="{{ is_scalar(old('cantidad')) ? old('cantidad') : ($seleccionada?->cantidad ?? 1) }}" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"></div>
             <div class="flex flex-wrap gap-2">@if ($seleccionada)<a href="{{ route('recursos.ubicaciones.index', $equipamiento) }}" class="boton boton-secundario">Cancelar</a>@endif<button class="boton boton-primario" type="submit">{{ $seleccionada ? 'Guardar cantidad' : 'Ubicar unidades' }}</button></div>
@@ -37,4 +38,18 @@
         @empty<div class="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">Este equipamiento aún no tiene unidades ubicadas.</div>@endforelse
     </section>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sede = document.getElementById('sede-ubicacion');
+    const espacio = document.getElementById('espacio-equipamiento');
+    sede?.addEventListener('change', () => {
+        for (const opcion of espacio.options) {
+            opcion.disabled = !!opcion.value && !!sede.value && opcion.dataset.sede !== sede.value;
+            opcion.hidden = opcion.disabled;
+        }
+        if (espacio.selectedOptions[0]?.disabled) espacio.value = '';
+        espacio.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+});
+</script>
 @endsection

@@ -230,7 +230,10 @@
 
                     @forelse ($actividad->grupos as $grupo)
 @php
-    $profesoresGrupo = $grupo->profesores;
+    $profesoresGrupo = $grupo->profesores
+        ->concat($grupo->horarios->flatMap(fn ($h) => $h->profesores))
+        ->filter(fn ($asignacion) => $asignacion->profesor?->estado)
+        ->unique('profesor_id')->values();
 
     $profesoresSinDisponibilidad = $profesoresGrupo->filter(function ($grupoProfesor) {
         return $grupoProfesor->profesor
@@ -387,6 +390,13 @@
     @endif
 
                                         @if ($editable)
+                                        <button type="button" class="boton boton-secundario" data-asignar-docente
+                                            data-url="{{ route('programacion.asignacion.horarios.profesor', $horario) }}"
+                                            data-horario="{{ $horario->id }}"
+                                            data-huella="{{ \App\Services\AsignacionModulosHorario::firmaDocentes($horario->profesores) }}"
+                                            data-resumen="{{ $seccion->asignatura?->nombre }} · {{ $horario->dia?->nombre }} · {{ substr((string) $horario->bloqueHorario?->hora_inicio, 0, 5) }}–{{ substr((string) $horario->bloqueHorario?->hora_fin, 0, 5) }}">
+                                            Asignar profesor
+                                        </button>
                                         <form
                                             method="POST"
                                             action="{{ route('programacion.asignacion.horarios.eliminar', $horario) }}"
@@ -707,6 +717,10 @@
     @endif
 
 </div>
+
+@if ($seccion && $editable)
+    <x-asignar-docente-horario :profesores="$profesoresParaHorario" :version="$version" :carrera-id="$carreraId" :semestre="$semestre" />
+@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -6,6 +6,7 @@ use App\Models\DisponibilidadProfesor;
 use App\Models\Equipamiento;
 use App\Models\Horario;
 use App\Models\ProfesorVersion;
+use App\Models\PrioridadRecurso;
 use App\Models\VersionPlanificacion;
 
 class RevisionConflictosProgramacion
@@ -129,6 +130,19 @@ class RevisionConflictosProgramacion
                 $activos[] = $actual;
             }
         }
+        $reglas = PrioridadRecurso::where('estado', true)->whereIn('asignatura_id', $horarios->pluck('actividadSeccion.seccion.asignatura_id')->filter()->unique())
+            ->with('tipoSala')->get();
+        $prioridades = new PrioridadUsoRecursos($reglas, $inventario);
+        $porId = $horarios->keyBy('id');
+        foreach ($cruces as &$cruce) {
+            $a = $porId->get($cruce['horarios'][0]['id']);
+            $b = $porId->get($cruce['horarios'][1]['id']);
+            foreach ($cruce['recursos'] as $recurso) {
+                $preferencia = $prioridades->recomendacion($a, $b, $recurso);
+                if ($preferencia) $cruce['mensaje'] .= ' '.$preferencia;
+            }
+        }
+        unset($cruce);
         $carga = (new RevisionCargaProgramacion)->revisar($version, $horarios);
         $observaciones = collect(array_merge(array_values($cruces), $asignaciones, $capacidades, $disponibilidad, $compatibilidad, $datos, $carga['observaciones']))
             ->sortBy('orden')->map(function ($fila) { $fila['recursos'] = array_values($fila['recursos']); return $fila; })->values();

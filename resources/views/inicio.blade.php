@@ -16,61 +16,21 @@
     </div>
 
 
-    <!-- Estado del periodo academico  -->
-    <div class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm sm:p-5">
-
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            <div>
-
-                <p class="text-xs font-semibold uppercase tracking-wide text-texto-secundario">
-                    Periodo académico
-                </p>
-
-                <p class="mt-1 text-lg font-semibold text-texto">
-                    {{ $periodoActivo?->nombre ?? 'Sin período activo' }}
-                </p>
-
-                @if ($periodoActivo)
-                    <p class="mt-1 text-sm text-texto-secundario">Semestre {{ $periodoActivo->numero_semestre }} de {{ $periodoActivo->anio }}</p>
-                @endif
-
-            </div>
-
-            <span class="inline-flex w-fit items-center rounded-full bg-fondo px-3 py-1 text-xs font-medium text-texto-secundario">
-                {{ $versionSemestral ? 'Semestral · ' . $versionSemestral->estado : 'Sin programación semestral' }}
-            </span>
-
+    <!-- Estado del período académico -->
+    <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-borde bg-superficie px-4 py-3 shadow-sm">
+        <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span class="text-xs font-semibold uppercase tracking-wide text-texto-secundario">Periodo académico</span>
+            <span class="text-base font-semibold text-texto">{{ $periodoActivo?->nombre ?? 'Sin período activo' }}</span>
+            @if ($periodoActivo)
+                <span class="text-sm text-texto-secundario">Semestre {{ $periodoActivo->numero_semestre }} de {{ $periodoActivo->anio }}</span>
+            @endif
         </div>
-
+        <span class="inline-flex w-fit items-center rounded-full bg-fondo px-3 py-1 text-xs font-medium text-texto-secundario">
+            {{ $versionSemestral ? 'Semestral · ' . $versionSemestral->estado : 'Sin programación semestral' }}
+        </span>
     </div>
 
 
-    <section aria-labelledby="titulo-indicadores" class="min-w-0 space-y-3">
-        <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
-            <h2 id="titulo-indicadores" class="text-base font-bold text-texto">Avance de la programación</h2>
-            <p class="text-sm text-texto-secundario">{{ $periodoActivo?->nombre ?? 'Sin período activo' }} @if ($versionSemestral)· Semestral v{{ $versionSemestral->version }}@endif</p>
-        </div>
-        @if ($versionSemestral)
-            <p class="text-sm leading-relaxed text-texto-secundario">La carga, los docentes y los espacios muestran la cobertura de las clases. Los recursos muestran cuántos tienen asignaciones en esta versión.</p>
-        @endif
-        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            @foreach ($indicadores['graficos'] as $indicador)
-                <x-indicador-circular :indicador="$indicador" />
-            @endforeach
-        </div>
-        @php($pendientesIndicadores = array_filter($indicadores['pendientes']))
-        @if ($pendientesIndicadores)
-            <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                <p class="font-semibold">Datos de carga por revisar</p>
-                <ul class="mt-1 flex flex-wrap gap-x-5 gap-y-1">
-                    @foreach (['actividades_sin_grupos' => 'actividades sin grupos activos', 'grupos_sin_carga' => 'grupos sin carga definida', 'modulos_sin_grupo' => 'módulos sin grupo', 'excedentes' => 'módulos sobre la carga requerida'] as $clave => $etiqueta)
-                        @if ($indicadores['pendientes'][$clave])<li>{{ number_format($indicadores['pendientes'][$clave], 0, ',', '.') }} {{ $etiqueta }}</li>@endif
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-    </section>
 
 
     <!-- Tarjetas resumen  -->
@@ -269,20 +229,30 @@
 
 
     
+    <section aria-labelledby="titulo-indicadores" class="min-w-0 space-y-3">
+        <div class="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 id="titulo-indicadores" class="text-base font-bold text-texto">Avance de la programación</h2>
+        </div>
+        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            @foreach ($indicadores['graficos'] as $indicador)
+                <x-indicador-circular :indicador="$indicador" />
+            @endforeach
+        </div>
+    </section>
+
     <div class="grid min-w-0 grid-cols-1 gap-6 xl:grid-cols-3">
         <section class="min-w-0 rounded-xl border border-borde bg-superficie shadow-sm xl:col-span-2" aria-labelledby="resumen-programacion">
             <div class="border-b border-borde px-5 py-4">
                 <h2 id="resumen-programacion" class="font-semibold text-texto">Programación semestral</h2>
-                <p class="mt-1 text-sm text-texto-secundario">Resumen de la versión actual del período activo.</p>
+                @if ($versionSemestral)
+                    <p class="mt-1 text-sm text-texto-secundario">Versión {{ $versionSemestral->version }} · {{ $versionSemestral->estado }}</p>
+                @else
+                    <p class="mt-1 text-sm text-texto-secundario">Resumen del período activo.</p>
+                @endif
             </div>
 
             <div class="space-y-4 p-5">
                 @if ($versionSemestral)
-                    <div class="min-w-0">
-                        <p class="font-semibold text-texto">{{ $versionSemestral->nombre }}</p>
-                        <p class="mt-1 text-sm text-texto-secundario">Versión {{ $versionSemestral->version }} · {{ $versionSemestral->estado }}</p>
-                    </div>
-
                     <dl class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
                         @foreach (['modulos' => 'Módulos programados', 'grupos' => 'Grupos con horarios', 'secciones' => 'Secciones con horarios'] as $clave => $etiqueta)
                             <div class="min-w-0 rounded-lg bg-fondo p-4">

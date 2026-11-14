@@ -21,6 +21,7 @@
         }
     </style>
 
+    <x-favicon />
 </head>
 
 <body class="min-h-screen bg-fondo">

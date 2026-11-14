@@ -97,7 +97,12 @@
                                     @php($solicitados = $objetivoPorCelda->get($clave, collect()))
                                     @php($compartidos = $solicitados->pluck('horario.id'))
                                     @php($topesCelda = $solicitados->contains(fn ($f) => $f['conflictos']->isNotEmpty()))
-                                    <td @class(['border-b border-r border-gray-200 p-1.5', 'bg-red-50' => $topesCelda, 'bg-green-50' => ! $topesCelda && ($disponiblePorCelda->has($clave) || $solicitados->contains(fn ($f) => $f['disponible'] === true))])>
+                                    <td @class([
+                                        'border-b border-r border-gray-200 p-1.5',
+                                        'bg-red-50' => $topesCelda,
+                                        'bg-sky-50' => ! $topesCelda && $solicitados->isNotEmpty(),
+                                        'bg-green-50' => ! $topesCelda && $solicitados->isEmpty() && $disponiblePorCelda->has($clave),
+                                    ])>
                                         <div class="space-y-2">@foreach ($porCelda->get($clave, collect())->reject(fn ($h) => $compartidos->contains($h->id)) as $horario)<div><p class="mb-1 text-[10px] font-semibold text-gray-500">Clase actual</p><x-intercambio-clase :horario="$horario" /></div>@endforeach
                                             @foreach ($solicitados as $fila)<div><p class="mb-1 text-[10px] font-semibold {{ $fila['conflictos']->isEmpty() ? 'text-sky-800' : 'text-red-800' }}">{{ $fila['conflictos']->isEmpty() ? 'Clase a cubrir' : 'Tope de horario' }}</p><x-intercambio-clase :horario="$fila['horario']" /></div>@endforeach
                                         </div>

@@ -73,11 +73,16 @@ class RequerimientoActividadController extends Controller
         $actual = $requerimiento->tipo_requerimiento;
         if ($actual && ! isset($tipos[$actual])) $tipos[$actual] = $actual.' (tipo anterior)';
         $tiposSala = TipoSala::where('estado', true)->when($requerimiento->tipo_sala_id, fn ($q) => $q->orWhere('id', $requerimiento->tipo_sala_id))->orderBy('nombre')->get();
-        $prioridades = PrioridadRecurso::where('estado', true)->when($requerimiento->prioridad_recurso_id, fn ($q) => $q->orWhere('id', $requerimiento->prioridad_recurso_id))->orderBy('nivel')->orderBy('nombre')->get();
+        $tipoSalaBase = $requerimiento->tipo_sala_id ?? $tiposSala->first(fn ($tipo) => $tipo->esDeImportacion())?->id;
+        $ocultarTipoSala = ($requerimiento->tipo_sala_id && $requerimiento->tipoSala?->esDeImportacion()) || $tiposSala->every(fn ($tipo) => $tipo->esDeImportacion());
+        $tiposSala = $tiposSala->reject(fn ($tipo) => $tipo->esDeImportacion());
+        $prioridades = PrioridadRecurso::where(fn ($q) => $q->where('estado', true)->when($requerimiento->prioridad_recurso_id, fn ($actual) => $actual->orWhere('id', $requerimiento->prioridad_recurso_id)))
+            ->where(fn ($q) => $q->whereNull('asignatura_id')->orWhere('asignatura_id', $actividad->seccion->asignatura_id))
+            ->orderBy('nivel')->orderBy('nombre')->get();
         $equipamientos = Equipamiento::where('universidad_id', $actividad->seccion->periodoAcademico->universidad_id)
             ->where(fn ($q) => $q->where(fn ($activo) => $activo->where('estado', true)->where('disponible', true))
                 ->when($requerimiento->equipamiento_id, fn ($actual) => $actual->orWhere('id', $requerimiento->equipamiento_id)))->orderBy('nombre')->get();
-        return view('programacion.requerimientos.formulario', compact('actividad', 'requerimiento', 'tipos', 'tiposSala', 'prioridades', 'equipamientos', 'contexto'));
+        return view('programacion.requerimientos.formulario', compact('actividad', 'requerimiento', 'tipos', 'tiposSala', 'prioridades', 'equipamientos', 'contexto', 'tipoSalaBase', 'ocultarTipoSala'));
     }
 
     private function guardar(Request $request, ActividadSeccion $actividad, RequerimientoActividad $requerimiento)
@@ -112,6 +117,12 @@ class RequerimientoActividadController extends Controller
             foreach (['tipo_sala_id' => TipoSala::class, 'prioridad_recurso_id' => PrioridadRecurso::class] as $campo => $modelo) {
                 if (empty($datos[$campo])) { $datos[$campo] = null; continue; }
                 $referencia = $modelo::lockForUpdate()->findOrFail($datos[$campo]);
+                if ($campo === 'prioridad_recurso_id' && $referencia->asignatura_id
+                    && ((int) $referencia->asignatura_id !== (int) $seccion->asignatura_id
+                        || (PrioridadRecurso::RECURSOS[$referencia->tipo_recurso] ?? null) !== $normalizado
+                        || ($referencia->tipo_sala_id && (int) $referencia->tipo_sala_id !== (int) ($datos['tipo_sala_id'] ?? 0)))) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([$campo => 'La prioridad debe corresponder al curso y al recurso de este requerimiento.']);
+                }
                 if (! $referencia->estado && ($nuevo || (int) $requerimiento->$campo !== (int) $referencia->id)) {
                     throw \Illuminate\Validation\ValidationException::withMessages([$campo => 'Selecciona un registro activo. Al editar puedes conservar el actual.']);
                 }

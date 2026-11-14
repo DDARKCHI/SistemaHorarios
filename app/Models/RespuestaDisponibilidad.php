@@ -14,10 +14,12 @@ class RespuestaDisponibilidad extends Model
         'respuesta',
         'observaciones',
         'fecha_respuesta',
+        'bloques', 'revisado_por', 'revisado_en', 'motivo_revision',
     ];
 
     protected $casts = [
         'fecha_respuesta' => 'datetime',
+        'bloques' => 'array', 'revisado_en' => 'datetime',
     ];
 
     public function solicitudDisponibilidad()

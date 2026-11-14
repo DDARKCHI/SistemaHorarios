@@ -180,6 +180,9 @@ Route::middleware('auth')->group(function () {
         )
         ->name('programacion.asignacion.horarios.eliminar');
 
+    Route::put('/programacion/asignacion-horarios/{horario}/profesor', [AsignacionHorarioController::class, 'asignarProfesor'])
+        ->whereNumber('horario')->middleware('permission.redirect:asignar horarios')->name('programacion.asignacion.horarios.profesor');
+
     Route::get(
         '/programacion/propuesta-horario',
         [PropuestaHorarioController::class, 'index']
@@ -404,6 +407,8 @@ Route::get('/prueba-excel', function () {
         'auth',
         'permission.redirect:ver panel inicio',
     ]);
+
+require __DIR__.'/disponibilidad.php';
 
 Route::fallback(function () {
     return redirect()->route('login');

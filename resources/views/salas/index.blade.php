@@ -50,7 +50,7 @@
             || filled($filtros['capacidad_minima']) || $filtros['estado'] !== 'activas'
             || filled($filtros['uso']);
     @endphp
-    <form method="GET" action="{{ route('salas.index') }}" aria-label="Buscar y filtrar salas" class="grid min-w-0 grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:grid-cols-[minmax(0,1fr)_auto_minmax(10rem,13rem)]">
+    <form method="GET" action="{{ route('salas.index') }}" aria-label="Buscar y filtrar salas" class="grid min-w-0 grid-cols-1 gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end lg:grid-cols-[minmax(0,1fr)_auto_auto]">
         <div class="min-w-0">
             <label for="busqueda-salas" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Buscar sala</label>
             <input id="busqueda-salas" type="search" name="q" maxlength="100" value="{{ $filtros['q'] ?? '' }}" placeholder="Código, nombre o edificio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
@@ -60,11 +60,11 @@
             <a href="{{ route('salas.index') }}" class="boton boton-secundario flex-1 sm:flex-none">Limpiar</a>
         </div>
         <details data-filtros-salas class="contents" @if ($hayFiltrosAvanzados || $errors->hasAny(['sede_id', 'tipo_sala_id', 'capacidad_minima', 'estado', 'uso'])) open @endif>
-            <summary class="boton boton-secundario sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1" title="Sede, tipo, capacidad, estado y uso">
+            <summary class="boton boton-secundario h-11 whitespace-nowrap sm:col-span-2 lg:col-span-1 lg:col-start-3 lg:row-start-1" title="Sede, tipo, capacidad, estado y uso">
                 Filtrar salas
-                @if ($hayFiltrosAvanzados)<span class="ml-1 text-[11px] font-medium text-institucional">Filtros aplicados</span>@endif
+                @if ($hayFiltrosAvanzados)<span class="shrink-0 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-institucional">Filtros aplicados</span>@endif
             </summary>
-        <div data-panel-filtros-salas class="grid min-w-0 grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-3 xl:grid-cols-5">
+        <div data-panel-filtros-salas class="grid min-w-0 grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2 lg:col-span-3 {{ $tiposSala->isEmpty() ? 'xl:grid-cols-4' : 'xl:grid-cols-5' }}">
             <div class="min-w-0">
                 <label for="sede-salas" class="mb-1 block text-xs font-semibold text-gray-700">Sede</label>
                 <select id="sede-salas" name="sede_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
@@ -74,7 +74,8 @@
                     @endforeach
                 </select>
             </div>
-            <div class="min-w-0">
+            @if ($tiposSala->isNotEmpty())
+<div class="min-w-0">
                 <label for="tipo-salas" class="mb-1 block text-xs font-semibold text-gray-700">Tipo de sala</label>
                 <select id="tipo-salas" name="tipo_sala_id" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                     <option value="">Todos los tipos</option>
@@ -83,6 +84,7 @@
                     @endforeach
                 </select>
             </div>
+@endif
             <div class="min-w-0">
                 <label for="capacidad-salas" class="mb-1 block text-xs font-semibold text-gray-700">Capacidad mínima</label>
                 <input id="capacidad-salas" type="number" name="capacidad_minima" min="0" max="65535" step="1" inputmode="numeric" value="{{ $filtros['capacidad_minima'] ?? '' }}" placeholder="Sin mínimo" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-800 placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
@@ -133,7 +135,7 @@
                     <article aria-label="Sala {{ $sala->codigo }}" class="min-w-0 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                         <div class="flex min-w-0 items-start justify-between gap-3">
                             <div class="min-w-0 flex-1">
-                                <h3 class="break-words text-sm font-bold text-gray-900">{{ $sala->codigo }}</h3>
+                                <h3 class="break-words text-sm font-bold text-gray-900">{{ $sala->codigo }}</h3>@if ($sala->laboratorios_count)<span class="mt-1 inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-800">Laboratorio</span>@endif
                                 <p class="mt-1 break-words text-sm text-gray-600">{{ $sala->nombre ?: 'Sin nombre registrado' }}</p>
                             </div>
                             <span @class(['shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold', 'bg-green-50 text-green-800' => $sala->estado, 'bg-gray-100 text-gray-600' => ! $sala->estado])>{{ $sala->estado ? 'Registro activo' : 'Registro inactivo' }}</span>
@@ -143,10 +145,12 @@
                                 <dt class="text-[11px] font-semibold text-gray-500">Sede</dt>
                                 <dd class="mt-0.5 break-words text-gray-800">{{ $sala->sede?->nombre ?? 'Sin sede registrada' }} @if ($sala->sede && ! $sala->sede->estado)<span class="text-xs text-gray-500">(inactiva)</span>@endif</dd>
                             </div>
-                            <div>
+                            @if ($sala->tipoSala && !$sala->tipoSala->esDeImportacion())
+<div>
                                 <dt class="text-[11px] font-semibold text-gray-500">Tipo de sala</dt>
                                 <dd class="mt-0.5 break-words text-gray-800">{{ $sala->tipoSala?->nombre ?? 'Sin tipo registrado' }} @if ($sala->tipoSala && ! $sala->tipoSala->estado)<span class="text-xs text-gray-500">(inactivo)</span>@endif</dd>
                             </div>
+@endif
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <dt class="text-[11px] font-semibold text-gray-500">Capacidad registrada</dt>
@@ -170,12 +174,12 @@
 
             <div class="hidden min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm xl:block">
                 <div class="max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Listado de salas" tabindex="0">
-                    <table class="w-full min-w-[900px] table-fixed border-collapse text-left text-sm">
-                        <colgroup><col class="w-[14%]"><col class="w-[18%]"><col class="w-[15%]"><col class="w-[18%]"><col class="w-[18%]"><col class="w-[17%]"></colgroup>
+                    <table class="w-full min-w-[1100px] table-fixed border-collapse text-left text-sm">
+                        <colgroup><col class="w-[12%]"><col class="w-[18%]"><col class="w-[14%]"><col class="w-[18%]"><col class="w-[16%]"><col class="w-[22%]"></colgroup>
                         <thead class="bg-gray-50 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
                             <tr>
                                 <th scope="col" class="px-4 py-3">Sala</th>
-                                <th scope="col" class="px-4 py-3">Sede y tipo</th>
+                                <th scope="col" class="px-4 py-3 text-center">Sede</th>
                                 <th scope="col" class="px-4 py-3">Capacidad registrada</th>
                                 <th scope="col" class="px-4 py-3">Ubicación</th>
                                 <th scope="col" class="px-4 py-3">Estado y uso</th>
@@ -186,12 +190,11 @@
                             @foreach ($salas as $sala)
                                 <tr class="align-top hover:bg-gray-50">
                                     <th scope="row" class="px-4 py-4 font-normal">
-                                        <div class="break-words font-bold text-gray-900">{{ $sala->codigo }}</div>
+                                        <div class="break-words font-bold text-gray-900">{{ $sala->codigo }}</div>@if ($sala->laboratorios_count)<span class="mt-1 inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-800">Laboratorio</span>@endif
                                         <p class="mt-1 break-words text-xs text-gray-600">{{ $sala->nombre ?: 'Sin nombre registrado' }}</p>
                                     </th>
-                                    <td class="px-4 py-4">
+                                    <td class="px-4 py-4 text-center align-middle">
                                         <p class="break-words text-xs font-medium text-gray-800">{{ $sala->sede?->nombre ?? 'Sin sede registrada' }} @if ($sala->sede && ! $sala->sede->estado)<span class="font-normal text-gray-500">(inactiva)</span>@endif</p>
-                                        <p class="mt-2 break-words text-xs text-gray-500">{{ $sala->tipoSala?->nombre ?? 'Sin tipo registrado' }} @if ($sala->tipoSala && ! $sala->tipoSala->estado)<span>(inactivo)</span>@endif</p>
                                     </td>
                                     <td class="px-4 py-4 text-xs font-semibold text-gray-800">{{ $sala->capacidad > 0 ? $sala->capacidad.($sala->capacidad == 1 ? ' persona' : ' personas') : 'Sin capacidad informada' }}</td>
                                     <td class="px-4 py-4 text-xs text-gray-600">
@@ -203,7 +206,7 @@
                                         <p class="mt-2 text-xs text-gray-600">{{ $sala->disponible ? 'Uso habilitado' : 'Uso deshabilitado' }}</p>
                                     </td>
                                     <td class="px-4 py-4">
-                                        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
+                                        <div class="flex min-w-0 flex-nowrap items-center justify-end gap-2 whitespace-nowrap [&>a]:shrink-0">
                                         <a href="{{ route('salas.horario', ['espacio' => 'sala:'.$sala->id]) }}#calendario-espacio" aria-label="Ver horario de la sala {{ $sala->codigo }}" class="boton boton-secundario">Ver horario</a>
                                         <a href="{{ route('salas.edit', $sala) }}" aria-label="Editar sala {{ $sala->codigo }}" class="boton boton-secundario">Editar</a>
                                         </div>

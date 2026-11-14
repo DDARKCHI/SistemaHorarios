@@ -9,6 +9,8 @@ class MigaDePan
 {
     private const PAGINAS = [
         'inicio' => ['Inicio'],
+        'disponibilidad.index' => ['Disponibilidad docente'],
+        'disponibilidad.show' => ['Revisar disponibilidad', 'disponibilidad.index'],
         'programacion.semestral' => ['Programación semestral'],
         'programacion.validacion' => ['Revisión de conflictos', 'programacion.semestral'],
         'programacion.requerimientos.index' => ['Requerimientos de actividades', 'programacion.validacion'],
@@ -46,6 +48,7 @@ class MigaDePan
 
     private const PERMISOS = [
         'inicio' => 'ver panel inicio',
+        'disponibilidad.index' => 'asignar profesores',
         'programacion.semestral' => 'ver programacion semestral',
         'programacion.validacion' => 'gestionar conflictos',
         'programacion.requerimientos.index' => 'gestionar conflictos',

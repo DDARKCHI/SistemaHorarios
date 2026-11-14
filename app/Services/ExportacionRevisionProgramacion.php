@@ -47,7 +47,7 @@ class ExportacionRevisionProgramacion
             ['Observaciones exportadas', $observaciones->count()],
             ['Fecha de exportación (UTC)', now()->utc()->format('Y-m-d H:i:s')],
             ['Alcance', 'Incluye todas las páginas del filtro aplicado y refleja los datos al momento de descargar.'],
-            ['Revisión adicional', 'Este informe no constituye una aprobación de la programación. La aprobación formal de disponibilidades y la aplicación automática de prioridades siguen pendientes.'],
+            ['Revisión adicional', 'Este informe no constituye una aprobación de la programación. La aprobación formal de disponibilidades requiere revisión adicional. La preferencia de los cursos se indica en sus cruces de recursos.'],
         ];
         foreach ($datos as $indice => $fila) $this->escribirFila($resumen, $indice + 3, $fila);
         $this->escribirFila($resumen, 13, ['Totales de la versión completa', 'Cantidad']);

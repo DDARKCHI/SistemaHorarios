@@ -44,11 +44,11 @@
                 <option value="">Selecciona un espacio</option>
                 @foreach (['sala' => 'Salas', 'laboratorio' => 'Laboratorios', 'movil' => 'Laboratorios móviles'] as $tipoEspacio => $etiquetaGrupo)
                     @if ($espacios->contains('tipo', $tipoEspacio))
-                        <optgroup label="{{ $etiquetaGrupo }}">
+                        @if ($tipoEspacio !== 'sala')<optgroup label="{{ $etiquetaGrupo }}">@endif
                             @foreach ($espacios->where('tipo', $tipoEspacio) as $opcion)
                                 <option value="{{ $opcion['clave'] }}" data-universidad="{{ $opcion['universidad_id'] }}" @selected(($espacioSeleccionado['clave'] ?? '') === $opcion['clave'])>{{ $opcion['etiqueta'] }}</option>
                             @endforeach
-                        </optgroup>
+                        @if ($tipoEspacio !== 'sala')</optgroup>@endif
                     @endif
                 @endforeach
             </select>

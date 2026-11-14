@@ -12,6 +12,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <x-favicon />
 </head>
 
 <body class="min-h-screen bg-fondo text-texto">

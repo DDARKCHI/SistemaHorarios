@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sala;
 use App\Models\Sede;
 use App\Models\TipoSala;
+use App\Models\Laboratorio;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -46,7 +47,11 @@ class SalaController extends Controller
             ->when($sala->exists, fn ($query) => $query->orWhere('id', $sala->tipo_sala_id))
             ->orderBy('nombre')->orderBy('id')->get();
 
-        return view('salas.formulario', compact('sala', 'sedes', 'tiposSala'));
+        $tipoSalaBase = $sala->tipo_sala_id ?? $tiposSala->first(fn ($tipo) => $tipo->esDeImportacion())?->id;
+        $ocultarTipoSala = ($sala->exists && $sala->tipoSala?->esDeImportacion()) || $tiposSala->every(fn ($tipo) => $tipo->esDeImportacion());
+        $tiposSala = $tiposSala->reject(fn ($tipo) => $tipo->esDeImportacion());
+        $laboratorioVinculado = $sala->exists ? $sala->laboratorios()->orderByDesc('estado')->orderBy('id')->first() : null;
+        return view('salas.formulario', compact('sala', 'sedes', 'tiposSala', 'tipoSalaBase', 'ocultarTipoSala', 'laboratorioVinculado'));
     }
 
     private function guardar(Request $request, Sala $sala)
@@ -70,6 +75,7 @@ class SalaController extends Controller
                     'descripcion' => ['nullable', 'string', 'max:5000'],
                     'estado' => ['required', 'boolean'],
                     'disponible' => ['required', 'boolean'],
+                    'registrar_laboratorio' => ['nullable', 'boolean'],
                 ], [
                     'sede_id.*' => 'Selecciona una sede activa. Si editas una sala, también puedes conservar su sede actual.',
                     'tipo_sala_id.*' => 'Selecciona un tipo de sala activo. Si editas una sala, también puedes conservar su tipo actual.',
@@ -84,7 +90,10 @@ class SalaController extends Controller
                     'descripcion.*' => 'La descripción debe ser un texto de hasta 5.000 caracteres.',
                     'estado.*' => 'Selecciona un estado de registro válido.',
                     'disponible.*' => 'Selecciona una habilitación de uso válida.',
+                    'registrar_laboratorio.*' => 'Indica si la sala también se registrará como laboratorio.',
                 ]);
+                $registrarLaboratorio = (bool) ($datos['registrar_laboratorio'] ?? false);
+                unset($datos['registrar_laboratorio']);
 
                 if ($sala->exists && (int) $datos['sede_id'] !== (int) $sala->sede_id
                     && (DB::table('asignaciones_salas')->where('sala_id', $sala->id)->exists() || $sala->laboratorios()->exists())) {
@@ -105,10 +114,12 @@ class SalaController extends Controller
                 $sala->fill($datos + ['universidad_id' => $sede->universidad_id]);
 
                 if (! $esNueva && ! $sala->isDirty()) {
+                    if ($registrarLaboratorio) $this->registrarLaboratorio($sala, $request);
                     return $sala;
                 }
 
                 $sala->save();
+                if ($registrarLaboratorio) $this->registrarLaboratorio($sala, $request);
                 DB::table('historial_acciones')->insert([
                     'usuario_id' => $request->user()->id,
                     'accion' => $esNueva ? 'Crear sala' : 'Actualizar sala',
@@ -119,7 +130,7 @@ class SalaController extends Controller
                 ]);
 
                 return $sala;
-            });
+            }, 3);
         } catch (UniqueConstraintViolationException $error) {
             throw ValidationException::withMessages(['codigo' => 'Ya existe una sala con este código en la sede seleccionada.']);
         }
@@ -168,8 +179,9 @@ class SalaController extends Controller
         ], Arr::only($validador->validated(), self::FILTROS));
         $filtros['q'] = trim($filtros['q'] ?? '');
         $filtros['estado'] = $filtros['estado'] ?: 'activas';
+        if ($filtros['tipo_sala_id'] && TipoSala::find($filtros['tipo_sala_id'])?->esDeImportacion()) $filtros['tipo_sala_id'] = null;
 
-        $consulta = Sala::with(['sede', 'tipoSala']);
+        $consulta = Sala::with(['sede', 'tipoSala'])->withCount('laboratorios');
 
         if ($filtros['q'] !== '') {
             // El texto buscado es literal, incluidos los caracteres especiales de LIKE.
@@ -210,11 +222,30 @@ class SalaController extends Controller
             'sedes' => (int) $totales->sedes,
         ];
         $sedes = Sede::orderBy('nombre')->orderBy('id')->get();
-        $tiposSala = TipoSala::orderBy('nombre')->orderBy('id')->get();
+        $tiposSala = TipoSala::clasificados()->orderBy('nombre')->orderBy('id')->get();
         $hayFiltros = $filtros['q'] !== '' || $filtros['sede_id'] !== null
             || $filtros['tipo_sala_id'] !== null || $filtros['capacidad_minima'] !== null
             || $filtros['estado'] !== 'activas' || ! empty($filtros['uso']);
 
         return view('salas.index', compact('salas', 'sedes', 'tiposSala', 'filtros', 'resumen', 'hayFiltros'));
+    }
+
+    private function registrarLaboratorio(Sala $sala, Request $request): void
+    {
+        // La sala ya está bloqueada por guardar(); leer en modo actual evita duplicados concurrentes.
+        if ($sala->laboratorios()->lockForUpdate()->first()) return;
+        $laboratorio = Laboratorio::create([
+            'sala_id' => $sala->id, 'codigo' => $sala->codigo,
+            'nombre' => filled($sala->nombre) ? $sala->nombre : $sala->codigo,
+            'capacidad' => $sala->capacidad, 'descripcion' => $sala->descripcion,
+            'estado' => $sala->estado, 'disponible' => $sala->disponible,
+        ]);
+        DB::table('historial_acciones')->insert([
+            'usuario_id' => $request->user()->id, 'accion' => 'Crear laboratorio', 'modulo' => 'Laboratorios',
+            'tabla_afectada' => 'laboratorios', 'registro_id' => $laboratorio->id,
+            'descripcion' => 'Registro de una sala como laboratorio fijo.',
+            'datos' => json_encode(['tipo' => 'fijo', 'antes' => null, 'despues' => $laboratorio->only($laboratorio->getFillable())], JSON_THROW_ON_ERROR),
+            'direccion_ip' => $request->ip(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
     }
 }

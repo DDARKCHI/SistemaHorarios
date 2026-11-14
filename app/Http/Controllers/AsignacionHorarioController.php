@@ -9,6 +9,7 @@ use App\Models\Horario;
 use App\Models\PeriodoAcademico;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
+use App\Models\Profesor;
 use App\Services\AsignacionModulosHorario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -103,7 +104,9 @@ class AsignacionHorarioController extends Controller
 
                 'actividades.grupos.horarios.dia',
                 'actividades.grupos.horarios.bloqueHorario',
+                'actividades.grupos.horarios.profesores' => fn ($q) => $q->where('estado', true),
                 'actividades.grupos.horarios.profesores.profesor',
+                'actividades.grupos.horarios.profesores.profesor.disponibilidades' => fn ($q) => $q->where('periodo_academico_id', $periodoId)->where('estado', true),
             ])
                 ->where('id', $seccionId)
                 ->where(
@@ -114,6 +117,9 @@ class AsignacionHorarioController extends Controller
                 ->first();
         }
 
+        $profesoresParaHorario = $seccion && $editable
+            ? Profesor::where('universidad_id', $seccion->asignatura->universidad_id)->where('estado', true)->orderBy('apellido')->orderBy('nombre')->get(['id', 'nombre', 'apellido', 'rut'])
+            : collect();
         return view(
             'programacion.asignacion-horarios',
             compact(
@@ -129,7 +135,8 @@ class AsignacionHorarioController extends Controller
                 'editable',
                 'dias',
                 'bloques',
-                'seccion'
+                'seccion',
+                'profesoresParaHorario'
             )
         );
     }
@@ -222,6 +229,21 @@ class AsignacionHorarioController extends Controller
         return redirect()->route('programacion.asignacion.horarios', $contexto + [
             'carrera_id' => $request->integer('carrera_id') ?: null, 'semestre' => $request->integer('semestre') ?: null,
         ])->with('success', 'Horario eliminado correctamente.');
+    }
+
+    public function asignarProfesor(Request $request, Horario $horario, AsignacionModulosHorario $asignador)
+    {
+        $datos = $request->validate([
+            'version_id' => ['required', 'integer', 'exists:versiones_planificacion,id'],
+            'profesor_id' => ['required', 'integer', 'exists:profesores,id'],
+            'accion_docente' => ['required', 'in:reemplazar,agregar'],
+            'huella_profesores' => ['required', 'string', 'regex:/^[a-f0-9]{64}$/D'],
+        ], ['profesor_id.*' => 'Selecciona un profesor registrado.', 'accion_docente.*' => 'Selecciona cómo asignar el profesor.',
+            'version_id.*' => 'Actualiza la página para revisar la versión vigente.', 'huella_profesores.*' => 'Actualiza la página antes de modificar los profesores.']);
+        $resultado = $asignador->asignarProfesor($horario, $datos, $request->user()->id, $request->ip());
+        return redirect()->route('programacion.asignacion.horarios', ['periodo_id' => $resultado['periodo_id'], 'seccion_id' => $resultado['seccion_id'],
+            'carrera_id' => $request->integer('carrera_id') ?: null, 'semestre' => $request->integer('semestre') ?: null])
+            ->with('success', 'Profesor asignado al horario correctamente.'.($resultado['sin_declaracion'] ? ' El profesor no ha informado disponibilidad para este período.' : ''));
     }
 
     private function obtenerVersionSemestral(

@@ -6,6 +6,7 @@ use App\Models\Equipamiento;
 use App\Models\EquipamientoEspacio;
 use App\Models\LaboratorioMovil;
 use App\Models\Sala;
+use App\Models\Sede;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -22,10 +23,11 @@ class EquipamientoEspacioController extends Controller
         abort_if(filled($request->query('ubicacion')) && ! $seleccionada, 404);
         $ubicadas = (int) $ubicaciones->sum('cantidad');
         $espacios = Sala::where('universidad_id', $equipamiento->universidad_id)->where('estado', true)->where('disponible', true)->with('sede')->orderBy('codigo')->get()
-            ->map(fn ($s) => ['id' => 'sala:'.$s->id, 'nombre' => 'Sala '.$s->codigo.' · '.$s->sede?->nombre])
+            ->map(fn ($s) => ['id' => 'sala:'.$s->id, 'sede_id' => $s->sede_id, 'nombre' => 'Sala '.$s->codigo.' · '.$s->sede?->nombre])
             ->concat(LaboratorioMovil::where('universidad_id', $equipamiento->universidad_id)->where('estado', true)->where('disponible', true)->with('sede')->orderBy('codigo')->get()
-                ->map(fn ($m) => ['id' => 'movil:'.$m->id, 'nombre' => 'Laboratorio móvil '.$m->codigo.' · '.$m->sede?->nombre]));
-        return view('recursos.ubicaciones', compact('equipamiento', 'ubicaciones', 'seleccionada', 'ubicadas', 'espacios'));
+                ->map(fn ($m) => ['id' => 'movil:'.$m->id, 'sede_id' => $m->sede_id, 'nombre' => 'Laboratorio móvil '.$m->codigo.' · '.$m->sede?->nombre]));
+        $sedes = Sede::where('universidad_id', $equipamiento->universidad_id)->orderBy('nombre')->get();
+        return view('recursos.ubicaciones', compact('equipamiento', 'ubicaciones', 'seleccionada', 'ubicadas', 'espacios', 'sedes'));
     }
 
     public function store(Request $request, Equipamiento $equipamiento)

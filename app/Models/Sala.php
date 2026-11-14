@@ -28,6 +28,11 @@ class Sala extends Model
         'capacidad' => 'integer',
     ];
 
+    public function getDescripcionAttribute(?string $value): ?string
+    {
+        return trim($value ?? '') === 'Recurso importado desde programación Excel.' ? null : $value;
+    }
+
     public function universidad()
     {
         return $this->belongsTo(Universidad::class);

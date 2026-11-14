@@ -141,7 +141,8 @@ class LaboratorioController extends Controller
                 $datos = $request->validate([
                     $campoUbicacion => ['bail', 'required', 'integer', Rule::exists($tipo === 'fijo' ? 'salas' : 'sedes', 'id')],
                     'codigo' => ['bail', $tipo === 'fijo' ? 'nullable' : 'required', 'string', 'max:30'],
-                    'nombre' => ['required', 'string', 'max:100'],
+                    'nombre' => [$tipo === 'fijo' && $request->boolean('usar_nombre_sala') ? 'nullable' : 'required', 'string', 'max:100'],
+                    'usar_nombre_sala' => [Rule::prohibitedIf($tipo !== 'fijo'), 'nullable', 'boolean'],
                     'capacidad' => ['required', 'integer', 'min:0', 'max:65535'],
                     'descripcion' => ['nullable', 'string', 'max:5000'],
                     'estado' => ['required', 'boolean'], 'disponible' => ['required', 'boolean'],
@@ -157,6 +158,10 @@ class LaboratorioController extends Controller
                 $ubicacion = $tipo === 'fijo'
                     ? Sala::with('sede')->lockForUpdate()->findOrFail($datos[$campoUbicacion])
                     : Sede::query()->lockForUpdate()->findOrFail($datos[$campoUbicacion]);
+                if ($tipo === 'fijo' && $request->boolean('usar_nombre_sala')) {
+                    $datos['nombre'] = filled($ubicacion->nombre) ? $ubicacion->nombre : $ubicacion->codigo;
+                }
+                unset($datos['usar_nombre_sala']);
                 $mismaUbicacion = $laboratorio->exists && (int) $laboratorio->{$campoUbicacion} === (int) $ubicacion->id;
                 $habilitada = $ubicacion->estado && ($tipo === 'movil' || ($ubicacion->disponible && $ubicacion->sede?->estado));
                 if (! $habilitada && ! $mismaUbicacion) {

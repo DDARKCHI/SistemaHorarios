@@ -142,3 +142,145 @@ select {
 [data-filtros-salas]:not([open]) [data-panel-filtros-salas] {
     display: none;
 }
+
+
+/* Formularios y detalles: el ancho del panel determina la distribución. */
+@layer components {
+    .panel-editor {
+        container: editor / inline-size;
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        gap: 1.25rem;
+    }
+
+    .panel-formulario,
+    .panel-columna,
+    .panel-layout {
+        display: grid;
+        min-width: 0;
+        gap: 1.25rem;
+    }
+
+    .panel-layout { align-items: start; }
+
+    .panel-seccion,
+    .panel-contexto,
+    .panel-acciones {
+        min-width: 0;
+        padding: 1.25rem;
+        border: 1px solid var(--color-borde);
+        border-radius: 0.75rem;
+        background: var(--color-superficie);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.03);
+    }
+
+    .panel-seccion { container: seccion / inline-size; }
+
+    .panel-titulo {
+        margin-bottom: 1rem;
+        color: var(--color-texto);
+        font-size: 0.9375rem;
+        line-height: 1.375rem;
+        font-weight: 700;
+    }
+
+    .panel-campos,
+    .panel-pareja {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 1rem;
+    }
+
+    .panel-campos > *,
+    .panel-pareja > * { min-width: 0; }
+
+    .panel-pareja {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+    }
+
+    .panel-campos + .panel-pareja { margin-top: 1rem; }
+
+    .panel-seccion textarea {
+        display: block;
+        min-height: 6.5rem;
+        resize: vertical;
+    }
+
+    .panel-nota {
+        margin-top: 1rem;
+        padding: 0.75rem 0.875rem;
+        border-radius: 0.5rem;
+        background: var(--color-fondo);
+        color: #4b5563;
+        font-size: 0.75rem;
+        line-height: 1.25rem;
+    }
+
+    .panel-acciones {
+        display: grid;
+        align-items: center;
+        gap: 1rem;
+        padding-block: 1rem;
+    }
+
+    .panel-acciones-ayuda {
+        color: var(--color-texto-secundario);
+        font-size: 0.75rem;
+        line-height: 1.25rem;
+    }
+
+    .panel-botones {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .panel-resumen {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-borde);
+        font-size: 0.875rem;
+    }
+
+    .panel-modulos {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+        gap: 0.75rem;
+    }
+
+    .panel-modulo {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid var(--color-borde);
+        border-radius: 0.5rem;
+        background: var(--color-fondo);
+    }
+
+    .panel-docente + .panel-docente {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--color-borde);
+    }
+
+    @container editor (min-width: 38rem) {
+        .panel-acciones { grid-template-columns: minmax(0, 1fr) auto; }
+        .panel-botones { display: flex; flex-wrap: wrap; justify-content: end; }
+    }
+
+    @container editor (min-width: 60rem) {
+        .panel-layout { grid-template-columns: minmax(0, 1.85fr) minmax(18rem, 1fr); }
+    }
+
+    @container seccion (min-width: 28rem) {
+        .panel-campos { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        .panel-campos > .panel-campo--corto { grid-column: span 2; }
+        .panel-campos > .panel-campo--medio { grid-column: span 3; }
+        .panel-campos > .panel-campo--largo { grid-column: span 4; }
+        .panel-campos > .panel-campo--completo { grid-column: 1 / -1; }
+    }
+}

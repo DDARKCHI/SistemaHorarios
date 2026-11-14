@@ -29,6 +29,10 @@ class AsignacionModulosHorario
             }
             $asignaciones = Models\GrupoProfesor::where('grupo_seccion_id', $grupo->id)->where('estado', true)
                 ->whereIn('profesor_id', $profesoresIds)->orderBy('id')->lockForUpdate()->get()->unique('profesor_id');
+            $directas = Models\HorarioProfesor::where('estado', true)->whereIn('profesor_id', $profesoresIds)
+                ->whereHas('horario', fn ($q) => $q->where('grupo_seccion_id', $grupo->id)->where('version_planificacion_id', $version->id)->where('estado', true))
+                ->orderByDesc('es_principal')->orderBy('id')->lockForUpdate()->get();
+            $asignaciones = $asignaciones->concat($directas)->unique('profesor_id');
             if ($asignaciones->count() !== $profesoresIds->count() || $profesores->count() !== $profesoresIds->count()
                 || $profesores->contains(fn ($profesor) => ! $profesor->estado || (int) $profesor->universidad_id !== (int) $periodo->universidad_id)) {
                 $this->rechazar('profesores_ids', 'La asignación de profesores del grupo cambió o contiene docentes inactivos o de otra institución. Revisa los docentes antes de guardar.');
@@ -117,6 +121,87 @@ class AsignacionModulosHorario
             $actual->delete();
             $this->auditar('Eliminar módulo', $actual->id, $usuarioId, $ip, ['periodo_id' => $periodo->id, 'version_id' => $version->id, 'antes' => $antes]);
             return ['periodo_id' => $periodo->id, 'seccion_id' => $seccion->id];
+        }, 3);
+    }
+
+    public static function firmaDocentes($asignaciones): string
+    {
+        return hash('sha256', json_encode($asignaciones->where('estado', true)->sortBy('id')
+            ->map(fn ($a) => $a->only(['id', 'profesor_id', 'tipo_participacion', 'es_principal', 'observaciones']))->values()->all(), JSON_THROW_ON_ERROR));
+    }
+
+    public function asignarProfesor(Models\Horario $referencia, array $datos, int $usuarioId, ?string $ip): array
+    {
+        $periodoId = $referencia->versionPlanificacion->periodo_academico_id;
+        return DB::transaction(function () use ($referencia, $datos, $usuarioId, $ip, $periodoId) {
+            $periodo = Models\PeriodoAcademico::lockForUpdate()->findOrFail($periodoId);
+            $version = $this->versionEditable($periodo, (int) $datos['version_id']);
+            $profesor = Models\Profesor::lockForUpdate()->findOrFail($datos['profesor_id']);
+            $grupo = Models\GrupoSeccion::lockForUpdate()->findOrFail($referencia->grupo_seccion_id);
+            $actividad = Models\ActividadSeccion::lockForUpdate()->findOrFail($grupo->actividad_seccion_id);
+            $seccion = Models\Seccion::lockForUpdate()->findOrFail($actividad->seccion_id);
+            $horario = Models\Horario::with('bloqueHorario', 'dia')->lockForUpdate()->findOrFail($referencia->id);
+            if (!$horario->estado || !$grupo->estado_activo || !$actividad->estado || !$seccion->estado_activo
+                || (int) $horario->version_planificacion_id !== (int) $version->id
+                || (int) $horario->grupo_seccion_id !== (int) $grupo->id
+                || (int) $horario->actividad_seccion_id !== (int) $actividad->id
+                || (int) $seccion->periodo_academico_id !== (int) $periodo->id) {
+                $this->rechazar('horario', 'El horario o su grupo ya no están activos en la versión actual. Actualiza la página.');
+            }
+            if (!$profesor->estado || (int) $profesor->universidad_id !== (int) $periodo->universidad_id) {
+                $this->rechazar('profesor_id', 'Selecciona un profesor activo de la institución de este período.');
+            }
+            $actuales = $horario->profesores()->where('estado', true)->orderBy('id')->lockForUpdate()->get();
+            if (!hash_equals(self::firmaDocentes($actuales), $datos['huella_profesores'])) {
+                $this->rechazar('horario', 'Los profesores de este horario cambiaron mientras lo editabas. Actualiza la página antes de guardar.');
+            }
+            $rango = IntervalosHorario::deBloque($horario->bloqueHorario);
+            if (!$rango || !$horario->dia) $this->rechazar('horario', 'El horario tiene horas o día sin definir. Revisa sus datos antes de asignar al profesor.');
+            $ocupados = Models\Horario::where('version_planificacion_id', $version->id)->where('dia_id', $horario->dia_id)->where('estado', true)
+                ->whereKeyNot($horario->id)->with(['bloqueHorario', 'profesores' => fn ($q) => $q->where('estado', true),
+                    'grupoSeccion.profesores' => fn ($q) => $q->where('estado', true), 'actividadSeccion.seccion.profesores' => fn ($q) => $q->where('estado', true)])->get();
+            foreach ($ocupados as $otro) {
+                $docentes = $otro->profesores;
+                if ($docentes->isEmpty()) $docentes = $otro->grupoSeccion?->profesores ?? collect();
+                if ($docentes->isEmpty()) $docentes = $otro->actividadSeccion?->seccion?->profesores ?? collect();
+                if (!$docentes->contains('profesor_id', $profesor->id)) continue;
+                $otroRango = IntervalosHorario::deBloque($otro->bloqueHorario);
+                if (!$otroRango || IntervalosHorario::seSuperponen($rango, $otroRango)) {
+                    $this->rechazar('profesor_id', 'El profesor ya tiene el horario #'.$otro->id.' en un intervalo coincidente o con horas por revisar. Selecciona otro profesor.');
+                }
+            }
+            $declaradas = Models\DisponibilidadProfesor::where('profesor_id', $profesor->id)->where('periodo_academico_id', $periodo->id)
+                ->where('estado', true)->with('bloqueHorario')->get();
+            if ($declaradas->isNotEmpty() && IntervalosHorario::coberturaDisponibilidad($rango, $declaradas->where('dia_id', $horario->dia_id)) !== 'cubierto') {
+                $this->rechazar('profesor_id', 'El módulo queda fuera de la disponibilidad informada o coincide con un bloque no disponible. Revisa la declaración del profesor.');
+            }
+            $resultado = ['periodo_id' => $periodo->id, 'seccion_id' => $seccion->id, 'sin_declaracion' => $declaradas->isEmpty()];
+            $añadir = $datos['accion_docente'] === 'agregar';
+            if ($actuales->contains('profesor_id', $profesor->id) && ($añadir || $actuales->count() === 1)) return $resultado;
+            $antes = $actuales->toArray();
+            if ($añadir && $actuales->isEmpty()) {
+                $inferidos = $grupo->profesores()->where('estado', true)->get();
+                if ($inferidos->isEmpty()) $inferidos = $seccion->profesores()->where('estado', true)->get();
+                foreach ($inferidos->unique('profesor_id') as $inferido) {
+                    Models\HorarioProfesor::create(['horario_id' => $horario->id, 'profesor_id' => $inferido->profesor_id,
+                        'tipo_participacion' => $inferido->tipo_participacion, 'es_principal' => $inferido->es_principal,
+                        'observaciones' => $inferido->observaciones, 'estado' => true]);
+                }
+                $actuales = $horario->profesores()->where('estado', true)->orderBy('id')->get();
+            }
+            $existePrincipal = $actuales->contains('es_principal', true);
+            if (!$añadir) $horario->profesores()->where('estado', true)->where('profesor_id', '!=', $profesor->id)->update(['estado' => false]);
+            $registro = $horario->profesores()->where('profesor_id', $profesor->id)->orderByDesc('estado')->orderBy('id')->first();
+            $registro ??= new Models\HorarioProfesor(['horario_id' => $horario->id, 'profesor_id' => $profesor->id]);
+            if (!$añadir || !$registro->exists || !$registro->estado) {
+                $registro->fill(['tipo_participacion' => !$añadir || !$existePrincipal ? 'PROFESOR RESPONSABLE' : 'PROFESOR COLABORADOR',
+                    'es_principal' => !$añadir || !$existePrincipal, 'estado' => true])->save();
+            }
+            $this->auditar('Asignar profesor a horario', $horario->id, $usuarioId, $ip, ['periodo_id' => $periodo->id, 'version_id' => $version->id,
+                'grupo_id' => $grupo->id, 'accion_docente' => $datos['accion_docente'], 'antes' => $antes,
+                'despues' => $horario->profesores()->where('estado', true)->orderBy('id')->get()->toArray(),
+                'profesores_sin_declaracion' => $declaradas->isEmpty() ? [$profesor->id] : []]);
+            return $resultado;
         }, 3);
     }
 
