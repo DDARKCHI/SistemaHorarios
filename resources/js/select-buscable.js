@@ -1,4 +1,4 @@
-const normalizar = (texto) => String(texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+export const normalizar = (texto) => String(texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const textoOpcion = (opcion) => String(opcion?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.className = 'block min-h-11 w-full break-words px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50';
                 item.setAttribute('role', 'option');
                 item.setAttribute('aria-selected', String(opcion.selected));
-                if (opcion.selected) item.classList.add('bg-red-50', 'font-semibold', 'text-red-700');
+                if (opcion.selected) item.classList.add('bg-institucional/5', 'font-semibold', 'text-institucional');
                 item.textContent = textoOpcion(opcion);
                 item.addEventListener('mousedown', (event) => event.preventDefault());
                 item.addEventListener('click', () => { elegir(opcion); input.focus(); cerrar(); });

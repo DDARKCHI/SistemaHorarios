@@ -13,7 +13,7 @@
     <div class="mt-1.5 space-y-0.5 break-words text-[10px] leading-tight text-gray-500">
         <p><span class="font-semibold text-gray-700">Sec.:</span> {{ $sesion['seccion'] }}</p>
         <p><span class="font-semibold text-gray-700">Act.:</span> {{ $sesion['actividad'] }}</p>
-        <p title="{{ implode(', ', $sesion['profesores']) }}"><span class="font-semibold text-gray-700">Prof.:</span> {{ count($sesion['profesores']) ? implode(', ', $sesion['profesores']) : 'Sin docente asignado' }}</p>
+        <p title="{{ implode(', ', $sesion['profesores']) }}"><span class="font-semibold text-gray-700">Docente:</span> {{ count($sesion['profesores']) ? implode(', ', $sesion['profesores']) : 'Sin docente asignado' }}</p>
         @foreach ($sesion['recursos'] ?? [] as $tipo => $codigos)
             @if (count($codigos))<p><span class="font-semibold text-gray-700">{{ $tipo }}:</span> {{ implode(', ', $codigos) }}</p>@endif
         @endforeach

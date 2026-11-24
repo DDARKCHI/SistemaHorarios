@@ -36,4 +36,14 @@ class SolicitudDisponibilidad extends Model
     {
         return $this->hasMany(RespuestaDisponibilidad::class);
     }
+
+    public function enviosAcceso()
+    {
+        return $this->hasMany(EnvioAccesoDocente::class, 'solicitud_disponibilidad_id');
+    }
+
+    public function recordatorios()
+    {
+        return $this->hasMany(RecordatorioDisponibilidad::class, 'solicitud_disponibilidad_id');
+    }
 }

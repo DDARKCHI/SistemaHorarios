@@ -13,7 +13,7 @@ use App\Models\ProfesorVersion;
 use App\Models\Sede;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
-use App\Services\ProgramacionSemestralService;
+use App\Services\GeneracionAutomatica;
 use App\Support\DiasCalendario;
 use Illuminate\Http\Request;
 
@@ -45,6 +45,7 @@ class ProgramacionSemestralController extends Controller
             ->where('tipo', 'anterior')
             ->orderByDesc('id')
             ->get();
+        $versionesBase = $versiones->concat($versionesAnteriores);
 
         $versionIdSolicitada = $request->input('version_id');
 
@@ -231,6 +232,7 @@ class ProgramacionSemestralController extends Controller
             'periodos' => $periodos,
             'versiones' => $versiones,
             'versionesAnteriores' => $versionesAnteriores,
+            'versionesBase' => $versionesBase,
             'sedes' => $sedes,
             'carreras' => $carreras,
             'semestres' => $semestres,
@@ -256,24 +258,21 @@ class ProgramacionSemestralController extends Controller
 
     public function generar(
         Request $request,
-        ProgramacionSemestralService $service
+        GeneracionAutomatica $service
     ) {
         $datos = $request->validate([
-            'version_anterior_id' => [
-                'required',
-                'integer',
-                'exists:versiones_planificacion,id',
-            ],
+            'version_base_id' => ['required_without:version_anterior_id', 'integer', 'exists:versiones_planificacion,id'],
+            'version_anterior_id' => ['required_without:version_base_id', 'integer', 'exists:versiones_planificacion,id'],
+            'solicitud' => ['nullable', 'uuid'],
         ]);
 
-        $versionAnterior = VersionPlanificacion::query()
-            ->where('id', $datos['version_anterior_id'])
-            ->where('tipo', 'anterior')
-            ->firstOrFail();
+        $versionBase = VersionPlanificacion::findOrFail($datos['version_base_id'] ?? $datos['version_anterior_id']);
 
         $versionSemestral = $service->generar(
-            $versionAnterior->id,
-            auth()->id()
+            $versionBase,
+            $request->user()->id,
+            $request->ip(),
+            $datos['solicitud'] ?? null
         );
 
         return redirect()
@@ -283,9 +282,8 @@ class ProgramacionSemestralController extends Controller
             ])
             ->with(
                 'success',
-                'Programación semestral generada correctamente desde la versión V'
-                . number_format((float) $versionAnterior->version, 1)
-                . '.'
+                'Programación generada como borrador V'.$versionSemestral->version
+                .'. Revisa el resultado y actívalo desde Más acciones.'
             );
     }
 

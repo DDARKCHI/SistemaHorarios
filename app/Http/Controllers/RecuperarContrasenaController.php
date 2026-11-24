@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Notifications\PasswordCambiadaNotification;
+use App\Services\CuentasDocentes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -20,14 +20,14 @@ class RecuperarContrasenaController extends Controller
     public function enviarEnlace(Request $request)
     {
         $request->validate([
-            'rut' => ['required', 'string'],
+            'rut' => ['required', 'string', 'max:40'],
         ], [
-            'rut.required' => 'Debes ingresar tu RUT.',
+            'rut.required' => 'Debes ingresar tu RUT o usuario.',
         ]);
 
-        $usuario = User::where('rut', $request->rut)->first();
+        $usuario = CuentasDocentes::buscarUsuario($request->rut);
 
-        $mensaje = 'Si el RUT se encuentra registrado, recibirás un enlace de recuperación en tu correo.';
+        $mensaje = 'Si el usuario tiene un correo asociado, recibirás un enlace de recuperación.';
 
         if (!$usuario || !$usuario->email) {
             return back()->with('status', $mensaje);
@@ -87,6 +87,8 @@ class RecuperarContrasenaController extends Controller
                 $usuario->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
+                    'debe_cambiar_password' => false,
+                    'clave_temporal' => null,
                 ])->save();
 
                 $usuario->notify(

@@ -56,8 +56,14 @@ class IndicadoresProgramacion
             ->whereDoesntHave('grupos', fn ($query) => $query->where('estado_activo', true))->count();
         $pendientes['modulos_sin_grupo'] = (clone $modulos)->whereNull('grupo_seccion_id')->count();
         $datos['horario'] = $this->medir($datos['horario'], $cubiertos, $requeridos);
-        $conDocente = (clone $modulos)->whereHas('profesores', fn ($query) => $query->where('estado', true)
-            ->whereHas('profesor', fn ($query) => $query->where('universidad_id', $universidad)))->count();
+        $activa = fn ($query) => $query->where('estado', true);
+        $deInstitucion = fn ($query) => $query->where('estado', true)
+            ->whereHas('profesor', fn ($profesor) => $profesor->where('universidad_id', $universidad));
+        $sinDocenteExpreso = (clone $modulos)->whereDoesntHave('profesores', $activa);
+        $conDocente = (clone $modulos)->whereHas('profesores', $deInstitucion)->count()
+            + (clone $sinDocenteExpreso)->whereHas('grupoSeccion.profesores', $deInstitucion)->count()
+            + (clone $sinDocenteExpreso)->whereDoesntHave('grupoSeccion.profesores', $activa)
+                ->whereHas('actividadSeccion.seccion.profesores', $deInstitucion)->count();
         $datos['docentes'] = $this->medir($datos['docentes'], $conDocente, $cantidad);
         $conEspacio = (clone $modulos)->where(fn ($query) => $query
             ->whereHas('asignacionesSalas', fn ($query) => $query->where('estado', true)

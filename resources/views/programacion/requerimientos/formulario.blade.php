@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', ($requerimiento->exists ? 'Editar requerimiento' : 'Agregar requerimiento').' | PROSEC')
+@section('title', ($requerimiento->exists ? 'Editar requerimiento' : 'Agregar requerimiento').' | '.$identidad['nombre'])
 @section('content')
 @php
     $editando = $requerimiento->exists;
@@ -25,15 +25,15 @@
                 <x-seccion-formulario titulo="Recursos necesarios" id="recursos-requerimiento">
                     <div class="panel-campos">
                         <div class="panel-campo--medio"><label for="tipo-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Tipo de requerimiento *</label><select id="tipo-requerimiento" name="tipo_requerimiento" data-select-buscable required class="{{ $campo }}">@foreach ($tipos as $tipo => $etiqueta)<option value="{{ $tipo }}" data-tipo-normalizado="{{ \App\Models\RequerimientoActividad::tipoNormalizado($tipo) }}" @selected((string) $valor('tipo_requerimiento', $requerimiento->tipo_requerimiento) === (string) $tipo)>{{ $etiqueta }}</option>@endforeach</select></div>
-                        <div class="panel-campo--medio"><label for="cantidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de recursos *</label><input id="cantidad-requerimiento" name="cantidad" type="number" min="1" max="65535" step="1" inputmode="numeric" required value="{{ $valor('cantidad', $requerimiento->cantidad) }}" class="{{ $campo }}"></div>
+                        <div class="panel-campo--medio"><label for="cantidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de recursos *</label><input placeholder="Ej. 1" id="cantidad-requerimiento" name="cantidad" type="number" min="1" max="65535" step="1" inputmode="numeric" required value="{{ $valor('cantidad', $requerimiento->cantidad) }}" class="{{ $campo }}"></div>
                         @if (!$ocultarTipoSala)
 <div class="panel-campo--medio"><label for="sala-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Tipo de sala</label><select id="sala-requerimiento" name="tipo_sala_id" data-select-buscable class="{{ $campo }}"><option value="">Sin tipo específico</option>@foreach ($tiposSala as $tipo)<option value="{{ $tipo->id }}" @selected((string) $valor('tipo_sala_id', $requerimiento->tipo_sala_id) === (string) $tipo->id)>{{ $tipo->nombre }}{{ $tipo->estado ? '' : ' (inactivo)' }}</option>@endforeach</select><p class="mt-1 text-xs text-gray-500">Es obligatorio para laboratorio móvil e indica el tipo de sala física que necesita.</p></div>
 @else
 <select id="sala-requerimiento" name="tipo_sala_id" hidden><option value="{{ $tipoSalaBase }}"></option></select>
 @endif
-                        <div class="panel-campo--medio"><label for="capacidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Capacidad mínima por recurso</label><input id="capacidad-requerimiento" name="capacidad_minima" type="number" min="1" max="65535" step="1" inputmode="numeric" value="{{ $valor('capacidad_minima', $requerimiento->capacidad_minima) }}" class="{{ $campo }}"><p class="mt-1 text-xs text-gray-500">Déjala vacía si no hay un mínimo adicional.</p></div>
+                        <div class="panel-campo--medio"><label for="capacidad-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Capacidad mínima por recurso</label><input placeholder="Ej. 25" id="capacidad-requerimiento" name="capacidad_minima" type="number" min="1" max="65535" step="1" inputmode="numeric" value="{{ $valor('capacidad_minima', $requerimiento->capacidad_minima) }}" class="{{ $campo }}"><p class="mt-1 text-xs text-gray-500">Déjala vacía si no hay un mínimo adicional.</p></div>
                         <div class="panel-campo--completo"><label for="equipo-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Equipamiento del inventario</label><select id="equipo-requerimiento" name="equipamiento_id" data-select-buscable class="{{ $campo }}"><option value="">Sin vínculo: revisar por nombre</option>@foreach ($equipamientos as $equipo)<option value="{{ $equipo->id }}" data-nombre="{{ $equipo->nombre }}" @selected((string) $valor('equipamiento_id', $requerimiento->equipamiento_id) === (string) $equipo->id)>{{ $equipo->nombre }} · {{ $equipo->tipo }}{{ $equipo->estado && $equipo->disponible ? '' : ' (inactivo o no habilitado)' }}</option>@endforeach</select><p class="mt-1 text-xs text-gray-500">La revisión contará las unidades de este equipo ubicadas en los espacios asignados al módulo.</p></div>
-                        <div class="panel-campo--completo"><label for="nombre-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Recurso específico</label><input id="nombre-requerimiento" name="nombre_recurso" type="text" maxlength="100" value="{{ $valor('nombre_recurso', $requerimiento->nombre_recurso) }}" class="{{ $campo }}"><p class="mt-1 text-xs leading-5 text-gray-500">Al vincular un equipo se utiliza su nombre del inventario. Los recursos solicitados solo por nombre requieren revisión manual.</p></div>
+                        <div class="panel-campo--completo"><label for="nombre-requerimiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Recurso específico</label><input placeholder="Ej. Proyector multimedia" id="nombre-requerimiento" name="nombre_recurso" type="text" maxlength="100" value="{{ $valor('nombre_recurso', $requerimiento->nombre_recurso) }}" class="{{ $campo }}"><p class="mt-1 text-xs leading-5 text-gray-500">Al vincular un equipo se utiliza su nombre del inventario. Los recursos solicitados solo por nombre requieren revisión manual.</p></div>
                     </div>
                 </x-seccion-formulario>
             </div>
@@ -49,7 +49,7 @@
                 </x-seccion-formulario>
                 <x-seccion-formulario titulo="Observaciones" id="notas-requerimiento">
                     <div class="panel-campos">
-                        <div class="panel-campo--completo"><label for="observaciones-requerimiento" class="sr-only">Observaciones</label><textarea id="observaciones-requerimiento" name="observaciones" maxlength="2000" rows="3" class="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800">{{ $valor('observaciones', $requerimiento->observaciones) }}</textarea></div>
+                        <div class="panel-campo--completo"><label for="observaciones-requerimiento" class="sr-only">Observaciones</label><textarea placeholder="Ej. Se necesita conexión HDMI." id="observaciones-requerimiento" name="observaciones" maxlength="2000" rows="3" class="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800">{{ $valor('observaciones', $requerimiento->observaciones) }}</textarea></div>
                     </div>
                 </x-seccion-formulario>
             </div>

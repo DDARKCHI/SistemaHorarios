@@ -8,18 +8,12 @@
 
 <div class="space-y-6">
 
-    <!-- Presentación -->
-    <div>
-        <h1 class="text-2xl font-bold text-texto">
-            Bienvenido al sistema, {{ auth()->user()->name }}
-        </h1>
-    </div>
-
+    <x-encabezado-pagina :titulo="'Bienvenido al sistema, '.auth()->user()->name" />
 
     <!-- Estado del período académico -->
     <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border border-borde bg-superficie px-4 py-3 shadow-sm">
         <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span class="text-xs font-semibold uppercase tracking-wide text-texto-secundario">Periodo académico</span>
+            <span class="text-xs font-semibold uppercase tracking-wide text-texto-secundario">Período académico</span>
             <span class="text-base font-semibold text-texto">{{ $periodoActivo?->nombre ?? 'Sin período activo' }}</span>
             @if ($periodoActivo)
                 <span class="text-sm text-texto-secundario">Semestre {{ $periodoActivo->numero_semestre }} de {{ $periodoActivo->anio }}</span>
@@ -92,7 +86,7 @@
                 <div>
 
                     <p class="text-sm text-texto-secundario">
-                        Profesores
+                        Docentes
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-texto">
@@ -277,7 +271,7 @@
                 @endif
 
                 @can('ver programacion semestral')
-                    <a href="{{ $urlProgramacion }}" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-institucional px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-institucional-oscuro sm:w-auto">
+                    <a href="{{ $urlProgramacion }}" class="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-institucional px-4 py-2 text-center text-sm font-semibold text-white transition [overflow-wrap:normal] hover:bg-institucional-oscuro sm:w-auto">
                         Consultar programación
                         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" /></svg>
                     </a>
@@ -295,7 +289,7 @@
                 <ul class="space-y-2">
                     @forelse ($accesos as $acceso)
                         <li>
-                            <a href="{{ $acceso['url'] }}" class="flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-lg border border-borde px-3 py-2.5 text-sm font-medium text-texto transition hover:border-institucional hover:bg-red-50">
+                            <a href="{{ $acceso['url'] }}" class="flex min-h-11 min-w-0 items-center justify-between gap-3 rounded-lg border border-borde px-3 py-2.5 text-sm font-medium text-texto transition hover:border-institucional hover:bg-institucional/5">
                                 <span class="min-w-0">{{ $acceso['titulo'] }}</span>
                                 <svg class="h-4 w-4 shrink-0 text-texto-secundario" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7" /></svg>
                             </a>

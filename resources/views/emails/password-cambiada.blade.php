@@ -9,16 +9,16 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Contraseña actualizada | PROSEC</title>
+    <title>Contraseña actualizada | {{ $identidad['nombre'] }}</title>
 </head>
 
 <body
     style="
         margin: 0;
         padding: 0;
-        background-color: #f3f4f6;
+        background-color: {{ $identidad['fondo'] }};
         font-family: Arial, Helvetica, sans-serif;
-        color: #1f2937;
+        color: {{ $identidad['secundario'] }};
     "
 >
 
@@ -30,7 +30,7 @@
         border="0"
         style="
             width: 100%;
-            background-color: #f3f4f6;
+            background-color: {{ $identidad['fondo'] }};
             padding: 36px 16px;
         "
     >
@@ -62,28 +62,7 @@
                             "
                         >
 
-                            @if (file_exists(public_path('images/prosec-logo-email.png')))
-                                <img
-                                    src="{{ $message->embed(public_path('images/prosec-logo-email.png')) }}"
-                                    alt="PROSEC"
-                                    style="
-                                        display: block;
-                                        width: 250px;
-                                        max-width: 100%;
-                                        height: auto;
-                                        margin: 0 auto;
-                                    "
-                                >
-                            @else
-                                <strong
-                                    style="
-                                        font-size: 28px;
-                                        color: #d92323;
-                                    "
-                                >
-                                    PROSEC
-                                </strong>
-                            @endif
+                            <x-logo-correo tipo="principal" />
 
                         </td>
                     </tr>
@@ -92,7 +71,7 @@
                         <td
                             style="
                                 height: 4px;
-                                background-color: #d92323;
+                                background-color: {{ $identidad['principal'] }};
                                 font-size: 0;
                                 line-height: 0;
                             "
@@ -111,7 +90,7 @@
                             <h1
                                 style="
                                     margin: 0 0 22px 0;
-                                    color: #1f2937;
+                                    color: {{ $identidad['secundario'] }};
                                     font-size: 24px;
                                     line-height: 1.3;
                                     font-weight: 700;
@@ -140,7 +119,7 @@
                                 "
                             >
                                 Te informamos que la contraseña de tu cuenta en
-                                <strong style="color: #1f2937;">PROSEC</strong>
+                                <strong style="color: {{ $identidad['secundario'] }};">{{ $identidad['nombre'] }}</strong>
                                 fue actualizada correctamente.
                             </p>
 
@@ -201,8 +180,8 @@
                                 "
                             >
                                 Saludos,<br>
-                                <strong style="color: #1f2937;">
-                                    Equipo PROSEC
+                                <strong style="color: {{ $identidad['secundario'] }};">
+                                    Equipo {{ $identidad['nombre'] }}
                                 </strong>
                             </p>
 
@@ -219,19 +198,7 @@
                             "
                         >
 
-                            @if (file_exists(public_path('images/ucsc-logo-email.png')))
-                                <img
-                                    src="{{ $message->embed(public_path('images/ucsc-logo-email.png')) }}"
-                                    alt="Universidad Católica de la Santísima Concepción"
-                                    style="
-                                        display: block;
-                                        height: 48px;
-                                        width: auto;
-                                        max-width: 220px;
-                                        margin: 0 auto 14px auto;
-                                    "
-                                >
-                            @endif
+                            <x-logo-correo tipo="institucion" />
 
                             <p
                                 style="
@@ -241,7 +208,7 @@
                                     line-height: 1.5;
                                 "
                             >
-                                PROSEC · Programación Semestral de Cursos
+                                {{ $identidad['nombre'] }} · {{ $identidad['lema'] }}
                             </p>
 
                             <p

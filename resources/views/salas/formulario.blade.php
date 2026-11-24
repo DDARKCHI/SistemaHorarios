@@ -37,12 +37,12 @@
                     <div class="panel-campos">
                         <div class="panel-campo--corto">
                             <label for="codigo-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Código *</label>
-                            <input id="codigo-sala" name="codigo" type="text" maxlength="30" required value="{{ $valor('codigo', $sala->codigo) }}" class="{{ $campo }}" aria-describedby="codigo-ayuda">
+                            <input placeholder="Ej. TH-101" id="codigo-sala" name="codigo" type="text" maxlength="30" required value="{{ $valor('codigo', $sala->codigo) }}" class="{{ $campo }}" aria-describedby="codigo-ayuda">
                             <p id="codigo-ayuda" class="mt-1 text-xs text-gray-500">Debe ser único dentro de la sede.</p>
                         </div>
                         <div class="panel-campo--largo">
                             <label for="nombre-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Nombre</label>
-                            <input id="nombre-sala" name="nombre" type="text" maxlength="100" value="{{ $valor('nombre', $sala->nombre) }}" class="{{ $campo }}">
+                            <input placeholder="Ej. Aula 101" id="nombre-sala" name="nombre" type="text" maxlength="100" value="{{ $valor('nombre', $sala->nombre) }}" class="{{ $campo }}">
                         </div>
                         <div class="{{ $ocultarTipoSala ? 'panel-campo--completo' : 'panel-campo--medio' }}">
                             <label for="sede-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Sede *</label>
@@ -80,7 +80,7 @@
                         </div>
                         <div class="panel-campo--completo">
                             <label for="descripcion-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Descripción</label>
-                            <textarea id="descripcion-sala" name="descripcion" maxlength="5000" rows="3" class="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-800 focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional sm:text-sm">{{ $valor('descripcion', $sala->descripcion) }}</textarea>
+                            <textarea placeholder="Ej. Sala con proyector y acceso universal." id="descripcion-sala" name="descripcion" maxlength="5000" rows="3" class="w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-base text-gray-800 focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional sm:text-sm">{{ $valor('descripcion', $sala->descripcion) }}</textarea>
                         </div>
                     </div>
                 </x-seccion-formulario>
@@ -90,17 +90,17 @@
                     <div class="panel-campos">
                         <div class="panel-campo--completo">
                             <label for="edificio-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Edificio</label>
-                            <input id="edificio-sala" name="edificio" type="text" maxlength="100" value="{{ $valor('edificio', $sala->edificio) }}" class="{{ $campo }}">
+                            <input placeholder="Ej. Edificio A" id="edificio-sala" name="edificio" type="text" maxlength="100" value="{{ $valor('edificio', $sala->edificio) }}" class="{{ $campo }}">
                         </div>
                     </div>
                     <div class="panel-pareja">
                         <div class="panel-campo--completo">
                             <label for="piso-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Piso</label>
-                            <input id="piso-sala" name="piso" type="text" maxlength="30" value="{{ $valor('piso', $sala->piso) }}" class="{{ $campo }}">
+                            <input placeholder="Ej. 2" id="piso-sala" name="piso" type="text" maxlength="30" value="{{ $valor('piso', $sala->piso) }}" class="{{ $campo }}">
                         </div>
                         <div class="panel-campo--completo">
                             <label for="capacidad-sala" class="mb-1.5 block text-sm font-semibold text-gray-700">Capacidad *</label>
-                            <input id="capacidad-sala" name="capacidad" type="number" min="0" max="65535" step="1" inputmode="numeric" required value="{{ $valor('capacidad', $sala->capacidad) }}" class="{{ $campo }}" aria-describedby="capacidad-ayuda">
+                            <input placeholder="Ej. 30" id="capacidad-sala" name="capacidad" type="number" min="0" max="65535" step="1" inputmode="numeric" required value="{{ $valor('capacidad', $sala->capacidad) }}" class="{{ $campo }}" aria-describedby="capacidad-ayuda">
                             <p id="capacidad-ayuda" class="mt-1 text-xs text-gray-500">Cantidad de personas. Usa 0 si aún no se ha informado.</p>
                         </div>
                     </div>

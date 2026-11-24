@@ -20,20 +20,23 @@ use App\Models\SeccionProfesor;
 use App\Models\Universidad;
 use App\Models\VersionPlanificacion;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProgramacionCargaService
 {
     public function cargar(
         array $registros,
         int $usuarioId,
-        string $nombreArchivo
+        string $nombreArchivo,
+        ?string $firma = null
     ): VersionPlanificacion {
         return DB::transaction(function () use (
             $registros,
             $usuarioId,
-            $nombreArchivo
+            $nombreArchivo,
+            $firma
         ) {
-            $universidad = Universidad::first();
+            $universidad = Universidad::orderBy('id')->lockForUpdate()->first();
 
             if (!$universidad) {
                 throw new \Exception(
@@ -41,9 +44,21 @@ class ProgramacionCargaService
                 );
             }
 
+            $periodos = PeriodoAcademico::where('universidad_id', $universidad->id)->orderBy('id')->lockForUpdate()->get();
+            VersionPlanificacion::whereIn('periodo_academico_id', $periodos->modelKeys())->orderBy('id')->lockForUpdate()->get();
+            foreach ([Profesor::class, Sede::class, FacultadInstituto::class, Carrera::class, Asignatura::class] as $modelo) $modelo::where('universidad_id', $universidad->id)->orderBy('id')->lockForUpdate()->get();
+            $secciones = Seccion::whereIn('periodo_academico_id', $periodos->modelKeys())->orderBy('id')->lockForUpdate()->get();
+            $actividades = ActividadSeccion::whereIn('seccion_id', $secciones->modelKeys())->orderBy('id')->lockForUpdate()->get();
+            GrupoSeccion::whereIn('actividad_seccion_id', $actividades->modelKeys())->orderBy('id')->lockForUpdate()->get();
+            $plan = (new ConciliacionOfertaImportada)->analizar($registros);
+            if ($plan['errores']) throw ValidationException::withMessages(['conciliacion' => array_column($plan['errores'], 'mensaje')]);
+            if ($plan['sin_cambios']) throw ValidationException::withMessages(['conciliacion' => 'Este contenido ya corresponde a la última importación del período. No se creará otra versión idéntica.']);
+            if ($firma !== null && ! hash_equals($firma, $plan['firma'])) throw ValidationException::withMessages(['conciliacion' => 'Los datos cambiaron desde el análisis. Vuelve a analizar el archivo antes de confirmar.']);
+
             $periodo = $this->obtenerPeriodo(
                 $registros,
-                $universidad->id
+                $universidad->id,
+                $plan
             );
 
             $version = VersionPlanificacion::create([
@@ -80,6 +95,10 @@ class ProgramacionCargaService
                 'facultades' => [],
                 'salas' => [],
                 'tipos_sala' => [],
+                'conciliacion' => $plan,
+                'claves_seccion' => [],
+                'claves_actividad' => [],
+                'docencia_importada' => [],
             ];
 
             foreach ($registros as $registro) {
@@ -92,8 +111,21 @@ class ProgramacionCargaService
                 );
             }
 
+            // Fijar el respaldo docente del archivo en esta versión; no usar plantillas manuales compartidas.
+            foreach ($version->horarios()->whereDoesntHave('profesores')->with('actividadSeccion')->get() as $h) {
+                foreach ($cache['docencia_importada'][$h->actividadSeccion->seccion_id] ?? [] as $docente) $h->profesores()->create($docente);
+            }
+            $cuentas = app(CuentasDocentes::class);
+            foreach (collect($cache['profesores'])->unique('id') as $profesor) {
+                $cuentas->asegurarCuenta($profesor);
+            }
+            DB::table('historial_acciones')->insert(['usuario_id' => $usuarioId, 'accion' => 'Importar programación anterior', 'modulo' => 'Programación anterior',
+                'tabla_afectada' => 'versiones_planificacion', 'registro_id' => $version->id, 'descripcion' => 'Carga con conciliación de la oferta existente y conservación de plantillas.',
+                'datos' => json_encode(['archivo' => $nombreArchivo, 'contenido_hash' => $plan['contenido_hash'], 'registros' => count($registros), 'resumen' => $plan['resumen'], 'secciones_importadas' => collect($cache['secciones'])->pluck('id')->unique()->values()->all(), 'secciones_reutilizadas' => array_values(array_filter($plan['mapas']['secciones'])),
+                    'datos_importados' => app(DetalleComparacionImportacion::class)->snapshot($registros, $universidad->id)], JSON_THROW_ON_ERROR),
+                'created_at' => now(), 'updated_at' => now()]);
             return $version;
-        });
+        }, 3);
     }
 
     private function procesarRegistro(
@@ -107,6 +139,10 @@ class ProgramacionCargaService
             $registro,
             CASE_UPPER
         );
+        if (ConciliacionOfertaImportada::rut($registro['PROF_RESP'] ?? '') === '') {
+            $correo = mb_strtolower(ConciliacionOfertaImportada::texto($registro['CORREO_INST'] ?? ''));
+            $registro['PROF_RESP'] = $cache['conciliacion']['alias_docentes'][$correo] ?? '';
+        }
 
         $codRamo = $this->texto(
             $registro['COD_RAMO'] ?? null
@@ -153,13 +189,18 @@ class ProgramacionCargaService
             $cache
         );
 
-        if ($carrera) {
+        $existente = in_array($seccion->id, $cache['conciliacion']['mapas']['secciones'], true);
+        if ($profesor) {
+            $tipo = $this->texto($registro['TIPO_PROFESOR'] ?? null) ?: 'Profesor responsable';
+            $cache['docencia_importada'][$seccion->id][$profesor->id] = ['profesor_id' => $profesor->id, 'tipo_participacion' => $tipo, 'es_principal' => $this->esProfesorPrincipal($tipo), 'estado' => true];
+        }
+        if ($carrera && ! $existente) {
             $seccion->carreras()->syncWithoutDetaching([
                 $carrera->id,
             ]);
         }
 
-        if ($profesor) {
+        if ($profesor && ! $existente) {
             $tipoParticipacion = $this->texto(
                 $registro['TIPO_PROFESOR'] ?? null
             ) ?: 'Profesor responsable';
@@ -189,56 +230,10 @@ class ProgramacionCargaService
         );
     }
 
-    private function obtenerPeriodo(
-        array $registros,
-        int $universidadId
-    ): PeriodoAcademico {
-        $semestre = '';
-
-        foreach ($registros as $registro) {
-            $registro = array_change_key_case(
-                $registro,
-                CASE_UPPER
-            );
-
-            $semestre = $this->texto(
-                $registro['SEMESTRE'] ?? null
-            );
-
-            if ($semestre !== '') {
-                break;
-            }
-        }
-
-        if ($semestre === '') {
-            throw new \Exception(
-                'No se pudo determinar el período académico.'
-            );
-        }
-
-        $anio = null;
-        $numeroSemestre = null;
-
-        if (preg_match(
-            '/^([0-9]{4})[-\/](\d+)$/',
-            $semestre,
-            $coincidencia
-        )) {
-            $anio = (int) $coincidencia[1];
-            $numeroSemestre = (int) $coincidencia[2];
-        }
-
-        return PeriodoAcademico::firstOrCreate(
-            [
-                'universidad_id' => $universidadId,
-                'nombre' => $semestre,
-            ],
-            [
-                'anio' => $anio,
-                'numero_semestre' => $numeroSemestre,
-                'estado' => true,
-            ]
-        );
+    private function obtenerPeriodo(array $registros, int $universidadId, array $plan): PeriodoAcademico
+    {
+        if ($plan['periodo_id']) return PeriodoAcademico::findOrFail($plan['periodo_id']);
+        return PeriodoAcademico::create(['universidad_id' => $universidadId] + $plan['periodo'] + ['estado' => true]);
     }
 
     private function obtenerCarrera(
@@ -254,7 +249,10 @@ class ProgramacionCargaService
             return null;
         }
 
-        $clave = mb_strtoupper($nombre);
+        $clave = ConciliacionOfertaImportada::claveCarrera($registro);
+        if (isset($cache['carreras'][$clave])) return $cache['carreras'][$clave];
+        $existente = $cache['conciliacion']['mapas']['carreras'][$clave] ?? null;
+        if ($existente) return $cache['carreras'][$clave] = Carrera::findOrFail($existente);
 
         $codigo = $this->texto(
             $registro['COD_CARR'] ?? null
@@ -335,12 +333,15 @@ class ProgramacionCargaService
         }
 
         $clave = $codigo !== ''
-            ? 'COD:' . $codigo
-            : 'NOMBRE:' . mb_strtoupper($nombre);
+            ? 'COD:' . ConciliacionOfertaImportada::clave($codigo)
+            : 'NOMBRE:' . ConciliacionOfertaImportada::clave($nombre);
 
         if (isset($cache['sedes'][$clave])) {
             return $cache['sedes'][$clave];
         }
+
+        $existente = $cache['conciliacion']['mapas']['sedes'][$clave] ?? null;
+        if ($existente) return $cache['sedes'][$clave] = Sede::findOrFail($existente);
 
         $sede = Sede::query()
             ->where('universidad_id', $universidadId)
@@ -376,12 +377,15 @@ class ProgramacionCargaService
         }
 
         $clave = $codigo !== ''
-            ? 'COD:' . $codigo
-            : 'NOMBRE:' . mb_strtoupper($nombre);
+            ? 'COD:' . ConciliacionOfertaImportada::clave($codigo)
+            : 'NOMBRE:' . ConciliacionOfertaImportada::clave($nombre);
 
         if (isset($cache['facultades'][$clave])) {
             return $cache['facultades'][$clave];
         }
+
+        $existente = $cache['conciliacion']['mapas']['facultades'][$clave] ?? null;
+        if ($existente) return $cache['facultades'][$clave] = FacultadInstituto::findOrFail($existente);
 
         $facultad = FacultadInstituto::query()
             ->where('universidad_id', $universidadId)
@@ -415,9 +419,12 @@ class ProgramacionCargaService
         $codigo = $this->texto(
             $registro['COD_RAMO'] ?? null
         );
+        $claveCodigo = ConciliacionOfertaImportada::clave($codigo);
+        $existente = $cache['conciliacion']['mapas']['asignaturas'][ConciliacionOfertaImportada::clave($codigo)] ?? null;
+        if ($existente) return Asignatura::findOrFail($existente);
 
-        if (isset($cache['asignaturas'][$codigo])) {
-            return $cache['asignaturas'][$codigo];
+        if (isset($cache['asignaturas'][$claveCodigo])) {
+            return $cache['asignaturas'][$claveCodigo];
         }
 
         $asignatura = Asignatura::firstOrCreate(
@@ -469,7 +476,7 @@ class ProgramacionCargaService
             ]
         );
 
-        $cache['asignaturas'][$codigo] = $asignatura;
+        $cache['asignaturas'][$claveCodigo] = $asignatura;
 
         return $asignatura;
     }
@@ -479,7 +486,7 @@ class ProgramacionCargaService
         int $universidadId,
         array &$cache
     ): ?Profesor {
-        $rut = $this->texto(
+        $rut = ConciliacionOfertaImportada::rut(
             $registro['PROF_RESP'] ?? null
         );
 
@@ -491,13 +498,13 @@ class ProgramacionCargaService
             return null;
         }
 
-        $clave = $rut !== ''
-            ? 'RUT:' . $rut
-            : 'CORREO:' . mb_strtolower($correo);
+        $clave = ConciliacionOfertaImportada::claveProfesor($registro);
 
         if (isset($cache['profesores'][$clave])) {
             return $cache['profesores'][$clave];
         }
+        $existente = $cache['conciliacion']['mapas']['profesores'][$clave] ?? null;
+        if ($existente) return $cache['profesores'][$clave] = Profesor::findOrFail($existente);
 
         $nombreCompleto = $this->texto(
             $registro['NOM_PROF_RESP'] ?? null
@@ -592,90 +599,23 @@ class ProgramacionCargaService
         );
     }
 
-    private function obtenerSeccion(
-        array $registro,
-        Asignatura $asignatura,
-        PeriodoAcademico $periodo,
-        array &$cache
-    ): Seccion {
-        $idCurso = $this->texto(
-            $registro['ID_CURSO'] ?? null
-        );
-
-        $codigo = $this->texto(
-            $registro['SECC'] ?? null
-        );
-
-        $semestre = $this->entero(
-            $registro['NIVEL_UA'] ?? null
-        );
-
-        $clave = implode('|', [
-            $idCurso,
-            $codigo,
-            $periodo->id,
+    private function obtenerSeccion(array $registro, Asignatura $asignatura, PeriodoAcademico $periodo, array &$cache): Seccion
+    {
+        $clave = ConciliacionOfertaImportada::claveSeccion($registro);
+        if (isset($cache['secciones'][$clave])) return $cache['secciones'][$clave];
+        $id = $cache['conciliacion']['mapas']['secciones'][$clave] ?? null;
+        $seccion = $id ? Seccion::findOrFail($id) : Seccion::create([
+            'identificador_externo' => $this->texto($registro['ID_CURSO'] ?? null) ?: null,
+            'asignatura_id' => $asignatura->id, 'periodo_academico_id' => $periodo->id,
+            'codigo' => $this->texto($registro['SECC'] ?? null), 'nombre' => $this->texto($registro['RAMO_NOMBRE'] ?? null) ?: null,
+            'semestre' => $this->entero($registro['NIVEL_UA'] ?? null), 'cupos' => $this->entero($registro['CUPO'] ?? null),
+            'inscritos' => $this->entero($registro['INSCRITOS'] ?? null) ?? 0,
+            'modalidad' => $this->texto($registro['MODALIDAD'] ?? null) ?: null, 'categoria' => $this->texto($registro['CATEGORIA'] ?? null) ?: null,
+            'tipo_dictacion' => $this->texto($registro['TIPO_DICTACION'] ?? null) ?: null,
+            'estado' => $this->texto($registro['ESTADO_CURSO'] ?? null) ?: 'Pendiente', 'estado_activo' => true,
         ]);
-
-        if (isset($cache['secciones'][$clave])) {
-            $seccion = $cache['secciones'][$clave];
-
-            if (
-                $semestre !== null
-                && $seccion->semestre !== $semestre
-            ) {
-                $seccion->update([
-                    'semestre' => $semestre,
-                ]);
-            }
-
-            return $seccion;
-        }
-
-        $seccion = Seccion::firstOrCreate(
-            [
-                'identificador_externo' => $idCurso,
-                'asignatura_id' => $asignatura->id,
-                'periodo_academico_id' => $periodo->id,
-                'codigo' => $codigo,
-            ],
-            [
-                'nombre' => $this->texto(
-                    $registro['RAMO_NOMBRE'] ?? null
-                ) ?: null,
-                'cupos' => $this->entero(
-                    $registro['CUPO'] ?? null
-                ),
-                'inscritos' => $this->entero(
-                    $registro['INSCRITOS'] ?? null
-                ) ?? 0,
-                'modalidad' => $this->texto(
-                    $registro['MODALIDAD'] ?? null
-                ) ?: null,
-                'categoria' => $this->texto(
-                    $registro['CATEGORIA'] ?? null
-                ) ?: null,
-                'tipo_dictacion' => $this->texto(
-                    $registro['TIPO_DICTACION'] ?? null
-                ) ?: null,
-                'estado' => $this->texto(
-                    $registro['ESTADO_CURSO'] ?? null
-                ) ?: 'Pendiente',
-                'estado_activo' => true,
-            ]
-        );
-
-        if (
-            $semestre !== null
-            && $seccion->semestre !== $semestre
-        ) {
-            $seccion->update([
-                'semestre' => $semestre,
-            ]);
-        }
-
-        $cache['secciones'][$clave] = $seccion;
-
-        return $seccion;
+        $cache['claves_seccion'][$seccion->id] = $clave;
+        return $cache['secciones'][$clave] = $seccion;
     }
 
     private function procesarHorarios(
@@ -827,8 +767,6 @@ class ProgramacionCargaService
         $clave = $sede->id . '|' . mb_strtoupper($codigoRecurso);
 
         if (!isset($cache['salas'][$clave])) {
-            $tipoSalaId = $this->obtenerTipoSalaRecurso($cache);
-
             $sala = DB::table('salas')
                 ->where('universidad_id', $universidadId)
                 ->where('sede_id', $sede->id)
@@ -836,6 +774,7 @@ class ProgramacionCargaService
                 ->first();
 
             if (!$sala) {
+                $tipoSalaId = $this->obtenerTipoSalaRecurso($cache);
                 $salaId = DB::table('salas')->insertGetId([
                     'universidad_id' => $universidadId,
                     'sede_id' => $sede->id,
@@ -855,15 +794,6 @@ class ProgramacionCargaService
                 ]);
             } else {
                 $salaId = $sala->id;
-
-                if (!$sala->tipo_sala_id) {
-                    DB::table('salas')
-                        ->where('id', $salaId)
-                        ->update([
-                            'tipo_sala_id' => $tipoSalaId,
-                            'updated_at' => now(),
-                        ]);
-                }
             }
 
             $cache['salas'][$clave] = $salaId;
@@ -941,144 +871,36 @@ class ProgramacionCargaService
         return false;
     }
 
-    private function parsearHorarios(
-        string $horario
-    ): array {
-        $resultado = [];
-
-        preg_match_all(
-            '/(?:^|\s)(ca|la|ta|ce)\s*:\s*(.*?)(?=\s+(?:ca|la|ta|ce)\s*:|$)/is',
-            trim($horario),
-            $actividades,
-            PREG_SET_ORDER
-        );
-
-        foreach ($actividades as $actividadEncontrada) {
-            $codigoTipo = mb_strtolower(
-                trim($actividadEncontrada[1])
-            );
-
-            $contenido = trim(
-                $actividadEncontrada[2]
-            );
-
-            $tipo = match ($codigoTipo) {
-                'ca' => 'Cátedra',
-                'la' => 'Laboratorio',
-                'ta' => 'Taller',
-                'ce' => 'Centro de práctica',
-                default => 'Otro',
-            };
-
-            preg_match_all(
-                '/\b(LU|MA|MI|JU|VI|SA)\.(\d+)(?:\s*\/\s*G\s*:\s*(\d+))?\s*(?:\(([^)]+)\))?/i',
-                $contenido,
-                $coincidencias,
-                PREG_SET_ORDER
-            );
-
-            foreach ($coincidencias as $coincidencia) {
-                $resultado[] = [
-                    'dia' => mb_strtoupper(
-                        $coincidencia[1]
-                    ),
-                    'bloque' => (int) $coincidencia[2],
-                    'grupo' => isset($coincidencia[3])
-                        && $coincidencia[3] !== ''
-                        ? 'G:' . $coincidencia[3]
-                        : null,
-                    'sala' => isset($coincidencia[4])
-                        && $coincidencia[4] !== ''
-                        ? trim($coincidencia[4])
-                        : null,
-                    'tipo' => $tipo,
-                ];
-            }
-        }
-
-        return $resultado;
+    private function parsearHorarios(string $horario): array
+    {
+        return ConciliacionOfertaImportada::horarios($horario);
     }
 
-    private function obtenerActividad(
-        Seccion $seccion,
-        string $tipo,
-        array $registro,
-        array &$cache
-    ): ActividadSeccion {
-        $clave = $seccion->id . '|' . $tipo;
-
-        if (isset($cache['actividades'][$clave])) {
-            return $cache['actividades'][$clave];
-        }
-
-        $actividad = ActividadSeccion::firstOrCreate(
-            [
-                'seccion_id' => $seccion->id,
-                'tipo' => $tipo,
-            ],
-            [
-                'cantidad_horas' => $this->horasActividad(
-                    $registro,
-                    $tipo
-                ),
-                'cantidad_estudiantes' => $this->entero(
-                    $registro['INSCRITOS'] ?? null
-                ),
-                'modalidad' => $this->texto(
-                    $registro['MODALIDAD'] ?? null
-                ) ?: null,
-                'estado' => true,
-            ]
-        );
-
-        $cache['actividades'][$clave] = $actividad;
-
-        return $actividad;
+    private function obtenerActividad(Seccion $seccion, string $tipo, array $registro, array &$cache): ActividadSeccion
+    {
+        $clave = $cache['claves_seccion'][$seccion->id].'|'.ConciliacionOfertaImportada::tipo($tipo);
+        if (isset($cache['actividades'][$clave])) return $cache['actividades'][$clave];
+        $id = $cache['conciliacion']['mapas']['actividades'][$clave] ?? null;
+        $actividad = $id ? ActividadSeccion::findOrFail($id) : ActividadSeccion::create([
+            'seccion_id' => $seccion->id, 'tipo' => $tipo, 'cantidad_horas' => $this->horasActividad($registro, $tipo),
+            'cantidad_estudiantes' => $this->entero($registro['INSCRITOS'] ?? null),
+            'modalidad' => $this->texto($registro['MODALIDAD'] ?? null) ?: null, 'estado' => true,
+        ]);
+        $cache['claves_actividad'][$actividad->id] = $clave;
+        return $cache['actividades'][$clave] = $actividad;
     }
 
-    private function obtenerGrupo(
-        ActividadSeccion $actividad,
-        string $codigo,
-        array $registro,
-        array &$cache
-    ): GrupoSeccion {
-        $clave = $actividad->id . '|' . $codigo;
-
-        if (isset($cache['grupos'][$clave])) {
-            return $cache['grupos'][$clave];
-        }
-
-        $numero = null;
-
-        if (preg_match(
-            '/(\d+)/',
-            $codigo,
-            $coincidencia
-        )) {
-            $numero = (int) $coincidencia[1];
-        }
-
-        $grupo = GrupoSeccion::firstOrCreate(
-            [
-                'actividad_seccion_id' => $actividad->id,
-                'codigo' => $codigo,
-            ],
-            [
-                'numero' => $numero,
-                'cupos' => $this->entero(
-                    $registro['CUPO'] ?? null
-                ),
-                'inscritos' => $this->entero(
-                    $registro['INSCRITOS'] ?? null
-                ) ?? 0,
-                'estado' => 'Activo',
-                'estado_activo' => true,
-            ]
-        );
-
-        $cache['grupos'][$clave] = $grupo;
-
-        return $grupo;
+    private function obtenerGrupo(ActividadSeccion $actividad, string $codigo, array $registro, array &$cache): GrupoSeccion
+    {
+        $clave = $cache['claves_actividad'][$actividad->id].'|'.$codigo;
+        if (isset($cache['grupos'][$clave])) return $cache['grupos'][$clave];
+        $id = $cache['conciliacion']['mapas']['grupos'][$clave] ?? null;
+        $grupo = $id ? GrupoSeccion::findOrFail($id) : GrupoSeccion::create([
+            'actividad_seccion_id' => $actividad->id, 'codigo' => $codigo,
+            'numero' => (int) substr($codigo, 2), 'cupos' => $this->entero($registro['CUPO'] ?? null),
+            'inscritos' => $this->entero($registro['INSCRITOS'] ?? null) ?? 0, 'estado' => 'Activo', 'estado_activo' => true,
+        ]);
+        return $cache['grupos'][$clave] = $grupo;
     }
 
     private function obtenerDia(

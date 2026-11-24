@@ -1,8 +1,32 @@
 import './bootstrap';
 import './select-buscable';
+import './carreras-seccion';
 import './filtros-programacion-anterior';
+import './identidad-visual';
+import './disponibilidad-semanal';
+import './campo-archivo';
+import './calendario-semanal';
+import './confirmaciones';
+import './accesos-docentes';
+import './estado-carga';
+import './manual-usuario';
 
 document.addEventListener('DOMContentLoaded', function () {
+    const menuAcciones = document.querySelector('[data-menu-acciones]');
+    if (menuAcciones) {
+        document.addEventListener('click', (evento) => {
+            if (!menuAcciones.contains(evento.target)) {
+                menuAcciones.open = false;
+            }
+        });
+        menuAcciones.addEventListener('keydown', (evento) => {
+            if (evento.key === 'Escape' && menuAcciones.open) {
+                menuAcciones.open = false;
+                menuAcciones.querySelector('summary').focus();
+            }
+        });
+    }
+
     const botonMenuMovil = document.getElementById('boton-menu-movil');
     const sidebarMovil = document.getElementById('sidebar-movil');
     const botonCerrarMenuMovil = document.getElementById('cerrar-menu-movil');
@@ -11,6 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const sidebarEscritorio = document.getElementById('sidebar-escritorio');
     const botonSidebar = document.getElementById('boton-sidebar');
     const iconoSidebar = document.getElementById('icono-sidebar');
+    const navEscritorio = sidebarEscritorio?.querySelector('nav');
+    const navMovil = sidebarMovil?.querySelector('nav');
 
     const flyout = document.getElementById('sidebar-flyout');
     const flyoutTitulo = document.getElementById('sidebar-flyout-title');
@@ -18,10 +44,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let botonFlyoutActivo = null;
 
+    function modoSidebarEscritorio() {
+        return sidebarEscritorio?.classList.contains('w-20') ? 'contraido' : 'escritorio';
+    }
+
+    function guardarPosicionMenu(navegacion, modo) {
+        if (!navegacion?.clientHeight) {
+            return;
+        }
+
+        try {
+            sessionStorage.setItem(`prosec.sidebar.posicion.${modo}`, navegacion.scrollTop);
+        } catch {
+            // El almacenamiento puede estar deshabilitado por el navegador.
+        }
+    }
+
+    function restaurarPosicionMenu(navegacion, modo) {
+        if (!navegacion?.clientHeight) {
+            return;
+        }
+
+        try {
+            const posicion = Number(sessionStorage.getItem(`prosec.sidebar.posicion.${modo}`));
+            navegacion.scrollTop = Number.isFinite(posicion) ? Math.max(0, posicion) : 0;
+        } catch {
+            // El almacenamiento puede estar deshabilitado por el navegador.
+        }
+    }
+
+    window.addEventListener('pagehide', function () {
+        guardarPosicionMenu(navEscritorio, modoSidebarEscritorio());
+        guardarPosicionMenu(navMovil, 'movil');
+    });
+
+    window.addEventListener('pageshow', function (evento) {
+        if (evento.persisted) {
+            restaurarPosicionMenu(navEscritorio, modoSidebarEscritorio());
+            restaurarPosicionMenu(navMovil, 'movil');
+        }
+    });
+
     function abrirMenuMovil() {
         if (sidebarMovil) {
+            sidebarMovil.hidden = false;
             sidebarMovil.classList.remove('hidden');
             sidebarMovil.setAttribute('aria-hidden', 'false');
+            restaurarPosicionMenu(navMovil, 'movil');
         }
 
         if (botonMenuMovil) {
@@ -31,6 +100,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function cerrarMenuMovil() {
         if (sidebarMovil) {
+            guardarPosicionMenu(navMovil, 'movil');
+            sidebarMovil.hidden = true;
             sidebarMovil.classList.add('hidden');
             sidebarMovil.setAttribute('aria-hidden', 'true');
         }
@@ -145,6 +216,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const estaAbierto =
                 !submenu.classList.contains('hidden');
 
+            const primeraUrl = boton.dataset.firstUrl;
+
+            if (!estaAbierto && primeraUrl) {
+                const actual = window.location.pathname.replace(/\/$/, '');
+                const destino = new URL(primeraUrl, window.location.origin).pathname.replace(/\/$/, '');
+
+                if (actual !== destino) {
+                    window.location.href = primeraUrl;
+                    return;
+                }
+            }
+
             cerrarFlyout();
 
             if (estaAbierto) {
@@ -178,21 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             activarBotonPadre(boton);
 
-            const primeraUrl = boton.dataset.firstUrl;
-
-            if (primeraUrl) {
-                const actual =
-                    window.location.pathname.replace(/\/$/, '');
-
-                const destino =
-                    new URL(primeraUrl, window.location.origin)
-                        .pathname
-                        .replace(/\/$/, '');
-
-                if (actual !== destino) {
-                    window.location.href = primeraUrl;
-                }
-            }
         });
     });
 
@@ -300,16 +368,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    if (sidebarEscritorio) {
-        const navEscritorio =
-            sidebarEscritorio.querySelector('nav');
-
-        if (navEscritorio) {
-            navEscritorio.addEventListener('scroll', function () {
-                cerrarFlyout();
-                restaurarMenuRuta(sidebarEscritorio);
-            });
-        }
+    if (navEscritorio) {
+        navEscritorio.addEventListener('scroll', function () {
+            cerrarFlyout();
+            restaurarMenuRuta(sidebarEscritorio);
+        });
     }
 
     function cerrarOtrosMenus(contenedor, botonActual) {
@@ -417,16 +480,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (sidebarEscritorio && botonSidebar) {
         const sidebarColapsado =
-            localStorage.getItem('sidebarColapsado') === 'true';
+            document.documentElement.dataset.sidebarInicial === 'contraido';
 
         if (sidebarColapsado) {
             colapsarSidebar(false);
         }
+        delete document.documentElement.dataset.sidebarInicial;
+        restaurarPosicionMenu(navEscritorio, modoSidebarEscritorio());
 
         botonSidebar.addEventListener('click', function () {
             const estaColapsado =
                 sidebarEscritorio.classList.contains('w-20');
 
+            guardarPosicionMenu(navEscritorio, modoSidebarEscritorio());
             cerrarFlyout();
 
             if (estaColapsado) {
@@ -434,6 +500,8 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 colapsarSidebar(true);
             }
+
+            restaurarPosicionMenu(navEscritorio, modoSidebarEscritorio());
         });
     }
 
@@ -503,10 +571,12 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('contenedor-logo-prosec');
 
         if (logoCompleto) {
+            logoCompleto.hidden = true;
             logoCompleto.classList.add('hidden');
         }
 
         if (logoMini) {
+            logoMini.hidden = false;
             logoMini.classList.remove('hidden');
         }
 
@@ -600,10 +670,12 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('contenedor-logo-prosec');
 
         if (logoCompleto) {
+            logoCompleto.hidden = false;
             logoCompleto.classList.remove('hidden');
         }
 
         if (logoMini) {
+            logoMini.hidden = true;
             logoMini.classList.add('hidden');
         }
 

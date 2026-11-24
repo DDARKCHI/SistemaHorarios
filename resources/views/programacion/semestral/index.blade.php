@@ -2,27 +2,51 @@
 
 @section('content')
 
+@php
+    $versionConsultada = $versiones->firstWhere('id', (int) $versionId);
+@endphp
+
 <x-encabezado-pagina titulo="Programación semestral">
-    Consulta y gestiona la nueva programación semestral generada por PROSEC.
+    Consulta horarios y prepara la programación del período.
     <x-slot:acciones>
+        @can('generar programacion semestral')
+        <a class="boton boton-primario" href="{{ route('programacion.completar.index', ['periodo_id' => $periodoId, 'version_id' => $versionId]) }}">Completar programación</a>
+        @endcan
         @can('gestionar conflictos')
         <a href="{{ route('programacion.validacion', array_filter(['periodo_id' => $periodoId, 'version_id' => $versionId])) }}" class="boton boton-secundario">Revisar conflictos</a>
         @endcan
+        @canany(['administrar usuarios', 'asignar horarios', 'generar programacion semestral'])
+            <details data-menu-acciones class="relative">
+                <summary class="boton boton-secundario w-full">Más acciones</summary>
+                <div class="z-40 mt-2 grid gap-0.5 rounded-xl border border-borde bg-superficie p-1.5 shadow-lg sm:absolute sm:left-0 sm:w-64 xl:left-auto xl:right-0">
+                    @can('administrar usuarios')
+                        <a class="accion-menu" href="{{ route('administracion.secciones.index', ['periodo_id' => $periodoId]) }}">Oferta del período</a>
+                    @endcan
+                    @can('asignar horarios')
+                        <a class="accion-menu" href="{{ route('programacion.cambios.index', ['periodo_id' => $periodoId]) }}">Solicitudes de cambio</a>
+                    @endcan
+                    @can('generar programacion semestral')
+                        <a class="accion-menu" href="{{ route('programacion.preparacion', ['periodo_id' => $periodoId]) }}">Preparar generación</a>
+                        @if ($versionConsultada)
+                            <a class="accion-menu" href="{{ route('programacion.version.cierre', $versionConsultada) }}">Aprobación y publicación</a>
+                            @if (!$versionConsultada->es_actual && $versionConsultada->estado === 'Borrador')
+                                <a class="accion-menu" href="{{ route('programacion.version.revisar', $versionConsultada) }}">Revisar para activar</a>
+                            @endif
+                        @endif
+                    @endcan
+                </div>
+            </details>
+        @endcanany
     </x-slot:acciones>
 </x-encabezado-pagina>
 
 <div class="min-w-0 w-full">
-
-    @if (session('success'))
-        <div class="mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs font-medium text-green-700">
-            {{ session('success') }}
-        </div>
+    @if ($versionConsultada && in_array($versionConsultada->estado, ['Aprobado', 'Publicado'], true))
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-borde bg-superficie p-4 text-sm"><p><strong>{{ $versionConsultada->estado }}</strong> · Esta versión está cerrada a modificaciones de horarios. Para ajustar su programación, crea un nuevo borrador.</p>@if ($versionConsultada->estado === 'Publicado')<a class="boton boton-secundario" href="{{ route('programacion.version.publicada', $versionConsultada) }}">Consultar copia publicada</a>@endif</div>
     @endif
 
-    @if ($errors->any())
-        <div class="mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
-            {{ $errors->first() }}
-        </div>
+    @if (session('success') || $errors->any())
+        <div class="mb-3 space-y-2">@include('disponibilidad.avisos')</div>
     @endif
 
     @can('generar programacion semestral')
@@ -35,38 +59,42 @@
                     </div>
 
                     <div class="mt-0.5 text-xs text-gray-500">
-                        Selecciona una versión de la programación anterior para utilizarla como base.
+                        Completa horarios y espacios según disponibilidad, capacidad y prioridad, conservando las asignaciones de la base.
                     </div>
                 </div>
 
-                @if ($versionesAnteriores->isNotEmpty())
+                @if ($versionesBase->isNotEmpty())
                     <form
                         method="POST"
                         action="{{ route('programacion.semestral.generar') }}"
                         class="grid min-w-0 w-full gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-                        onsubmit="return confirmarGeneracion()"
+                        data-confirmar="Se generará un borrador nuevo a partir de las asignaciones de la base, completando los horarios y espacios pendientes."
+                        data-confirmar-titulo="Generar programación semestral"
+                        data-confirmar-accion="Generar"
+                        data-confirmar-seleccion="version_base_id"
                     >
                         @csrf
+                        <input type="hidden" name="solicitud" value="{{ (string) \Illuminate\Support\Str::uuid() }}">
 
                         <div class="min-w-0">
                             <label
-                                for="version_anterior_id"
+                                for="version_base_id"
                                 class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
                             >
-                                Programación anterior
+                                Versión base
                             </label>
 
                             <select data-select-buscable
-                                id="version_anterior_id"
-                                name="version_anterior_id"
+                                id="version_base_id"
+                                name="version_base_id"
                                 required
-                                class="h-11 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                class="h-11 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-institucional focus:ring-institucional"
                             >
-                                @foreach ($versionesAnteriores as $versionAnterior)
-                                    <option value="{{ $versionAnterior->id }}">
-                                        V{{ number_format((float) $versionAnterior->version, 1) }}
+                                @foreach ($versionesBase as $versionBase)
+                                    <option value="{{ $versionBase->id }}" @selected((int) $versionBase->id === (int) $versionId)>
+                                        {{ $versionBase->tipo === 'anterior' ? 'Anterior' : 'Semestral' }} · V{{ number_format((float) $versionBase->version, 1) }}
 
-                                        @if ($versionAnterior->es_actual)
+                                        @if ($versionBase->es_actual)
                                             — Actual
                                         @endif
                                     </option>
@@ -76,14 +104,14 @@
 
                         <button
                             type="submit"
-                            class="min-h-11 whitespace-nowrap rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800"
+                            class="boton boton-primario"
                         >
                             Generar programación
                         </button>
                     </form>
                 @else
                     <div class="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-500">
-                        No existe una programación anterior disponible para este período.
+                        Prepara las secciones del período e inicia un borrador desde Oferta del período para generar su programación.
                     </div>
                 @endif
 
@@ -95,12 +123,12 @@
         id="filtros-form"
         method="GET"
         action="{{ route('programacion.semestral') }}"
-        class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+        class="@container/filtros-programacion mb-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
     >
 
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
+        <div class="grid min-w-0 grid-cols-1 items-end gap-3 @min-[19rem]/filtros-programacion:grid-cols-2 @min-[40rem]/filtros-programacion:grid-cols-6 @min-[56rem]/filtros-programacion:grid-cols-20">
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-3">
                 <label
                     for="periodo_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -111,7 +139,7 @@
                 <select data-select-buscable
                     id="periodo_id"
                     name="periodo_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     @foreach ($periodos as $periodo)
                         <option
@@ -124,7 +152,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
                 <label
                     for="version_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -135,7 +163,7 @@
                 <select data-select-buscable
                     id="version_id"
                     name="version_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                     @disabled($versiones->isEmpty())
                 >
                     @if ($versiones->isEmpty())
@@ -159,7 +187,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
                 <label
                     for="sede_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -170,7 +198,7 @@
                 <select data-select-buscable
                     id="sede_id"
                     name="sede_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas las sedes
@@ -187,7 +215,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-9">
                 <label
                     for="carrera_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -198,7 +226,7 @@
                 <select data-select-buscable
                     id="carrera_id"
                     name="carrera_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas las carreras
@@ -215,7 +243,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-2">
                 <label
                     for="semestre"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -226,7 +254,7 @@
                 <select data-select-buscable
                     id="semestre"
                     name="semestre"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todos
@@ -243,7 +271,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-2">
                 <label
                     for="seccion_numero"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -254,7 +282,7 @@
                 <select data-select-buscable
                     id="seccion_numero"
                     name="seccion_numero"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas
@@ -271,7 +299,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-6">
                 <label
                     for="asignatura_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
@@ -282,7 +310,7 @@
                 <select data-select-buscable
                     id="asignatura_id"
                     name="asignatura_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todos los ramos
@@ -299,21 +327,21 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-6">
                 <label
                     for="profesor_id"
                     class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700"
                 >
-                    Profesor
+                    Docente
                 </label>
 
                 <select data-select-buscable
                     id="profesor_id"
                     name="profesor_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
-                        Todos los profesores
+                        Todos los docentes
                     </option>
 
                     @foreach ($profesores as $profesor)
@@ -327,35 +355,17 @@
                 </select>
             </div>
 
-        </div>
-
-        <div class="mt-3 flex flex-wrap items-center gap-2">
-            <button
-                type="submit"
-                class="h-9 whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
-            >
-                Aplicar
-            </button>
-
-            <a
-                href="{{ route('programacion.semestral') }}"
-                class="flex h-9 items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
-            >
-                Limpiar
-            </a>
-
-            <div class="ml-auto flex h-9 items-center justify-end whitespace-nowrap px-1 text-xs text-gray-500">
+            <div class="col-span-full min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
                 @if ($hayFiltroAplicado)
-                    <span class="font-semibold text-gray-700">
-                        {{ number_format($horarios->count()) }}
-                    </span>
-
-                    <span class="ml-1">
+                    <p class="mb-1.5 text-right text-xs leading-5 text-texto-secundario">
+                        <span class="font-semibold text-texto">{{ number_format($horarios->count(), 0, ',', '.') }}</span>
                         {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
-                    </span>
-                @else
-                    <span>Sin consulta</span>
+                    </p>
                 @endif
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="submit" class="boton boton-primario">Aplicar</button>
+                    <a href="{{ route('programacion.semestral') }}" class="boton boton-secundario">Limpiar</a>
+                </div>
             </div>
 
         </div>
@@ -399,7 +409,7 @@
             </div>
 
             <div class="mt-1 text-xs text-gray-500">
-                Elige una sede, carrera, semestre, sección, ramo o profesor y pulsa Aplicar.
+                Elige una sede, carrera, semestre, sección, ramo o docente y pulsa Aplicar.
             </div>
         </div>
 
@@ -412,7 +422,7 @@
             </div>
 
             <div class="mt-1 text-xs text-gray-400">
-                Prueba seleccionando otro período, versión, sede, carrera, semestre, sección, ramo o profesor.
+                Prueba seleccionando otro período, versión, sede, carrera, semestre, sección, ramo o docente.
             </div>
 
         </div>
@@ -421,9 +431,7 @@
 
         <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
-
-            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación semestral" tabindex="0">
+            <div id="cuadricula-programacion-semestral" data-calendario-semanal class="min-w-0 max-w-full overflow-x-auto overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación semestral" tabindex="0">
 
                 <table class="w-full min-w-[900px] table-fixed border-collapse">
 
@@ -438,12 +446,12 @@
                     <thead>
                         <tr class="bg-gray-100">
 
-                            <th class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-1.5 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                            <th scope="col" data-eje-horas class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-1.5 py-2 text-left text-xs font-semibold text-gray-700">
                                 Bloque
                             </th>
 
                             @foreach ($diasVisualizacion as $dia)
-                                <th class="border-b border-r border-gray-200 px-1.5 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-gray-700 last:border-r-0">
+                                <th scope="col" data-dia-semanal="{{ $dia->nombre }}" class="border-b border-r border-gray-200 px-1.5 py-2 text-center text-xs font-semibold text-gray-700 last:border-r-0">
                                     {{ $dia->nombre }}
                                 </th>
                             @endforeach
@@ -554,7 +562,7 @@
 
                                                                 <div>
                                                                     <span class="font-semibold text-gray-700">
-                                                                        Prof.:
+                                                                        Docente:
                                                                     </span>
 
                                                                     @foreach ($horario->profesores as $horarioProfesor)
@@ -572,7 +580,7 @@
 
                                                                 <div>
                                                                     <span class="font-semibold text-gray-700">
-                                                                        Prof.:
+                                                                        Docente:
                                                                     </span>
 
                                                                     @foreach ($seccion->profesores as $seccionProfesor)
@@ -696,22 +704,6 @@
     const asignaturaSeleccionada = @json($asignaturaId);
     const profesorSeleccionado = @json($profesorId);
 
-    function confirmarGeneracion() {
-        const select = document.getElementById('version_anterior_id');
-
-        if (!select || !select.value) {
-            return false;
-        }
-
-        const texto = select.options[select.selectedIndex].text.trim();
-
-        return confirm(
-            'Se generará una nueva programación semestral utilizando '
-            + texto
-            + ' como base. ¿Deseas continuar?'
-        );
-    }
-
     function limpiarSelect(select, texto) {
         select.innerHTML = '';
 
@@ -807,7 +799,7 @@
     function cargarProfesores(profesores, valorSeleccionado = null) {
         limpiarSelect(
             profesorSelect,
-            'Todos los profesores'
+            'Todos los docentes'
         );
 
         profesores.forEach(function (profesor) {
@@ -980,7 +972,7 @@
 
         limpiarSelect(
             profesorSelect,
-            'Cargando profesores...'
+            'Cargando docentes...'
         );
 
         await actualizarFiltros({
@@ -1010,7 +1002,7 @@
 
         limpiarSelect(
             profesorSelect,
-            'Cargando profesores...'
+            'Cargando docentes...'
         );
 
         await actualizarFiltros({
@@ -1034,7 +1026,7 @@
 
         limpiarSelect(
             profesorSelect,
-            'Cargando profesores...'
+            'Cargando docentes...'
         );
 
         await actualizarFiltros({
@@ -1053,7 +1045,7 @@
 
         limpiarSelect(
             profesorSelect,
-            'Cargando profesores...'
+            'Cargando docentes...'
         );
 
         await actualizarFiltros({
@@ -1067,7 +1059,7 @@
     asignaturaSelect.addEventListener('change', async function () {
         limpiarSelect(
             profesorSelect,
-            'Cargando profesores...'
+            'Cargando docentes...'
         );
 
         await actualizarFiltros({
@@ -1079,12 +1071,12 @@
     });
 
     periodoSelect.addEventListener('change', function () {
-        document.getElementById('filtros-form').submit();
+        document.getElementById('filtros-form').requestSubmit();
     });
 
     if (versionSelect && !versionSelect.disabled) {
         versionSelect.addEventListener('change', function () {
-            document.getElementById('filtros-form').submit();
+            document.getElementById('filtros-form').requestSubmit();
         });
     }
 

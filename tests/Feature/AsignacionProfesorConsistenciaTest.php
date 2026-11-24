@@ -115,7 +115,7 @@ class AsignacionProfesorConsistenciaTest extends IsolatedDatabaseTestCase
             'horario_id' => $horario->id, 'profesor_id' => $this->profesor->id, 'estado' => true,
         ]);
         $this->get($this->url)->assertOk()->assertSee(
-            'No puedes quitar este profesor del grupo mientras tenga horarios asignados en la programación semestral actual. Revisa primero sus módulos en Asignación de horarios.'
+            'No puedes quitar este docente del grupo mientras tenga horarios asignados en la programación semestral actual. Revisa primero sus módulos en Asignación de horarios.'
         );
     }
 

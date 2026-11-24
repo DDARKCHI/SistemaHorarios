@@ -5,7 +5,7 @@
     $vista = $vista ?? null;
     $urlHorario = fn (array $cambios = []) => route('salas.horario', array_filter(
         array_replace($parametros, $cambios), fn ($valor) => $valor !== null && $valor !== ''
-    )).(isset($cambios['vista']) ? ($cambios['vista'] === 'semana' ? '#semana-espacio' : '#dia-espacio') : (isset($cambios['dia_id']) ? '#dia-espacio' : ''));
+    )).(isset($cambios['vista']) ? '#calendario-espacio' : (isset($cambios['dia_id']) ? '#dia-espacio' : ''));
     $claseSemanal = $vista === 'dia' ? 'hidden' : ($vista === 'semana' ? '' : 'hidden xl:block');
     $claseDiaria = $vista === 'semana' ? 'hidden' : ($vista === 'dia' ? '' : 'xl:hidden');
     $indiceDia = $dias->search(fn ($dia) => $dia->id === $diaSeleccionado?->id);
@@ -21,7 +21,7 @@
     </x-slot:acciones>
 </x-encabezado-pagina>
 
-<div class="min-w-0 w-full space-y-3">
+<div class="min-w-0 w-full space-y-4">
 
     @if ($errors->any())
         <div role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
@@ -32,13 +32,13 @@
         </div>
     @endif
 
-    <div data-selector-espacio class="min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
+    <div data-selector-espacio class="@container/selector-horario min-w-0 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
     @if ($espacioSeleccionado)
         <details class="min-w-0" @if (! $periodoSeleccionado || ! $versionSeleccionada || $errors->any()) open @endif>
         <summary class="boton boton-secundario">Cambiar espacio o programación</summary>
     @endif
-    <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] {{ $espacioSeleccionado ? 'mt-4' : '' }}">
-        <div class="min-w-0 sm:col-span-2 xl:col-span-1">
+    <form method="GET" action="{{ route('salas.horario') }}" aria-label="Seleccionar espacio y programación" class="grid min-w-0 grid-cols-1 items-end gap-3 @min-[34rem]/selector-horario:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[52rem]/selector-horario:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_auto] {{ $espacioSeleccionado ? 'mt-4' : '' }}">
+        <div class="min-w-0 @min-[34rem]/selector-horario:col-span-full @min-[52rem]/selector-horario:col-span-1">
             <label for="espacio-horario" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Sala o laboratorio</label>
             <select data-select-buscable id="espacio-horario" name="espacio" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-white px-2 text-base text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional sm:text-sm">
                 <option value="">Selecciona un espacio</option>
@@ -73,7 +73,7 @@
         </div>
         @if ($vista)<input type="hidden" name="vista" value="{{ $vista }}">@endif
         @if ($diaSeleccionado)<input type="hidden" name="dia_id" value="{{ $diaSeleccionado->id }}">@endif
-        <button type="submit" class="boton boton-primario sm:col-span-2 xl:col-span-1">Consultar</button>
+        <button type="submit" class="boton boton-primario">Consultar</button>
     </form>
     @if ($espacioSeleccionado)
         </details>
@@ -155,10 +155,9 @@
                 <p class="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-gray-500">No hay asignaciones activas al espacio seleccionado en esta programación.</p>
             </section>
         @else
-            <div id="calendario-espacio" class="scroll-mt-32"></div>
-            <div class="flex min-w-0 flex-col gap-2 rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <p class="text-xs text-gray-600">Consulta diaria o semana completa</p>
-                <nav aria-label="Vista del horario" class="flex gap-2">
+            <div id="calendario-espacio" class="flex min-w-0 scroll-mt-32 flex-col gap-3 rounded-xl border border-borde bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm font-semibold text-texto">Vista del horario</p>
+                <nav aria-label="Vista del horario" class="flex min-w-0 gap-2">
                     <a href="{{ $urlHorario(['vista' => 'dia']) }}" @if ($vista === 'dia') aria-current="page" @endif @class(['boton flex-1 sm:flex-none', 'boton-primario' => $vista === 'dia', 'boton-secundario' => $vista === 'semana', 'boton-primario xl:boton-secundario' => $vista === null])>Por día</a>
                     <a href="{{ $urlHorario(['vista' => 'semana']) }}" @if ($vista === 'semana') aria-current="page" @endif @class(['boton flex-1 sm:flex-none', 'boton-primario' => $vista === 'semana', 'boton-secundario' => $vista === 'dia', 'boton-secundario xl:boton-primario' => $vista === null])>Semana</a>
                 </nav>
@@ -168,36 +167,35 @@
                 <p class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">Hay más de una clase registrada en algunos bloques. Se muestran todas las asignaciones para que puedas revisarlas.</p>
             @endif
 
-            <section id="semana-espacio" class="min-w-0 scroll-mt-32 {{ $claseSemanal }}" aria-labelledby="titulo-semana-espacio">
-                <h2 id="titulo-semana-espacio" class="px-1 text-sm font-bold text-gray-800">Horario semanal · {{ $espacioSeleccionado['codigo'] }}</h2>
-                <p class="mb-2 mt-1 break-words px-1 text-[11px] text-gray-500">{{ $periodoSeleccionado->nombre }} · {{ $versionSeleccionada->tipo === 'semestral' ? 'Semestral' : 'Importación anterior' }} v{{ $versionSeleccionada->version }}</p>
-                <div class="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                    <div role="region" aria-label="Horario semanal del espacio" tabindex="0" class="relative max-h-[75vh] min-w-0 max-w-full overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional">
-                        <table class="w-full min-w-[1100px] table-fixed border-collapse text-left">
+            <section id="semana-espacio" class="min-w-0 scroll-mt-32 overflow-hidden rounded-xl border border-borde bg-white shadow-sm {{ $claseSemanal }}" aria-labelledby="titulo-semana-espacio">
+                <h2 id="titulo-semana-espacio" class="border-b border-borde p-4 text-sm font-semibold text-texto">Horario semanal · {{ $espacioSeleccionado['codigo'] }}</h2>
+                <div class="min-w-0">
+                    <div id="cuadricula-semana-espacio" data-calendario-semanal role="region" aria-labelledby="titulo-semana-espacio" tabindex="0" class="relative max-h-[70vh] min-w-0 max-w-full overflow-auto overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional">
+                        <table class="w-full table-fixed border-separate border-spacing-0 text-left" style="min-width: {{ 4.5 + 10.5 * $diasVisualizacion->count() }}rem">
                             <caption class="sr-only">Clases del espacio por día y módulo horario</caption>
-                            <colgroup><col class="w-28">@foreach ($diasVisualizacion as $dia)<col>@endforeach</colgroup>
+                            <colgroup><col class="w-[4.5rem] xl:w-28">@foreach ($diasVisualizacion as $dia)<col>@endforeach</colgroup>
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th scope="col" class="sticky top-0 left-0 z-30 border-b border-r border-gray-200 bg-gray-100 px-3 py-3 text-xs font-bold text-gray-700">Horario</th>
+                                    <th scope="col" data-eje-horas class="sticky top-0 left-0 z-30 border-b border-r border-borde bg-gray-100 px-2 py-3 text-xs font-bold text-gray-700">Horario</th>
                                     @foreach ($diasVisualizacion as $dia)
-                                        <th scope="col" class="sticky top-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-2 py-3 text-center text-xs font-bold text-gray-700 last:border-r-0">{{ $dia->nombre }} @if (! $dia->estado)<span class="mt-1 block text-[10px] font-normal text-gray-500">Registro inactivo</span>@endif</th>
+                                        <th scope="col" data-dia-semanal="{{ $dia->nombre }}" class="sticky top-0 z-20 border-b border-r border-borde bg-gray-100 px-2 py-3 text-center text-sm font-bold text-gray-700 last:border-r-0">{{ $dia->nombre }} @if (! $dia->estado)<span class="mt-1 block text-xs font-normal text-gray-600">Día inactivo</span>@endif</th>
                                     @endforeach
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($bloques as $bloque)
                                     <tr class="align-top">
-                                        <th scope="row" class="sticky left-0 z-10 border-b border-r border-gray-200 bg-gray-50 px-3 py-3 text-xs font-normal text-gray-600">
-                                            <span class="block font-semibold tabular-nums text-gray-800">{{ substr((string) $bloque->hora_inicio, 0, 5) }}–{{ substr((string) $bloque->hora_fin, 0, 5) }}</span>
-                                            <span class="mt-1 block text-[10px]">Módulo {{ $bloque->numero }}</span>
-                                            @if ($bloque->es_almuerzo)<span class="mt-1 block text-[10px] text-gray-500">Almuerzo</span>@endif
-                                            @if (! $bloque->estado)<span class="mt-1 block text-[10px] text-gray-500">Bloque inactivo</span>@endif
+                                        <th scope="row" class="sticky left-0 z-10 border-b border-r border-borde bg-gray-50 px-2 py-3 text-xs font-normal tabular-nums text-gray-700">
+                                            <span class="block font-semibold xl:inline">{{ substr((string) $bloque->hora_inicio, 0, 5) }}</span><span class="sr-only xl:not-sr-only"> a </span><span class="block xl:inline">{{ substr((string) $bloque->hora_fin, 0, 5) }}</span>
+                                            <span class="mt-1 block">Módulo {{ $bloque->numero }}</span>
+                                            @if ($bloque->es_almuerzo)<span class="mt-1 block">Almuerzo</span>@endif
+                                            @if (! $bloque->estado)<span class="mt-1 block">Inactivo</span>@endif
                                         </th>
                                         @foreach ($diasVisualizacion as $dia)
                                             @php($clases = $celdas->get($dia->id.'-'.$bloque->id, collect()))
-                                            <td class="border-b border-r border-gray-200 p-2 last:border-r-0">
-                                                @if ($clases->count() > 1)<p class="mb-2 rounded-md bg-amber-50 px-2 py-1.5 text-[10px] font-semibold text-amber-800">Varias clases registradas en este bloque</p>@endif
-                                                <div class="space-y-2">
+                                            <td class="border-b border-r border-borde p-2 last:border-r-0">
+                                                @if ($clases->count() > 1)<p class="mb-2 rounded-md bg-amber-50 px-2 py-1.5 text-xs font-semibold text-amber-800">Varias clases en este bloque</p>@endif
+                                                <div class="space-y-2 [&_article]:p-2 [&_article_p]:text-xs! max-sm:[&_article_p.line-clamp-2]:line-clamp-none">
                                                     @forelse ($clases as $sesion)
                                                         <x-clase-espacio :sesion="$sesion" :compacta="true" />
                                                     @empty
@@ -220,7 +218,7 @@
                         @if ($nombreParametro !== 'dia_id' && $valorParametro !== null && $valorParametro !== '')<input type="hidden" name="{{ $nombreParametro }}" value="{{ $valorParametro }}">@endif
                     @endforeach
                     <label for="dia-horario-espacio" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">Día a consultar</label>
-                    <div class="flex min-w-0 flex-wrap items-center gap-2">
+                    <div class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]">
                         @if ($diaAnterior)
                             <a href="{{ $urlHorario(['dia_id' => $diaAnterior->id]) }}" aria-label="Día anterior" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">←</span></a>
                         @else
@@ -234,14 +232,13 @@
                         @else
                             <span aria-disabled="true" aria-label="Día siguiente" class="boton boton-secundario w-11 shrink-0 px-0"><span aria-hidden="true">→</span></span>
                         @endif
-                        <button type="submit" class="boton boton-primario w-full sm:w-auto">Ver día</button>
+                        <button type="submit" class="boton boton-primario col-span-full w-full sm:col-span-1 sm:w-auto">Ver día</button>
                     </div>
                 </form>
                 <div class="flex flex-wrap items-baseline justify-between gap-2 px-1">
                     <h2 id="titulo-dia-espacio" class="break-words text-sm font-bold text-gray-800">{{ $diaSeleccionado?->nombre ?? 'Agenda diaria' }} · {{ $espacioSeleccionado['codigo'] }}</h2>
                     <p class="text-xs text-gray-500">{{ $sesionesDia->count() }} {{ $sesionesDia->count() === 1 ? 'asignación de módulo' : 'asignaciones de módulos' }}</p>
                 </div>
-                <p class="break-words px-1 text-[11px] text-gray-500">{{ $periodoSeleccionado->nombre }} · {{ $versionSeleccionada->tipo === 'semestral' ? 'Semestral' : 'Importación anterior' }} v{{ $versionSeleccionada->version }}</p>
                 @if ($sesionesDia->isEmpty())
                     <div class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
                         <h3 class="text-sm font-semibold text-gray-700">Sin clases registradas para este día</h3>
@@ -259,7 +256,7 @@
                                         <p class="mt-1 text-[10px]">Módulo {{ $bloque->numero }}</p>
                                         @if (! $bloque->estado)<p class="mt-1 text-[10px]">Bloque inactivo</p>@endif
                                     </div>
-                                    <div class="min-w-0 space-y-2">
+                                    <div class="min-w-0 space-y-2 [&_article]:p-3 [&_article_p]:text-xs! [&_article_p.line-clamp-2]:line-clamp-none">
                                         @if ($clases->count() > 1)<p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Varias clases registradas en este bloque</p>@endif
                                         @foreach ($clases as $sesion)<x-clase-espacio :sesion="$sesion" />@endforeach
                                     </div>

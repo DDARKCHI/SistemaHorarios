@@ -10,11 +10,12 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Recuperar contraseña | PROSEC</title>
+    <title>Recuperar contraseña | {{ $identidad['nombre'] }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <x-favicon />
+    <x-identidad-estilos />
 </head>
 
 <body class="min-h-screen bg-fondo">
@@ -31,16 +32,16 @@
                 <div class="flex justify-center">
 
                     <img
-                        src="{{ asset('images/prosec-logo.svg') }}"
-                        alt="PROSEC - Programación Semestral de Cursos"
-                        style="width: 245px; max-width: 100%; height: auto;"
+                        src="{{ $identidad['principal_url'] }}"
+                        alt="{{ $identidad['nombre'] }}"
+                        style="width: 245px; max-width: 100%; max-height: 100px; height: auto; object-fit: contain;"
                     >
 
                 </div>
 
                 <div class="mt-6">
                     <x-encabezado-pagina titulo="Recuperar contraseña">
-                        Ingresa tu RUT y enviaremos un enlace de recuperación
+                        Ingresa tu RUT o usuario y enviaremos un enlace de recuperación
                         al correo asociado a tu cuenta.
                     </x-encabezado-pagina>
                 </div>
@@ -94,7 +95,7 @@
                                 font-size: 15px;
                             "
                         >
-                            RUT
+                            RUT o usuario
                         </label>
 
                         <input
@@ -105,7 +106,7 @@
                             required
                             autofocus
                             autocomplete="username"
-                            placeholder="Sin puntos, ni dígito verificador"
+                            placeholder="RUT o identificador de acceso"
                             class="w-full rounded-lg border border-borde bg-superficie text-texto outline-none transition-colors placeholder:text-texto-secundario focus:border-institucional focus:ring-2 focus:ring-institucional/10"
                             style="
                                 height: 48px;
@@ -198,8 +199,8 @@
                 >
 
                     <img
-                        src="{{ asset('images/main-logo.svg') }}"
-                        alt="Universidad Católica de la Santísima Concepción"
+                        src="{{ $identidad['institucion_url'] }}"
+                        alt="{{ $identidad['institucion'] }}"
                         style="
                             height: 48px;
                             width: auto;
@@ -219,7 +220,7 @@
                     font-size: 12px;
                 "
             >
-                PROSEC · Programación Semestral de Cursos
+                {{ $identidad['nombre'] }} · {{ $identidad['lema'] }}
             </div>
 
         </div>

@@ -22,9 +22,56 @@
     --color-borde: #e5e7eb;
 }
 
-/* Dos estilos comunes para las acciones de salas y recursos. */
+@keyframes avance-carga {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(250%); }
+}
+
+@layer components {
+    .barra-carga {
+        height: .375rem;
+        overflow: hidden;
+        border-radius: 9999px;
+        background: var(--color-borde);
+    }
+
+    .barra-carga > span {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--color-institucional);
+        animation: avance-carga 1.6s ease-in-out infinite;
+    }
+
+    .estado-filtros-cargando::before {
+        content: '';
+        display: inline-block;
+        width: .75rem;
+        height: .75rem;
+        margin-right: .5rem;
+        vertical-align: -.125rem;
+        border: 2px solid var(--color-borde);
+        border-top-color: var(--color-institucional);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .barra-carga > span,
+        .estado-filtros-cargando::before {
+            animation: none;
+        }
+    }
+}
+
+/* Acciones y estados compartidos por toda la interfaz. */
 @utility boton {
     @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-center text-sm font-semibold leading-5 transition-colors;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
     cursor: pointer;
     text-decoration: none;
 
@@ -43,11 +90,12 @@
 @utility boton-primario {
     border-color: var(--color-institucional);
     background-color: var(--color-institucional);
-    color: white;
+    color: var(--color-sobre-institucional, white);
 
     &:hover:not(:disabled):not([aria-disabled='true']) {
         border-color: var(--color-institucional-oscuro);
         background-color: var(--color-institucional-oscuro);
+        color: var(--color-sobre-institucional-oscuro, white);
     }
 }
 
@@ -59,6 +107,17 @@
     &:hover:not(:disabled):not([aria-disabled='true']) {
         border-color: var(--color-gray-400);
         background-color: var(--color-gray-50);
+    }
+}
+
+@utility boton-peligro {
+    border-color: var(--color-red-200);
+    background-color: white;
+    color: var(--color-red-700);
+
+    &:hover:not(:disabled):not([aria-disabled='true']) {
+        border-color: var(--color-red-300);
+        background-color: var(--color-red-50);
     }
 }
 
@@ -91,6 +150,339 @@ label {
     font-size: 0.875rem;
     line-height: 1.25rem;
 }
+
+/* Distribución común: lectura clara, acciones separadas y controles cómodos. */
+@layer components {
+    .ancho-pagina {
+        max-width: 108rem;
+        margin-inline: auto;
+        padding-inline: clamp(1rem, 2vw, 2rem);
+    }
+
+    .pagina-prosec {
+        min-width: 0;
+        padding-block: clamp(1.25rem, 2vw, 1.75rem);
+    }
+
+    .encabezado-pagina {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        gap: 1rem;
+        margin-block-end: 1.5rem;
+    }
+
+    :is(.space-y-4, .space-y-5, .space-y-6, .panel-editor) > .encabezado-pagina {
+        margin-block-end: 0;
+    }
+
+    .encabezado-pagina > div > p { max-width: 72ch; line-height: 1.6; }
+    .acciones-pagina {
+        display: flex;
+        min-width: 0;
+        max-width: 100%;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .acciones-pagina > div { flex-wrap: wrap; max-width: 100%; }
+    .acciones-pagina :is(a, button, summary) {
+        flex-shrink: 0;
+        white-space: nowrap;
+        overflow-wrap: normal;
+        word-break: normal;
+    }
+    main input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='color']):not([type='file']),
+    main select { min-height: 2.75rem; }
+    main input[type='checkbox'], main input[type='radio'] { accent-color: var(--color-institucional); }
+    main table th { line-height: 1.4; }
+    main table td { line-height: 1.5; }
+    main :is(a, button, summary, input, select, textarea):focus-visible {
+        outline: 2px solid var(--color-institucional);
+        outline-offset: 2px;
+    }
+}
+
+@media (width >= 80rem) {
+    .encabezado-pagina:not(.encabezado-pagina--amplio) {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .encabezado-pagina:not(.encabezado-pagina--amplio) > .acciones-pagina {
+        max-width: 58%;
+        justify-content: end;
+    }
+}
+
+@media (width < 40rem) {
+    .acciones-pagina > :is(a, button) { flex: 1 0 max-content; min-width: 8rem; }
+    .acciones-pagina > :is(div, form, details),
+    .encabezado-pagina--amplio .acciones-pagina > .boton-primario { flex: 1 1 100%; }
+    .acciones-pagina > div > :is(a, button) { flex: 1 0 max-content; min-width: 8rem; }
+}
+
+@layer components {
+    .accion-menu {
+        @apply flex min-h-10 items-center rounded-lg px-3 py-2 text-sm font-medium text-texto transition-colors hover:bg-fondo;
+    }
+
+    .paginacion-control {
+        min-inline-size: 2.5rem;
+        min-block-size: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        padding-inline: 0.625rem;
+        border-radius: 0.375rem;
+        color: var(--color-texto);
+        font-size: 0.875rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    a.paginacion-control:hover,
+    .paginacion-control[aria-current='page'] {
+        background: var(--color-gray-200);
+    }
+
+    .paginacion-control[aria-current='page'] {
+        font-weight: 700;
+    }
+
+    .paginacion-control[aria-disabled='true'] {
+        color: var(--color-texto-secundario);
+        opacity: 0.65;
+    }
+}
+
+/* Aplica el ancho guardado desde el primer render del menú. */
+@media (width >= 64rem) {
+    [data-sidebar-inicial='contraido'] #sidebar-escritorio {
+        width: 5rem;
+        transition: none;
+    }
+
+    [data-sidebar-inicial='contraido'] #contenido-principal {
+        margin-left: 5rem;
+        transition: none;
+    }
+
+    [data-sidebar-inicial='contraido'] #sidebar-escritorio nav,
+    [data-sidebar-inicial='contraido'] #contenedor-logo-prosec {
+        padding-inline: 0.5rem;
+    }
+
+    [data-sidebar-inicial='contraido'] #sidebar-escritorio [data-sidebar-row] {
+        justify-content: center;
+        gap: 0;
+    }
+
+    [data-sidebar-inicial='contraido'] #sidebar-escritorio :is(nav span, [data-sidebar-submenu], [data-sidebar-chevron], #logo-prosec-completo) {
+        display: none;
+    }
+
+    [data-sidebar-inicial='contraido'] #logo-prosec-mini {
+        display: block !important;
+    }
+}
+
+@layer components {
+    .filtros-compactos {
+        container: filtros / inline-size;
+    }
+
+    .filtros-campos {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: end;
+        gap: 0.75rem;
+    }
+
+    .filtros-campos > * {
+        min-width: 0;
+    }
+
+    .filtros-campos[data-campos='3'] > :first-child,
+    .filtros-acciones {
+        grid-column: 1 / -1;
+    }
+
+    .filtros-acciones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filtros-acciones > * {
+        flex: 1 1 auto;
+    }
+
+    @container filtros (width >= 34rem) {
+        .filtros-campos {
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+        }
+
+        .filtros-campos[data-campos='4'] > :nth-child(2) {
+            grid-column: span 2;
+        }
+
+        .filtros-acciones {
+            grid-column: auto;
+            flex-wrap: nowrap;
+        }
+    }
+
+    @container filtros (width >= 51rem) {
+        .filtros-campos[data-campos='3'] {
+            grid-template-columns: minmax(0, 1.75fr) minmax(0, 1.1fr) minmax(7rem, 0.7fr) auto;
+        }
+
+        .filtros-campos[data-campos='3'] > :first-child {
+            grid-column: auto;
+        }
+    }
+
+    @container filtros (width >= 56rem) {
+        .filtros-campos[data-campos='4'] {
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(0, 1.35fr) minmax(7rem, 0.75fr) auto;
+        }
+
+        .filtros-campos[data-campos='4'] > :nth-child(2) {
+            grid-column: auto;
+        }
+    }
+}
+
+/* Cinco criterios de consulta conservan espacio para búsqueda y acciones. */
+@layer components {
+    .filtros-campos[data-campos='5'] > :nth-child(3) { grid-column: 1 / -1; }
+    @container filtros (width >= 34rem) {
+        .filtros-campos[data-campos='5'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .filtros-campos[data-campos='5'] > :nth-child(3) { grid-column: auto; }
+        .filtros-campos[data-campos='5'] .filtros-acciones { grid-column: 1 / -1; justify-content: end; }
+        .filtros-campos[data-campos='5'] .filtros-acciones > * { flex: 0 0 auto; }
+    }
+    @container filtros (width >= 66rem) {
+        .filtros-campos[data-campos='5'] { grid-template-columns: minmax(7rem, .8fr) minmax(8rem, 1fr) minmax(10rem, 1.35fr) minmax(8rem, 1fr) minmax(8.5rem, .85fr) auto; }
+        .filtros-campos[data-campos='5'] .filtros-acciones { grid-column: auto; }
+    }
+}
+
+/* Una sola fila de datos para la tabla y para la tarjeta en espacios estrechos. */
+.listado-adaptable {
+    container: listado / inline-size;
+}
+
+.listado-adaptable .etiqueta-listado {
+    display: none;
+}
+
+.listado-adaptable .dato-listado {
+    display: contents;
+}
+
+.listado-adaptable > table > thead th {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.listado-adaptable [data-acciones-listado] {
+    width: 1%;
+    white-space: nowrap;
+}
+
+@container listado (width < 56.5rem) {
+    .listado-adaptable > table {
+        display: block;
+        min-width: 0;
+    }
+
+    .listado-adaptable > table > thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .listado-adaptable > table > tbody,
+    .listado-adaptable > table > tbody > tr {
+        display: block;
+    }
+
+    .listado-adaptable > table > tbody > tr {
+        padding: 0.65rem 1rem;
+    }
+
+    .listado-adaptable > table > tbody > tr > td {
+        display: block;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+        padding: 0.5rem 0;
+        border: 0;
+        text-align: start;
+        white-space: normal;
+    }
+
+    .listado-adaptable > table > tbody > tr > td[colspan] {
+        padding: 1rem 0;
+        text-align: center;
+    }
+
+    .listado-adaptable > table > tbody > tr > td:has(> .etiqueta-listado) {
+        display: grid;
+        grid-template-columns: minmax(5rem, 33%) minmax(0, 1fr);
+        gap: 0.75rem;
+    }
+
+    .listado-adaptable .etiqueta-listado {
+        display: block;
+        color: var(--color-texto-secundario);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .listado-adaptable .dato-listado {
+        display: block;
+        min-width: 0;
+    }
+
+    .listado-adaptable [data-acciones-listado] > div {
+        justify-content: start;
+        flex-wrap: wrap;
+    }
+
+    .listado-adaptable [data-principal-listado] {
+        font-weight: 600;
+    }
+}
+
+.disponibilidad-semanal {
+    container: disponibilidad / inline-size;
+}
+
+.disponibilidad-dia {
+    display: none;
+}
+
+@container disponibilidad (width < 40rem) {
+    [data-dia-preparado] .disponibilidad-dia {
+        display: block;
+    }
+
+    [data-dia-preparado] table {
+        min-width: 100%;
+    }
+
+    [data-dia-preparado] [data-otro-dia] {
+        display: none;
+    }
+}
+
 /* Mantener visible el contorno de los selectores nativos. */
 select {
     border-width: 1px;
@@ -112,6 +504,13 @@ select {
     textarea {
         min-width: 0;
         max-width: 100%;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: color-mix(in srgb, var(--color-texto-secundario) 75%, var(--color-superficie));
+        opacity: 1;
+        font-weight: 400;
     }
 
     main .grid > *,
@@ -168,7 +567,7 @@ select {
     .panel-contexto,
     .panel-acciones {
         min-width: 0;
-        padding: 1.25rem;
+        padding: clamp(1rem, 2vw, 1.25rem);
         border: 1px solid var(--color-borde);
         border-radius: 0.75rem;
         background: var(--color-superficie);
@@ -232,9 +631,13 @@ select {
     }
 
     .panel-botones {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .panel-botones > * {
+        flex: 1 0 max-content;
     }
 
     .panel-resumen {

@@ -199,7 +199,7 @@ class RevisionCargaProgramacionTest extends IsolatedDatabaseTestCase
         $snapshot = fn () => collect($tablas)->mapWithKeys(fn ($tabla) => [$tabla => DB::table($tabla)->orderBy('id')->get()->toJson()])->all();
         $antes = $snapshot();
         $this->get($this->url())->assertOk()->assertSee('Cumplimiento de módulos')->assertSee('Faltan 2 por asignar')
-            ->assertSee('sin convertirlos a horas de 60 minutos');
+            ->assertSee('Los módulos cubiertos y pendientes completan la carga requerida.');
         $this->assertSame($antes, $snapshot());
     }
 

@@ -38,7 +38,7 @@
 
         <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
             <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                Profesor
+                Docente
             </div>
 
             <div class="mt-1 text-sm font-semibold text-gray-800">
@@ -84,6 +84,9 @@
         method="POST"
         action="{{ route('programacion.propuesta.guardar') }}"
         id="form-propuesta"
+        data-confirmar="Se registrará tu propuesta con los módulos seleccionados."
+        data-confirmar-titulo="Guardar propuesta de horario"
+        data-confirmar-accion="Guardar propuesta"
     >
         @csrf
         <input type="hidden" name="periodo_id" value="{{ $periodo->id }}">
@@ -107,7 +110,7 @@
                     <button
                         type="button"
                         id="seleccionar-todos"
-                        class="min-h-11 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                        class="min-h-11 shrink-0 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition [overflow-wrap:normal] hover:bg-gray-50"
                     >
                         Marcar semana
                     </button>
@@ -115,14 +118,14 @@
                     <button
                         type="button"
                         id="limpiar-seleccion"
-                        class="min-h-11 rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                        class="min-h-11 shrink-0 whitespace-nowrap rounded-md border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 transition [overflow-wrap:normal] hover:bg-gray-50"
                     >
                         Limpiar semana
                     </button>
 
                     <button
                         type="submit"
-                        class="min-h-11 rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800"
+                        class="min-h-11 shrink-0 whitespace-nowrap rounded-md bg-institucional px-4 text-xs font-semibold text-white transition [overflow-wrap:normal] hover:bg-institucional-oscuro"
                     >
                         Guardar propuesta
                     </button>
@@ -141,7 +144,7 @@
                     <button type="button" id="dia-anterior" aria-label="Día anterior" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-700 disabled:cursor-not-allowed disabled:opacity-40">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 18-6-6 6-6" /></svg>
                     </button>
-                    <select id="dia-disponibilidad" name="dia_activo" class="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-red-600 focus:ring-1 focus:ring-red-600">
+                    <select id="dia-disponibilidad" name="dia_activo" class="h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 focus:border-institucional focus:ring-1 focus:ring-institucional">
                         @foreach ($dias as $dia)
                             <option value="{{ $dia->id }}" @selected($diaInicial === $dia->id)>{{ $dia->nombre }}</option>
                         @endforeach
@@ -152,15 +155,15 @@
                 </div>
                 <p class="mt-2 text-[11px] text-gray-500">Los bloques marcados se conservan al cambiar de día.</p>
                 <div class="mt-2 flex flex-wrap gap-2">
-                    <button type="button" id="marcar-dia" class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-100">Marcar día</button>
-                    <button type="button" id="limpiar-dia" class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 hover:bg-gray-100">Limpiar día</button>
+                    <button type="button" id="marcar-dia" class="min-h-11 shrink-0 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 [overflow-wrap:normal] hover:bg-gray-100">Marcar día</button>
+                    <button type="button" id="limpiar-dia" class="min-h-11 shrink-0 whitespace-nowrap rounded-lg border border-gray-300 bg-white px-3 text-xs font-medium text-gray-700 [overflow-wrap:normal] hover:bg-gray-100">Limpiar día</button>
                 </div>
                 <p id="resumen-dia" class="mt-2 text-xs font-medium text-gray-700" aria-live="polite" aria-atomic="true"></p>
             </div>
 
             <p id="ayuda-calendario" class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
 
-            <div id="region-disponibilidad" class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Disponibilidad semanal del profesor" tabindex="0">
+            <div id="region-disponibilidad" class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Disponibilidad semanal del docente" tabindex="0">
 
                 <table class="w-full min-w-[900px] table-fixed border-collapse">
 
@@ -233,7 +236,7 @@
                                     <td data-dia-columna="{{ $dia->id }}" class="border-b border-r border-gray-200 p-1 text-center last:border-r-0">
 
                                         <label
-                                            class="grupo-bloque flex min-h-[44px] cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white transition hover:border-red-300 hover:bg-red-50"
+                                            class="grupo-bloque flex min-h-[44px] cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white transition hover:border-institucional/30 hover:bg-institucional/5"
                                         >
 
                                             <input
@@ -242,7 +245,7 @@
                                                 value="{{ $clave }}"
                                                 data-dia="{{ $dia->id }}"
                                                 aria-label="{{ $dia->nombre }}, módulo {{ $bloque->numero }}, de {{ substr($bloque->hora_inicio, 0, 5) }} a {{ substr($bloque->hora_fin, 0, 5) }}"
-                                                class="checkbox-disponibilidad h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-red-600"
+                                                class="checkbox-disponibilidad h-4 w-4 rounded border-gray-300 text-red-700 focus:ring-institucional"
                                                 @checked($seleccionado)
                                             >
 
@@ -279,7 +282,7 @@
 
             <button
                 type="submit"
-                class="min-h-11 rounded-md bg-red-700 px-5 text-xs font-semibold text-white transition hover:bg-red-800"
+                class="min-h-11 shrink-0 whitespace-nowrap rounded-md bg-institucional px-5 text-xs font-semibold text-white transition [overflow-wrap:normal] hover:bg-institucional-oscuro"
             >
                 Guardar propuesta
             </button>
@@ -330,7 +333,7 @@
             anterior.disabled = selectorDia.selectedIndex <= 0;
             siguiente.disabled = selectorDia.selectedIndex < 0 || selectorDia.selectedIndex >= selectorDia.options.length - 1;
             const nombreDia = selectorDia.selectedOptions[0]?.textContent.trim().toLowerCase();
-            region.setAttribute('aria-label', diaria ? `Disponibilidad del ${nombreDia}` : 'Disponibilidad semanal del profesor');
+            region.setAttribute('aria-label', diaria ? `Disponibilidad del ${nombreDia}` : 'Disponibilidad semanal del docente');
             actualizarCantidad();
         }
 

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Requerimientos de actividades | PROSEC')
+@section('title', 'Requerimientos de actividades | '.$identidad['nombre'])
 @section('content')
 <x-encabezado-pagina titulo="Requerimientos de actividades">
     Define los espacios y recursos que necesita cada actividad para revisar su programación.
@@ -44,11 +44,7 @@
     @empty
         <div class="rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm"><h2 class="text-base font-semibold text-gray-800">No hay actividades para esta consulta</h2><p class="mt-2 text-sm text-gray-500">Selecciona otro período o ajusta la búsqueda.</p></div>
     @endforelse
-    @if ($actividades->hasPages())<nav aria-label="Paginación de actividades" class="flex flex-wrap items-center justify-between gap-2">
-        @if ($actividades->onFirstPage())<span class="boton boton-secundario" aria-disabled="true">Anterior</span>@else<a class="boton boton-secundario" href="{{ $actividades->previousPageUrl() }}" rel="prev">Anterior</a>@endif
-        <span class="text-sm text-gray-500">Página {{ $actividades->currentPage() }} de {{ $actividades->lastPage() }}</span>
-        @if ($actividades->hasMorePages())<a class="boton boton-secundario" href="{{ $actividades->nextPageUrl() }}" rel="next">Siguiente</a>@else<span class="boton boton-secundario" aria-disabled="true">Siguiente</span>@endif
-    </nav>@endif
+    <x-paginacion-catalogo :paginas="$actividades" etiqueta="Paginación de actividades" />
 </div>
 <script>document.addEventListener('DOMContentLoaded', () => { document.getElementById('periodo-requerimientos').addEventListener('change', () => { document.getElementById('version-regreso')?.remove(); }); });</script>
 @endsection

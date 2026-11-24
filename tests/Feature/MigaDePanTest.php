@@ -90,7 +90,7 @@ class MigaDePanTest extends IsolatedDatabaseTestCase
         $usuario = $this->usuario('ver programacion semestral');
 
         foreach ([
-            'programacion.asignacion.profesores' => 'Asignación de profesores',
+            'programacion.asignacion.profesores' => 'Asignación de docentes',
             'programacion.asignacion.horarios' => 'Asignación de horarios',
             'programacion.propuesta' => 'Propuesta de horario',
         ] as $ruta => $etiqueta) {

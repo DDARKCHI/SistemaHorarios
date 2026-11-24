@@ -9,16 +9,16 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Recuperación de contraseña | PROSEC</title>
+    <title>Recuperación de contraseña | {{ $identidad['nombre'] }}</title>
 </head>
 
 <body
     style="
         margin: 0;
         padding: 0;
-        background-color: #f3f4f6;
+        background-color: {{ $identidad['fondo'] }};
         font-family: Arial, Helvetica, sans-serif;
-        color: #1f2937;
+        color: {{ $identidad['secundario'] }};
     "
 >
 
@@ -30,7 +30,7 @@
         border="0"
         style="
             width: 100%;
-            background-color: #f3f4f6;
+            background-color: {{ $identidad['fondo'] }};
             padding: 36px 16px;
         "
     >
@@ -63,17 +63,7 @@
                             "
                         >
 
-                            <img
-                                src="{{ $message->embed(public_path('images/prosec-logo-email.png')) }}"
-                                alt="PROSEC"
-                                style="
-                                    display: block;
-                                    width: 250px;
-                                    max-width: 100%;
-                                    height: auto;
-                                    margin: 0 auto;
-                                "
-                            >
+                            <x-logo-correo tipo="principal" />
 
                         </td>
                     </tr>
@@ -83,7 +73,7 @@
                         <td
                             style="
                                 height: 4px;
-                                background-color: #d92323;
+                                background-color: {{ $identidad['principal'] }};
                                 font-size: 0;
                                 line-height: 0;
                             "
@@ -103,7 +93,7 @@
                             <h1
                                 style="
                                     margin: 0 0 22px 0;
-                                    color: #1f2937;
+                                    color: {{ $identidad['secundario'] }};
                                     font-size: 24px;
                                     line-height: 1.3;
                                     font-weight: 700;
@@ -133,7 +123,7 @@
                                 "
                             >
                                 Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en
-                                <strong style="color: #1f2937;">PROSEC</strong>.
+                                <strong style="color: {{ $identidad['secundario'] }};">{{ $identidad['nombre'] }}</strong>.
                             </p>
 
                             <p
@@ -161,10 +151,10 @@
                                 <tr>
                                     <td
                                         align="center"
-                                        bgcolor="#d92323"
+                                        bgcolor="{{ $identidad['principal'] }}"
                                         style="
                                             border-radius: 8px;
-                                            background-color: #d92323;
+                                            background-color: {{ $identidad['principal'] }};
                                         "
                                     >
 
@@ -173,12 +163,12 @@
                                             style="
                                                 display: inline-block;
                                                 padding: 15px 30px;
-                                                color: #ffffff;
+                                                color: {{ $identidad['sobre_principal'] }};
                                                 font-size: 15px;
                                                 font-weight: 700;
                                                 text-decoration: none;
                                                 border-radius: 8px;
-                                                background-color: #d92323;
+                                                background-color: {{ $identidad['principal'] }};
                                             "
                                         >
                                             Restablecer contraseña
@@ -262,7 +252,7 @@
                                 <a
                                     href="{{ $url }}"
                                     style="
-                                        color: #d92323;
+                                        color: {{ $identidad['principal'] }};
                                         text-decoration: none;
                                     "
                                 >
@@ -284,17 +274,7 @@
                             "
                         >
 
-                            <img
-                                src="{{ $message->embed(public_path('images/ucsc-logo-email.png')) }}"
-                                alt="Universidad Católica de la Santísima Concepción"
-                                style="
-                                    display: block;
-                                    height: 48px;
-                                    width: auto;
-                                    max-width: 220px;
-                                    margin: 0 auto 14px auto;
-                                "
-                            >
+                            <x-logo-correo tipo="institucion" />
 
                             <p
                                 style="
@@ -304,7 +284,7 @@
                                     line-height: 1.5;
                                 "
                             >
-                                PROSEC · Programación Semestral de Cursos
+                                {{ $identidad['nombre'] }} · {{ $identidad['lema'] }}
                             </p>
 
                             <p

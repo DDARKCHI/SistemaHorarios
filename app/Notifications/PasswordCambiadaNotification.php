@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Services\IdentidadVisual;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -17,8 +18,11 @@ class PasswordCambiadaNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $identidad = app(IdentidadVisual::class);
+
         return (new MailMessage)
-            ->subject('Contraseña actualizada | PROSEC')
+            ->from(config('mail.from.address'), $identidad->remitenteCorreo())
+            ->subject('Contraseña actualizada | '.$identidad->datos()['nombre'])
             ->view('emails.password-cambiada', [
                 'usuario' => $notifiable,
             ]);

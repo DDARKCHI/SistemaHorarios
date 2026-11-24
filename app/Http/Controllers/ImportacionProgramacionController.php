@@ -6,8 +6,10 @@ use App\Imports\ProgramacionImport;
 use App\Services\ProgramacionCargaService;
 use App\Services\ProgramacionComparacionService;
 use App\Services\ProgramacionExcelService;
+use App\Services\ConciliacionOfertaImportada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportacionProgramacionController extends Controller
@@ -50,9 +52,33 @@ class ImportacionProgramacionController extends Controller
         $comparacionService =
             new ProgramacionComparacionService;
 
-        $comparacion = $comparacionService->comparar(
-            $resultado['registros']
-        );
+        $conciliacion = (new ConciliacionOfertaImportada)->analizar($resultado['registros']);
+        $comparacion = $comparacionService->comparar($resultado['registros'], $conciliacion['periodo_id']);
+        $comparacion['conciliacion'] = ['resumen' => $conciliacion['resumen'], 'errores' => array_slice($conciliacion['errores'], 0, 20),
+            'total_errores' => count($conciliacion['errores']), 'avisos' => $conciliacion['avisos']];
+        $comparacion['totales']['errores'] += count($conciliacion['errores']);
+        foreach (['carreras', 'asignaturas', 'profesores', 'secciones', 'grupos'] as $tipo) $comparacion['totales'][$tipo] = array_sum($conciliacion['resumen'][$tipo]);
+        // La huella contempla también recursos y datos que no aparecen como cambios de módulo.
+        $comparacion['hay_cambios'] = ! $conciliacion['sin_cambios'];
+        if ($conciliacion['sin_cambios']) {
+            $comparacion['hay_cambios'] = false;
+            $comparacion['resumen_cambios'] = [];
+            $comparacion['detalle_cambios'] = [];
+            $comparacion['conciliacion']['avisos'][] = 'Este contenido coincide con la última importación confirmada del período. No se creará otra versión idéntica.';
+        }
+        if ($comparacion['es_nueva_programacion']) {
+            foreach (['carreras', 'asignaturas', 'profesores', 'secciones'] as $tipo) {
+                $resumen = $conciliacion['resumen'][$tipo];
+                $comparacion[$tipo] = [in_array($tipo, ['carreras', 'asignaturas', 'secciones'], true) ? 'nuevas' : 'nuevos' => $resumen['nuevos'],
+                    'existentes' => $resumen['reutilizados'], 'modificados' => 0];
+            }
+        }
+        if ($conciliacion['errores'] || $comparacion['errores'] || $conciliacion['sin_cambios']) {
+            return view('programacion.importar', ['resultado' => collect($resultado)->except('registros')->all() + [
+                'nombre_archivo' => $archivo->getClientOriginalName(), 'comparacion' => $comparacion,
+                'primeras_filas' => array_slice($resultado['registros'], 0, 5),
+            ]]);
+        }
 
         $rutaTemporal = $archivo->store(
             'importaciones/pendientes',
@@ -69,6 +95,9 @@ class ImportacionProgramacionController extends Controller
             'ruta' => $rutaTemporal,
             'usuario_id' => (string) $request->user()->getAuthIdentifier(),
             'nombre_archivo' => $archivo->getClientOriginalName(),
+            'firma' => $conciliacion['firma'],
+            'archivo_hash' => hash_file('sha256', $archivo->getRealPath()),
+            'creada' => now()->timestamp,
         ]);
 
         return view('programacion.importar', [
@@ -148,13 +177,18 @@ class ImportacionProgramacionController extends Controller
                     );
             }
 
+            if (! hash_equals($pendiente['archivo_hash'] ?? '', hash_file('sha256', $rutaCompleta))) {
+                return redirect()->route('programacion.importar')->with('error', 'El archivo cambió desde el análisis. Vuelve a analizarlo antes de confirmar.');
+            }
+
             $cargaService =
                 new ProgramacionCargaService;
 
             $version = $cargaService->cargar(
                 $resultado['registros'],
                 auth()->id(),
-                $pendiente['nombre_archivo']
+                $pendiente['nombre_archivo'],
+                $pendiente['firma']
             );
 
             $disco->delete($ruta);
@@ -168,13 +202,15 @@ class ImportacionProgramacionController extends Controller
                     .$version->version
                     .'.'
                 );
+        } catch (ValidationException $e) {
+            return redirect()->route('programacion.importar')->with('error', implode(' ', collect($e->errors())->flatten()->take(5)->all()));
         } catch (\Throwable $e) {
+            report($e);
             return redirect()
                 ->route('programacion.importar')
                 ->with(
                     'error',
-                    'No fue posible completar la carga: '
-                    .$e->getMessage()
+                    'No fue posible completar la carga. No se guardaron los cambios; revisa el archivo y vuelve a intentarlo.'
                 );
         }
     }
@@ -206,6 +242,12 @@ class ImportacionProgramacionController extends Controller
         if (! is_array($pendiente)
             || ($pendiente['ruta'] ?? null) !== $ruta
             || ($pendiente['usuario_id'] ?? null) !== (string) $request->user()->getAuthIdentifier()) {
+            return null;
+        }
+
+        if (! isset($pendiente['creada'], $pendiente['firma'], $pendiente['archivo_hash']) || $pendiente['creada'] < now()->subMinutes(30)->timestamp) {
+            Storage::disk('local')->delete($ruta);
+            $this->olvidarArchivoPendiente($request, $ruta);
             return null;
         }
 

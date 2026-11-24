@@ -289,7 +289,7 @@ class ImportacionTemporalTest extends IsolatedDatabaseTestCase
             'name' => 'Importador de prueba '.$numero, 'rut' => (string) (77000000 + $numero),
             'email' => 'importador'.$numero.'@example.test', 'password' => 'clave-de-prueba',
         ]);
-        $usuario->givePermissionTo(Permission::findOrCreate('ver programacion anterior', 'web'));
+        $usuario->givePermissionTo(Permission::findOrCreate('ver programacion anterior', 'web'), Permission::findOrCreate('importar programacion anterior', 'web'));
 
         return $usuario;
     }

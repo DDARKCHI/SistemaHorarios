@@ -20,7 +20,7 @@
     @endif
 
     @if ($version && ! $editable)
-        <div role="status" class="mb-4 rounded-lg border border-gray-200 bg-white p-5 text-sm text-gray-600 shadow-sm sm:p-6">Esta programación está disponible para consulta. Los horarios solo se modifican en la versión actual en borrador de un período activo.</div>
+        <div role="status" class="mb-4 rounded-xl border border-borde bg-white p-5 text-sm text-gray-600 shadow-sm sm:p-6">Esta programación está disponible para consulta. Los horarios solo se modifican en la versión actual en borrador de un período activo.</div>
     @endif
 
     @if (!$version)
@@ -29,7 +29,7 @@
         </div>
     @endif
 
-    <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+    <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
 
         <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 [&>div]:min-w-0">
 
@@ -137,12 +137,12 @@
     </div>
 
     @if ($version)
-        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
 
             <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 [&>div]:min-w-0">
 
                 <div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
                         Versión actual
                     </div>
 
@@ -152,7 +152,7 @@
                 </div>
 
                 <div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
                         Versión
                     </div>
 
@@ -162,7 +162,7 @@
                 </div>
 
                 <div>
-                    <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
                         Estado
                     </div>
 
@@ -178,7 +178,7 @@
 
     @if ($seccion)
 
-        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
 
             <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
 
@@ -208,7 +208,7 @@
 
         @forelse ($seccion->actividades as $actividad)
 
-            <div class="mb-3 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div class="mb-3 overflow-hidden rounded-xl border border-borde bg-white shadow-sm">
 
                 <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
 
@@ -298,7 +298,7 @@
                                     @empty
 
                                         <span class="inline-flex items-center rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs text-yellow-700">
-                                            Sin profesor asignado
+                                            Sin docente asignado
                                         </span>
 
                                     @endforelse
@@ -310,7 +310,7 @@
                             @if ($profesoresSinDisponibilidad->isNotEmpty())
 
                                 <div class="mb-3 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-700">
-                                    Uno o más profesores de este grupo no han informado disponibilidad para este período.
+                                    Uno o más docentes de este grupo no han informado disponibilidad para este período.
                                 </div>
 
                             @endif
@@ -354,7 +354,7 @@
 
         @if ($horario->observaciones)
 
-            <div class="mt-1 break-words text-[11px] text-gray-500">
+            <div class="mt-1 break-words text-xs text-gray-500">
                 {{ $horario->observaciones }}
             </div>
 
@@ -366,11 +366,11 @@
 
         <div class="min-w-0 max-w-full break-words rounded-md border border-gray-200 bg-white px-3 py-2 lg:flex-1">
 
-            <div class="text-[10px] font-bold uppercase tracking-wide text-gray-400">
-                {{ $horario->profesores->count() === 1 ? 'Profesor asignado' : 'Profesores asignados' }}
+            <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
+                {{ $horario->profesores->count() === 1 ? 'Docente asignado' : 'Docentes asignados' }}
             </div>
 
-            <div class="mt-0.5 text-[11px] font-semibold text-gray-700">
+            <div class="mt-0.5 text-xs font-semibold text-gray-700">
 
                 {{ $horario->profesores
                     ->filter(fn ($horarioProfesor) => $horarioProfesor->profesor)
@@ -390,16 +390,20 @@
     @endif
 
                                         @if ($editable)
+                                        <a class="boton boton-secundario" href="{{ route('programacion.cambios.create', $horario) }}">Solicitar cambio</a>
                                         <button type="button" class="boton boton-secundario" data-asignar-docente
                                             data-url="{{ route('programacion.asignacion.horarios.profesor', $horario) }}"
                                             data-horario="{{ $horario->id }}"
                                             data-huella="{{ \App\Services\AsignacionModulosHorario::firmaDocentes($horario->profesores) }}"
                                             data-resumen="{{ $seccion->asignatura?->nombre }} · {{ $horario->dia?->nombre }} · {{ substr((string) $horario->bloqueHorario?->hora_inicio, 0, 5) }}–{{ substr((string) $horario->bloqueHorario?->hora_fin, 0, 5) }}">
-                                            Asignar profesor
+                                            Asignar docente
                                         </button>
                                         <form
                                             method="POST"
                                             action="{{ route('programacion.asignacion.horarios.eliminar', $horario) }}"
+                                            data-confirmar="Este módulo se quitará de la programación actual."
+                                            data-confirmar-titulo="Eliminar horario"
+                                            data-confirmar-accion="Eliminar"
                                         >
                                             @csrf
                                             @method('DELETE')
@@ -419,7 +423,6 @@
                                             <button
                                                 type="submit"
                                                 class="boton boton-secundario"
-                                                onclick="return confirm('¿Eliminar este horario?')"
                                             >
                                                 Eliminar
                                             </button>
@@ -445,10 +448,13 @@
         <form
             method="POST"
             action="{{ route('programacion.asignacion.horarios.guardar') }}"
-    class="js-form-horario rounded-lg border border-gray-200 bg-white p-5 sm:p-6"
+    class="js-form-horario rounded-xl border border-borde bg-white p-5 sm:p-6"
     data-max-modulos="{{ $cantidadMaximaModulos }}"
     data-modulos-asignados="{{ $cantidadModulosAsignados }}"
     data-modulos-disponibles="{{ $cantidadModulosDisponibles }}"
+    data-confirmar="Se registrarán los módulos seleccionados en el horario del grupo."
+    data-confirmar-titulo="Agregar horarios al grupo"
+    data-confirmar-accion="Agregar horarios"
 >
                                     @csrf
                                     <input type="hidden" name="version_id" value="{{ $version->id }}">
@@ -531,7 +537,7 @@
                                     <div class="mb-3">
 
     <div class="mb-2 text-xs font-semibold text-gray-600">
-        Profesor(es) para este horario
+        Docentes para este horario
     </div>
 
     @if ($profesoresGrupo->count() === 1)
@@ -607,8 +613,8 @@
 
         </div>
 
-        <div class="mt-1 text-[11px] text-gray-400">
-            Selecciona uno o más profesores que dictarán los módulos elegidos.
+        <div class="mt-1 text-xs text-gray-400">
+            Selecciona uno o más docentes que dictarán los módulos elegidos.
         </div>
 
     @endif
@@ -622,7 +628,7 @@
                                                 Módulos horarios
                                             </label>
 
-                                            <span class="text-[11px] text-gray-400">
+                                            <span class="text-xs text-gray-400">
                                                Máximo {{ $cantidadMaximaModulos }}
                                             </span>
 
@@ -649,14 +655,14 @@
                                                             Módulo {{ $bloque->numero }}
                                                         </span>
 
-                                                        <span class="block text-[11px] text-gray-500">
+                                                        <span class="block text-xs text-gray-500">
                                                             {{ substr($bloque->hora_inicio, 0, 5) }}
                                                             -
                                                             {{ substr($bloque->hora_fin, 0, 5) }}
                                                         </span>
 
                                                         @if ($bloque->es_almuerzo)
-                                                            <span class="mt-0.5 block text-[10px] font-semibold text-yellow-600">
+                                                            <span class="mt-0.5 block text-xs font-semibold text-yellow-600">
                                                                 Almuerzo
                                                             </span>
                                                         @endif
@@ -702,7 +708,7 @@
 
         @empty
 
-            <div class="rounded-lg border border-gray-200 bg-white px-4 py-4 text-xs text-gray-500 shadow-sm">
+            <div class="rounded-xl border border-borde bg-white px-4 py-4 text-xs text-gray-500 shadow-sm">
                 La sección seleccionada no tiene actividades registradas.
             </div>
 

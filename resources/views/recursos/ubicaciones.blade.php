@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Ubicaciones del equipamiento | PROSEC')
+@section('title', 'Ubicaciones del equipamiento | '.$identidad['nombre'])
 @section('content')
 <x-encabezado-pagina titulo="Ubicaciones del equipamiento">Distribuye unidades del inventario entre salas y laboratorios móviles.
     <x-slot:acciones><a href="{{ route('recursos.index', ['q' => $equipamiento->nombre, 'estado' => 'todos']) }}" class="boton boton-secundario">Volver al inventario</a></x-slot:acciones>
@@ -22,7 +22,7 @@
                 <div><label for="sede-ubicacion" class="mb-1.5 block text-sm font-semibold text-gray-700">Sede</label><select id="sede-ubicacion" class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm"><option value="">Todas las sedes</option>@foreach ($sedes as $sede)<option value="{{ $sede->id }}">{{ $sede->nombre }}</option>@endforeach</select></div>
                 <div><label for="espacio-equipamiento" class="mb-1.5 block text-sm font-semibold text-gray-700">Sala o laboratorio móvil</label><select id="espacio-equipamiento" name="espacio" data-select-buscable class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"><option value="">Selecciona un espacio</option>@foreach ($espacios as $espacio)<option data-sede="{{ $espacio['sede_id'] }}" value="{{ $espacio['id'] }}" @selected(is_string(old('espacio')) && old('espacio') === $espacio['id'])>{{ $espacio['nombre'] }}</option>@endforeach</select></div>
             @endif
-            <div><label for="cantidad-ubicacion" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de unidades</label><input id="cantidad-ubicacion" name="cantidad" type="number" min="1" max="65535" step="1" required value="{{ is_scalar(old('cantidad')) ? old('cantidad') : ($seleccionada?->cantidad ?? 1) }}" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"></div>
+            <div><label for="cantidad-ubicacion" class="mb-1.5 block text-sm font-semibold text-gray-700">Cantidad de unidades</label><input placeholder="Ej. 5" id="cantidad-ubicacion" name="cantidad" type="number" min="1" max="65535" step="1" required value="{{ is_scalar(old('cantidad')) ? old('cantidad') : ($seleccionada?->cantidad ?? 1) }}" class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 text-sm"></div>
             <div class="flex flex-wrap gap-2">@if ($seleccionada)<a href="{{ route('recursos.ubicaciones.index', $equipamiento) }}" class="boton boton-secundario">Cancelar</a>@endif<button class="boton boton-primario" type="submit">{{ $seleccionada ? 'Guardar cantidad' : 'Ubicar unidades' }}</button></div>
         </form>
     @else
@@ -33,7 +33,7 @@
             @php $espacio = $ubicacion->sala ?? $ubicacion->laboratorioMovil; @endphp
             <article class="flex min-w-0 flex-col justify-between gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6">
                 <div class="min-w-0"><h3 class="break-words text-sm font-semibold">{{ $ubicacion->sala_id ? 'Sala' : 'Laboratorio móvil' }} {{ $espacio?->codigo ?? 'por revisar' }}</h3><p class="mt-1 text-sm text-gray-600">{{ $espacio?->sede?->nombre }} · {{ $ubicacion->cantidad }} {{ $ubicacion->cantidad === 1 ? 'unidad' : 'unidades' }}</p>@if (! $espacio?->estado || ! $espacio?->disponible)<p class="mt-1 text-sm text-gray-500">Espacio inactivo o no habilitado; sus unidades siguen ubicadas aquí.</p>@endif</div>
-                <div class="flex flex-wrap gap-2"><a class="boton boton-secundario" href="{{ route('recursos.ubicaciones.index', ['equipamiento' => $equipamiento->id, 'ubicacion' => $ubicacion->id]) }}">Modificar</a><form method="POST" action="{{ route('recursos.ubicaciones.destroy', ['equipamiento' => $equipamiento->id, 'ubicacion' => $ubicacion->id]) }}">@csrf @method('DELETE')<button type="submit" class="boton boton-secundario">Quitar ubicación</button></form></div>
+                <div class="flex flex-wrap gap-2"><a class="boton boton-secundario" href="{{ route('recursos.ubicaciones.index', ['equipamiento' => $equipamiento->id, 'ubicacion' => $ubicacion->id]) }}">Modificar</a><form method="POST" action="{{ route('recursos.ubicaciones.destroy', ['equipamiento' => $equipamiento->id, 'ubicacion' => $ubicacion->id]) }}" data-confirmar="Se quitará esta ubicación de la distribución del equipamiento." data-confirmar-titulo="Eliminar ubicación" data-confirmar-accion="Eliminar">@csrf @method('DELETE')<button type="submit" class="boton boton-secundario">Quitar ubicación</button></form></div>
             </article>
         @empty<div class="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">Este equipamiento aún no tiene unidades ubicadas.</div>@endforelse
     </section>

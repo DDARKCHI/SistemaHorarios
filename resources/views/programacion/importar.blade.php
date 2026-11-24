@@ -1,574 +1,169 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="panel-editor">
+    <x-encabezado-pagina titulo="Cargar programación anterior">
+        Analiza el archivo y revisa sus cambios antes de incorporarlo.
+    </x-encabezado-pagina>
 
-<div class="space-y-6">
-
-    @if(session('success'))
-        <div class="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm">
-            <p class="font-medium text-green-800">
-                {{ session('success') }}
-            </p>
-        </div>
+    @if (session('success'))
+        <x-aviso tipo="exito">{{ session('success') }}</x-aviso>
+    @endif
+    @if (session('error'))
+        <x-aviso tipo="error">{{ session('error') }}</x-aviso>
     @endif
 
-    @if(session('error'))
-        <div class="rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
-            <p class="font-medium text-red-800">
-                {{ session('error') }}
-            </p>
+    <form action="{{ route('programacion.importar.analizar') }}" method="POST" enctype="multipart/form-data" class="panel-seccion">
+        @csrf
+        <div class="grid min-w-0 gap-4 @min-[38rem]/seccion:grid-cols-[minmax(0,1fr)_auto] @min-[38rem]/seccion:items-end">
+            <div class="min-w-0">
+                <label for="archivo" class="mb-1.5 block text-sm font-semibold">Archivo de programación</label>
+                <x-campo-archivo id="archivo" name="archivo" ayuda="formatos-programacion" accept=".xlsx,.xls,.csv" required />
+                <p id="formatos-programacion" class="mt-1.5 text-xs text-texto-secundario">XLSX, XLS o CSV de hasta 20 MB.</p>
+            </div>
+            <button type="submit" class="boton boton-primario @min-[38rem]/seccion:mb-6">Analizar archivo</button>
         </div>
-    @endif
-
-    <div>
-        <h1 class="text-2xl font-semibold text-gray-800">
-            Cargar programación anterior
-        </h1>
-
-        <p class="mt-1 text-sm text-gray-500">
-            Carga una programación anterior para analizar sus datos antes de incorporarlos al sistema.
-        </p>
-    </div>
-
-    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-
-        <form
-            action="{{ route('programacion.importar.analizar') }}"
-            method="POST"
-            enctype="multipart/form-data"
-        >
-            @csrf
-
-            <div>
-                <label
-                    for="archivo"
-                    class="mb-2 block text-sm font-medium text-gray-700"
-                >
-                    Archivo de programación
-                </label>
-
-                <input
-                    id="archivo"
-                    name="archivo"
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    required
-                    class="block w-full rounded-lg border border-gray-300 bg-white text-sm text-gray-700 file:mr-4 file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium"
-                >
-
-                <p class="mt-2 text-xs text-gray-500">
-                    Formatos permitidos: XLSX, XLS o CSV. Tamaño máximo: 20 MB.
-                </p>
-            </div>
-
-            @error('archivo')
-                <div class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                    {{ $message }}
-                </div>
-            @enderror
-
-            <div class="mt-6 flex justify-end">
-                <button
-                    type="submit"
-                    class="rounded-lg bg-red-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-800"
-                >
-                    Analizar archivo
-                </button>
-            </div>
-
-        </form>
-
-    </div>
+        @error('archivo')
+            <p role="alert" class="mt-3 text-sm text-red-700">{{ $message }}</p>
+        @enderror
+    </form>
 
     @isset($resultado)
+        @php
+            $valido = $resultado['valido'] ?? false;
+            $comparacion = $resultado['comparacion'] ?? [];
+            $conciliacion = $comparacion['conciliacion'] ?? [];
+            $esNuevaProgramacion = $comparacion['es_nueva_programacion'] ?? false;
+            $hayCambios = $comparacion['hay_cambios'] ?? false;
+            $detalles = collect($comparacion['detalle_cambios'] ?? []);
+            $gruposCambios = $detalles->groupBy(fn ($cambio) => json_encode([$cambio['entidad'], $cambio['nombre']]));
+            $erroresComparacion = collect($comparacion['errores'] ?? []);
+            $erroresConciliacion = collect($conciliacion['errores'] ?? []);
+            $errores = $erroresComparacion->merge($erroresConciliacion)
+                ->unique(fn ($error) => ($error['fila'] ?? '').'|'.($error['mensaje'] ?? ''))->values();
+            $avisos = collect($conciliacion['avisos'] ?? [])->unique()->values();
+            $puedeConfirmar = $valido && ($esNuevaProgramacion || $hayCambios)
+                && $errores->isEmpty() && empty($conciliacion['total_errores'])
+                && filled($resultado['ruta_temporal'] ?? null);
+        @endphp
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-
-            <div class="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
+        <section class="min-w-0 overflow-hidden rounded-xl border border-borde bg-superficie shadow-sm" aria-labelledby="titulo-analisis">
+            <header class="flex flex-wrap items-start justify-between gap-3 border-b border-borde p-4 sm:px-5">
                 <div class="min-w-0">
-                    <h2 class="text-lg font-semibold text-gray-800">
-                        Resultado del análisis
-                    </h2>
-
-                    <p class="mt-1 break-words text-sm text-gray-500">
-                        {{ $resultado['nombre_archivo'] ?? 'Archivo' }}
-                    </p>
-                </div>
-
-                @if($resultado['valido'] ?? false)
-
-                    <span class="shrink-0 self-start rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-                        Estructura válida
-                    </span>
-
-                @else
-
-                    <span class="shrink-0 self-start rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700">
-                        Estructura incompleta
-                    </span>
-
-                @endif
-
-            </div>
-
-            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                <div class="rounded-lg bg-gray-50 p-4">
-                    <p class="text-sm text-gray-500">
-                        Columnas
-                    </p>
-
-                    <p class="mt-1 text-2xl font-semibold text-gray-800">
-                        {{ $resultado['total_columnas'] ?? 0 }}
-                    </p>
-                </div>
-
-                <div class="rounded-lg bg-gray-50 p-4">
-                    <p class="text-sm text-gray-500">
-                        Filas vacías
-                    </p>
-
-                    <p class="mt-1 text-2xl font-semibold text-gray-800">
-                        {{ $resultado['filas_vacias'] ?? 0 }}
-                    </p>
-                </div>
-
-            </div>
-
-            @if(!($resultado['valido'] ?? false))
-
-                <div class="mt-6 rounded-lg bg-red-50 p-4">
-
-                    <h3 class="font-medium text-red-800">
-                        Columnas requeridas no encontradas
-                    </h3>
-
-                    @if(!empty($resultado['faltantes']))
-
-                        <ul class="mt-2 list-disc pl-5 text-sm text-red-700">
-                            @foreach($resultado['faltantes'] as $faltante)
-                                <li>
-                                    {{ $faltante }}
-                                </li>
-                            @endforeach
-                        </ul>
-
-                    @else
-
-                        <p class="mt-2 text-sm text-red-700">
-                            El archivo no pudo ser validado correctamente.
+                    <h2 id="titulo-analisis" class="font-semibold">Resultado del análisis</h2>
+                    <p class="mt-1 break-words text-sm text-texto-secundario">{{ $resultado['nombre_archivo'] ?? 'Archivo' }}</p>
+                    @if ($valido && filled($comparacion['periodo_actual'] ?? null))
+                        <p class="mt-1 text-xs text-texto-secundario">
+                            Período {{ $comparacion['periodo_actual'] }}
+                            @if (isset($comparacion['version_anterior']['version']))
+                                · Comparado con V{{ $comparacion['version_anterior']['version'] }}
+                            @endif
                         </p>
+                    @endif
+                </div>
+                <span @class([
+                    'shrink-0 rounded-md px-2.5 py-1 text-xs font-semibold',
+                    'bg-green-50 text-green-800' => $valido,
+                    'bg-red-50 text-red-800' => ! $valido,
+                ])>{{ $valido ? 'Estructura válida' : 'Estructura incompleta' }}</span>
+            </header>
 
+            @if (! $valido)
+                <div class="p-4 sm:p-5">
+                    <x-aviso tipo="error" titulo="Columnas requeridas no encontradas">
+                        @if (! empty($resultado['faltantes']))
+                            <ul class="mt-1 list-disc space-y-1 pl-5">
+                                @foreach ($resultado['faltantes'] as $faltante)
+                                    <li>{{ $faltante }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            El archivo no pudo ser validado correctamente.
+                        @endif
+                    </x-aviso>
+                </div>
+            @elseif ($comparacion)
+                <div class="space-y-5 p-4 sm:p-5">
+                    @if ($detalles->isNotEmpty())
+                        <div class="flex flex-wrap items-end justify-between gap-2">
+                            <h3 class="font-semibold">Cambios del archivo</h3>
+                            <p class="text-xs text-texto-secundario">
+                                {{ number_format($gruposCambios->count(), 0, ',', '.') }}
+                                {{ $gruposCambios->count() === 1 ? 'registro con cambios' : 'registros con cambios' }}
+                            </p>
+                        </div>
+                        @include('programacion.detalle-cambios-importacion', ['gruposCambios' => $gruposCambios])
+                    @elseif (! $hayCambios && ! $esNuevaProgramacion)
+                        <div class="rounded-lg bg-fondo px-4 py-3 text-sm">
+                            <p class="font-semibold">No se detectaron cambios</p>
+                            <p class="mt-1 text-texto-secundario">El archivo coincide con la última programación anterior del período.</p>
+                        </div>
+                    @elseif ($esNuevaProgramacion)
+                        <p class="rounded-lg bg-fondo px-4 py-3 text-sm text-texto-secundario">Se creará la primera versión de programación anterior del período.</p>
                     @endif
 
-                </div>
+                    @if ($errores->isNotEmpty() || ($conciliacion['total_errores'] ?? 0))
+                        <x-aviso tipo="error" titulo="Revisa estas observaciones antes de importar">
+                            <ul class="mt-1 list-disc space-y-1 pl-5">
+                                @foreach ($errores->take(30) as $error)
+                                    <li>
+                                        @if (filled($error['fila'] ?? null))Fila {{ $error['fila'] }}. @endif
+                                        {{ $error['mensaje'] ?? 'Revisa los datos del archivo.' }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if ($errores->count() > 30 || ($conciliacion['total_errores'] ?? 0) > $erroresConciliacion->count())
+                                <p class="mt-2">Se muestran las primeras observaciones. Corrígelas y vuelve a analizar el archivo para continuar.</p>
+                            @endif
+                        </x-aviso>
+                    @endif
 
-            @else
-
-                @if(isset($resultado['comparacion']))
-
-                    @php
-                        $comparacion = $resultado['comparacion'];
-                        $diagnostico = $comparacion['diagnostico'] ?? [];
-                        $totales = $comparacion['totales'] ?? [];
-
-                        $esNuevaProgramacion = $comparacion['es_nueva_programacion'] ?? false;
-                        $hayCambios = $comparacion['hay_cambios'] ?? false;
-                        $resumenCambios = $comparacion['resumen_cambios'] ?? [];
-
-                        $mostrarCambios =
-                            !$esNuevaProgramacion
-                            && $hayCambios
-                            && count($resumenCambios) > 0;
-
-                        $puedeConfirmar =
-                            $esNuevaProgramacion
-                            || $hayCambios;
-                    @endphp
-
-                    <div class="mt-8">
-
-                        <h3 class="text-lg font-semibold text-gray-800">
-                            Resumen de la programación
-                        </h3>
-
-                        <p class="mt-1 text-sm text-gray-500">
-                            Datos generales detectados en el archivo.
-                        </p>
-
-                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Períodos académicos
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['periodos'] ?? 0 }}
-                                </p>
+                    @if ($conciliacion)
+                        <details class="rounded-lg border border-borde bg-fondo px-4 py-3">
+                            <summary class="cursor-pointer text-sm font-semibold">Qué ocurre al guardar</summary>
+                            <div class="mt-3 space-y-2 text-sm text-texto-secundario">
+                                @if ($puedeConfirmar)
+                                    <p>Al confirmar el archivo, se creará una nueva versión de la programación anterior.</p>
+                                @endif
+                                @foreach ($avisos as $aviso)
+                                    <p>{{ $aviso }}</p>
+                                @endforeach
+                                @if ($puedeConfirmar)
+                                    <p class="text-xs leading-5">Tienes 30 minutos para confirmar este análisis.</p>
+                                @endif
                             </div>
+                        </details>
+                    @endif
 
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Carreras
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['carreras'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Asignaturas
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['asignaturas'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Secciones
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['secciones'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Profesores
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['profesores'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Grupos
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['grupos'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Relaciones sección-carrera
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['relaciones_seccion_carrera'] ?? 0 }}
-                                </p>
-                            </div>
-
-                            <div class="rounded-xl border border-gray-200 bg-white p-5">
-                                <p class="text-sm text-gray-500">
-                                    Registros procesados
-                                </p>
-
-                                <p class="mt-2 text-3xl font-semibold text-gray-800">
-                                    {{ $totales['registros_excel'] ?? 0 }}
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="mt-10">
-
-                        <h3 class="text-lg font-semibold text-gray-800">
-                            Diagnóstico de la estructura académica
-                        </h3>
-
-                        <p class="mt-1 text-sm text-gray-500">
-                            Información especial detectada en la programación.
-                        </p>
-
-                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-                            <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-
-                                <p class="text-sm text-yellow-700">
-                                    Cursos asociados a más de una carrera
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-yellow-800">
-                                    {{ $diagnostico['cursos_compartidos'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Cursos compartidos con un profesor
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['cursos_compartidos_un_profesor'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-
-                                <p class="text-sm text-gray-500">
-                                    Cursos compartidos con varios profesores
-                                </p>
-
-                                <p class="mt-1 text-2xl font-semibold text-gray-800">
-                                    {{ $diagnostico['cursos_compartidos_varios_profesores'] ?? 0 }}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        @if(($diagnostico['cursos_compartidos'] ?? 0) > 0)
-
-                            <div class="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-
-                                <p class="text-sm text-yellow-700">
-                                    Los cursos compartidos se mantendrán como una misma sección y quedarán relacionados con las carreras correspondientes.
-                                </p>
-
-                            </div>
-
+                    <div class="flex flex-col-reverse gap-3 border-t border-borde pt-4 sm:flex-row sm:justify-end">
+                        @if (filled($resultado['ruta_temporal'] ?? null))
+                            <form action="{{ route('programacion.importar.cancelar') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="ruta_temporal" value="{{ $resultado['ruta_temporal'] }}">
+                                <button type="submit" class="boton boton-secundario w-full sm:w-auto">{{ $puedeConfirmar ? 'Cancelar' : 'Volver' }}</button>
+                            </form>
+                        @else
+                            <a href="{{ route('programacion.importar') }}" class="boton boton-secundario">Volver a la carga</a>
                         @endif
 
-                    </div>
-
-                    @if($esNuevaProgramacion)
-
-                        <div class="mt-10 rounded-lg border border-blue-200 bg-blue-50 p-4">
-
-                            <p class="font-medium text-blue-800">
-                                Primera versión de programación
-                            </p>
-
-                            <p class="mt-1 text-sm text-blue-700">
-                                Todos los datos detectados en el archivo serán incorporados como la versión inicial de la programación anterior.
-                            </p>
-
-                        </div>
-
-                    @elseif($mostrarCambios)
-
-                        <div class="mt-10">
-
-                            <h3 class="text-lg font-semibold text-gray-800">
-                                Cambios detectados
-                            </h3>
-
-                            <p class="mt-1 text-sm text-gray-500">
-                                Cambios encontrados respecto de la versión actual de la programación.
-                            </p>
-
-                            <div class="mt-4 space-y-3">
-
-                                @foreach($resumenCambios as $cambio)
-
-                                    <div class="flex items-start justify-between gap-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-
-                                        <div>
-
-                                            <p class="font-medium text-blue-800">
-                                                {{ ucfirst($cambio['descripcion'] ?? 'Cambio detectado') }}
-                                            </p>
-
-                                            <p class="mt-1 text-sm text-blue-700">
-
-                                                @switch($cambio['tipo'] ?? '')
-
-                                                    @case('periodos')
-                                                        Se detectaron nuevos períodos académicos.
-                                                        @break
-
-                                                    @case('carreras')
-                                                        Se detectaron nuevas carreras.
-                                                        @break
-
-                                                    @case('asignaturas')
-                                                        Se detectaron nuevas asignaturas.
-                                                        @break
-
-                                                    @case('profesores')
-                                                        Se detectaron nuevos profesores.
-                                                        @break
-
-                                                    @case('profesores_modificados')
-                                                        Se modificaron datos de profesores existentes.
-                                                        @break
-
-                                                    @case('secciones_nuevas')
-                                                        Se detectaron nuevas secciones.
-                                                        @break
-
-                                                    @case('secciones_modificadas')
-                                                        Se detectaron modificaciones en secciones existentes.
-                                                        @break
-
-                                                    @case('relaciones_nuevas')
-                                                        Se detectaron nuevas relaciones entre secciones y carreras.
-                                                        @break
-
-                                                    @case('relaciones_modificadas')
-                                                        Se detectaron modificaciones en relaciones entre secciones y carreras.
-                                                        @break
-
-                                                    @case('grupos_nuevos')
-                                                        Se detectaron nuevos grupos.
-                                                        @break
-
-                                                    @case('horarios_nuevos')
-                                                        Se detectaron nuevos horarios.
-                                                        @break
-
-                                                    @case('horarios_modificados')
-                                                        Se detectaron modificaciones de horarios.
-                                                        @break
-
-                                                    @default
-                                                        Se detectaron cambios en la programación.
-
-                                                @endswitch
-
-                                            </p>
-
-                                        </div>
-
-                                        <span class="shrink-0 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
-                                            {{ $cambio['cantidad'] ?? 0 }}
-                                        </span>
-
-                                    </div>
-
-                                @endforeach
-
-                            </div>
-
-                        </div>
-
-                    @elseif(!$hayCambios)
-
-                        <div class="mt-10 rounded-lg border border-green-200 bg-green-50 p-4">
-
-                            <p class="font-medium text-green-800">
-                                No se detectaron cambios
-                            </p>
-
-                            <p class="mt-1 text-sm text-green-700">
-                                El archivo contiene la misma información que la versión actual de la programación.
-                            </p>
-
-                        </div>
-
-                    @endif
-
-                    @if(($totales['errores'] ?? 0) > 0)
-
-                        <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-4">
-
-                            <p class="font-medium text-red-800">
-                                Se encontraron
-                                {{ $totales['errores'] }}
-                                registros con errores.
-                            </p>
-
-                        </div>
-
-                    @else
-
-                        <div class="mt-6 rounded-lg border border-green-200 bg-green-50 p-4">
-
-                            <p class="font-medium text-green-800">
-                                No se encontraron errores en los registros analizados.
-                            </p>
-
-                        </div>
-
-                    @endif
-
-                    <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
-                        <form
-                            action="{{ route('programacion.importar.cancelar') }}"
-                            method="POST"
-                        >
-                            @csrf
-
-                            <input
-                                type="hidden"
-                                name="ruta_temporal"
-                                value="{{ $resultado['ruta_temporal'] ?? '' }}"
-                            >
-
-                            <button
-                                type="submit"
-                                class="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:w-auto"
-                            >
-                                {{ $puedeConfirmar ? 'Cancelar' : 'Volver' }}
-                            </button>
-                        </form>
-
-                        @if($puedeConfirmar)
-
+                        @if ($puedeConfirmar)
                             <form
                                 action="{{ route('programacion.importar.confirmar') }}"
                                 method="POST"
-                                onsubmit="const boton = this.querySelector('button[type=submit]'); boton.disabled = true; boton.textContent = 'Cargando programación...';"
+                                data-confirmar="Los datos de {{ $resultado['nombre_archivo'] ?? 'este archivo' }} se incorporarán como una versión de programación anterior."
+                                data-confirmar-titulo="Confirmar carga de programación"
+                                data-confirmar-accion="Cargar programación"
                             >
                                 @csrf
-
-                                <input
-                                    type="hidden"
-                                    name="ruta_temporal"
-                                    value="{{ $resultado['ruta_temporal'] ?? '' }}"
-                                >
-
-                                <input
-                                    type="hidden"
-                                    name="nombre_archivo"
-                                    value="{{ $resultado['nombre_archivo'] ?? '' }}"
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="w-full rounded-lg bg-red-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                                >
-                                    Confirmar carga
-                                </button>
+                                <input type="hidden" name="ruta_temporal" value="{{ $resultado['ruta_temporal'] }}">
+                                <input type="hidden" name="nombre_archivo" value="{{ $resultado['nombre_archivo'] ?? '' }}">
+                                <button type="submit" class="boton boton-primario w-full sm:w-auto">Confirmar carga</button>
                             </form>
-
                         @endif
-
                     </div>
-
-                    @if($puedeConfirmar)
-
-                        <p class="mt-2 text-right text-xs text-gray-400">
-                            Al confirmar, los datos del archivo se incorporarán como una nueva versión de la programación anterior.
-                        </p>
-
-                    @endif
-
-                @endif
-
+                </div>
             @endif
-
-        </div>
-
+        </section>
     @endisset
-
 </div>
-
 @endsection

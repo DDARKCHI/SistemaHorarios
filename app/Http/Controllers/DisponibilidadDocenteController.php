@@ -9,18 +9,6 @@ use Illuminate\Validation\{Rule, ValidationException};
 
 class DisponibilidadDocenteController extends Controller
 {
-    public function index(Request $request)
-    {
-        $datos = $request->validate(['periodo_id' => ['nullable', 'integer', 'exists:periodos_academicos,id'],
-            'estado' => ['nullable', Rule::in(['Pendiente', 'En revisión', 'Aprobada', 'Rechazada', 'Cancelada'])]]);
-        $periodos = PeriodoAcademico::orderByDesc('anio')->orderByDesc('numero_semestre')->get();
-        $periodo = isset($datos['periodo_id']) ? $periodos->firstWhere('id', $datos['periodo_id']) : $periodos->firstWhere('estado', true);
-        $profesores = Profesor::where('estado', true)->when($periodo, fn ($q) => $q->where('universidad_id', $periodo->universidad_id))->orderBy('apellido')->orderBy('nombre')->get();
-        $solicitudes = SolicitudDisponibilidad::with(['profesor', 'periodoAcademico'])->when($periodo, fn ($q) => $q->where('periodo_academico_id', $periodo->id))
-            ->when($datos['estado'] ?? null, fn ($q, $estado) => $q->where('estado', $estado))->latest('id')->paginate(15)->withQueryString();
-        return view('disponibilidad.index', compact('periodos', 'periodo', 'profesores', 'solicitudes'));
-    }
-
     public function store(Request $request)
     {
         $datos = $request->validate(['profesor_id' => ['required', 'integer', 'exists:profesores,id'],
@@ -28,8 +16,8 @@ class DisponibilidadDocenteController extends Controller
             'fecha_limite' => ['required', 'date_format:Y-m-d', 'after_or_equal:today', 'before_or_equal:'.now()->addYear()->toDateString()],
             'observaciones' => ['nullable', 'string', 'max:2000']]);
         $solicitud = DB::transaction(function () use ($request, $datos) {
+            $periodo = PeriodoAcademico::lockForUpdate()->findOrFail($datos['periodo_academico_id']);
             $profesor = Profesor::lockForUpdate()->findOrFail($datos['profesor_id']);
-            $periodo = PeriodoAcademico::findOrFail($datos['periodo_academico_id']);
             if (! $profesor->estado || ! $periodo->estado || $profesor->universidad_id !== $periodo->universidad_id) {
                 throw ValidationException::withMessages(['profesor_id' => 'Selecciona un docente activo de la institución del período activo.']);
             }
@@ -46,10 +34,19 @@ class DisponibilidadDocenteController extends Controller
 
     public function show(SolicitudDisponibilidad $solicitud)
     {
-        $solicitud->load(['profesor', 'periodoAcademico', 'respuestas']);
-        $respuesta = $solicitud->respuestas->sortByDesc('id')->first();
-        $enlace = $this->abierta($solicitud) ? URL::temporarySignedRoute('disponibilidad.publica', $solicitud->fecha_limite->endOfDay(), ['solicitud' => $solicitud->id]) : null;
-        return view('disponibilidad.detalle', compact('solicitud', 'respuesta', 'enlace') + $this->calendario());
+        return view('disponibilidad.detalle', $this->datosDetalle($solicitud));
+    }
+
+    public function datosDetalle(SolicitudDisponibilidad $solicitud): array
+    {
+        $solicitud->loadMissing('profesor', 'periodoAcademico', 'recordatorios');
+        $respuesta = $solicitud->respuestas()->latest('id')->first();
+        $usaCuenta = $solicitud->enviosAcceso()->exists();
+        $enlace = ! $usaCuenta && $this->abierta($solicitud) && $solicitud->profesor?->estado && $solicitud->periodoAcademico?->estado
+            ? URL::temporarySignedRoute('disponibilidad.publica', $solicitud->fecha_limite->copy()->endOfDay(), ['solicitud' => $solicitud->id])
+            : null;
+
+        return compact('solicitud', 'respuesta', 'enlace', 'usaCuenta') + $this->calendarioRespuesta($respuesta);
     }
 
     public function publica(Request $request, SolicitudDisponibilidad $solicitud)
@@ -60,6 +57,7 @@ class DisponibilidadDocenteController extends Controller
             $datos = $request->validate(['bloques' => ['nullable', 'array', 'max:1000'], 'bloques.*' => ['required', 'string', 'distinct', 'regex:/^\d+:\d+$/'],
                 'sin_disponibilidad' => ['nullable', 'boolean'], 'observaciones' => ['nullable', 'string', 'max:2000']]);
             DB::transaction(function () use ($request, $solicitud, $datos) {
+                PeriodoAcademico::lockForUpdate()->findOrFail($solicitud->periodo_academico_id);
                 $profesor = Profesor::lockForUpdate()->findOrFail($solicitud->profesor_id);
                 $registro = SolicitudDisponibilidad::lockForUpdate()->findOrFail($solicitud->id);
                 abort_unless($profesor->estado && $registro->periodoAcademico->estado && $this->abierta($registro), 410, 'La solicitud venció o ya fue respondida.');
@@ -86,6 +84,7 @@ class DisponibilidadDocenteController extends Controller
         $datos = $request->validate(['decision' => ['required', Rule::in(['aprobar', 'rechazar'])],
             'motivo' => ['required_if:decision,rechazar', 'nullable', 'string', 'max:2000']]);
         DB::transaction(function () use ($request, $solicitud, $datos) {
+            PeriodoAcademico::lockForUpdate()->findOrFail($solicitud->periodo_academico_id);
             $profesor = Profesor::lockForUpdate()->findOrFail($solicitud->profesor_id);
             $registro = SolicitudDisponibilidad::lockForUpdate()->findOrFail($solicitud->id);
             $respuesta = $registro->respuestas()->latest('id')->lockForUpdate()->first();
@@ -136,6 +135,19 @@ class DisponibilidadDocenteController extends Controller
     {
         return ['dias' => Dia::where('estado', true)->orderBy('numero')->get(),
             'bloques' => BloqueHorario::where('estado', true)->orderBy('hora_inicio')->get()];
+    }
+
+    private function calendarioRespuesta(?RespuestaDisponibilidad $respuesta): array
+    {
+        $pares = collect($respuesta?->bloques['calendario'] ?? [])
+            ->filter(fn ($clave) => is_string($clave) && preg_match('/^\d+:\d+$/', $clave))
+            ->map(fn ($clave) => explode(':', $clave));
+        if ($pares->isEmpty()) return $this->calendario();
+
+        return [
+            'dias' => Dia::whereIn('id', $pares->pluck(0)->unique())->orderBy('numero')->get(),
+            'bloques' => BloqueHorario::whereIn('id', $pares->pluck(1)->unique())->orderBy('hora_inicio')->get(),
+        ];
     }
 
     private function claves(array $calendario): array

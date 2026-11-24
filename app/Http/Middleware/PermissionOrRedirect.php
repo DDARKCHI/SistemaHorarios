@@ -24,13 +24,10 @@ class PermissionOrRedirect
             return $next($request);
         }
 
-        if ($usuario->can('ver panel inicio')) {
-            return redirect()->route('inicio');
-        }
+        if ($request->expectsJson()) return response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403);
 
-        if ($usuario->can('ver programacion semestral')) {
-            return redirect()->route('programacion.semestral');
-        }
+        $entrada = \App\Support\PermisosSistema::entrada($usuario);
+        if ($entrada) return redirect()->route($entrada)->with('error', 'Tu perfil no tiene permiso para acceder a esa función.');
 
         Auth::logout();
 

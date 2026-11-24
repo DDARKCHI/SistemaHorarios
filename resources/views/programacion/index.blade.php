@@ -3,7 +3,7 @@
 @section('content')
 
 <x-encabezado-pagina titulo="Consultar programación anterior">
-    Revisa una programación anterior y consulta sus cursos, docentes y horarios mediante los filtros.
+    Consulta cursos, docentes y horarios de versiones anteriores.
 </x-encabezado-pagina>
 
 <div class="min-w-0 w-full">
@@ -14,12 +14,12 @@
         data-filtros-url="{{ route('programacion.filtros') }}"
         method="GET"
         action="{{ route('programacion.index') }}"
-        class="mb-2 rounded-lg border border-gray-200 bg-white p-5 shadow-sm sm:p-6"
+        class="@container/filtros-programacion mb-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
     >
 
-        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end">
+        <div class="grid min-w-0 grid-cols-1 items-end gap-3 @min-[19rem]/filtros-programacion:grid-cols-2 @min-[40rem]/filtros-programacion:grid-cols-6 @min-[56rem]/filtros-programacion:grid-cols-20">
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-3">
                 <label for="periodo_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Período
                 </label>
@@ -27,7 +27,7 @@
                 <select data-select-buscable
                     id="periodo_id"
                     name="periodo_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     @foreach ($periodos as $periodo)
                         <option
@@ -40,7 +40,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
                 <label for="version_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Versión
                 </label>
@@ -48,7 +48,7 @@
                 <select data-select-buscable
                     id="version_id"
                     name="version_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     @foreach ($versiones as $version)
                         <option
@@ -64,7 +64,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
                 <label for="sede_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Sede
                 </label>
@@ -72,7 +72,7 @@
                 <select data-select-buscable
                     id="sede_id"
                     name="sede_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas las sedes
@@ -89,7 +89,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-9">
                 <label for="carrera_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Carrera
                 </label>
@@ -97,7 +97,7 @@
                 <select data-select-buscable
                     id="carrera_id"
                     name="carrera_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas las carreras
@@ -114,7 +114,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-2">
                 <label for="semestre" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Semestre
                 </label>
@@ -122,7 +122,7 @@
                 <select data-select-buscable
                     id="semestre"
                     name="semestre"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todos
@@ -139,7 +139,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-2">
                 <label for="seccion_numero" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Sección
                 </label>
@@ -147,7 +147,7 @@
                 <select data-select-buscable
                     id="seccion_numero"
                     name="seccion_numero"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todas
@@ -164,7 +164,7 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-6">
                 <label for="asignatura_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
                     Ramo
                 </label>
@@ -172,7 +172,7 @@
                 <select data-select-buscable
                     id="asignatura_id"
                     name="asignatura_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
                         Todos los ramos
@@ -189,18 +189,18 @@
                 </select>
             </div>
 
-            <div class="min-w-0">
+            <div class="min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-6">
                 <label for="profesor_id" class="mb-1.5 block text-sm font-semibold leading-5 text-gray-700">
-                    Profesor
+                    Docente
                 </label>
 
                 <select data-select-buscable
                     id="profesor_id"
                     name="profesor_id"
-                    class="h-9 min-w-0 w-full max-w-full truncate rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                    class="h-11 w-full min-w-0 truncate rounded-lg border border-borde bg-superficie px-2.5 text-xs text-texto focus:border-institucional focus:ring-institucional"
                 >
                     <option value="">
-                        Todos los profesores
+                        Todos los docentes
                     </option>
 
                     @foreach ($profesores as $profesor)
@@ -214,43 +214,17 @@
                 </select>
             </div>
 
-            <div class="flex min-w-0 flex-wrap items-center gap-2 sm:col-span-2 xl:col-span-4">
-            <button
-                type="submit"
-                id="aplicar-filtros"
-                class="h-9 min-w-0 w-full max-w-full whitespace-nowrap rounded-md bg-red-700 px-4 text-xs font-semibold text-white transition hover:bg-red-800 sm:w-auto"
-            >
-                Aplicar
-            </button>
-
-            <a
-                href="{{ route('programacion.index') }}"
-               class="flex h-9 min-w-0 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 transition hover:bg-gray-50 sm:w-auto"
-            >
-                Limpiar
-            </a>
-
-            <div class="flex min-w-0 flex-wrap items-center gap-x-1 px-1 text-xs text-gray-500 sm:ml-auto">
-
-    @if ($hayFiltroAplicado)
-
-        <span class="font-semibold text-gray-700">
-            {{ number_format($horarios->count()) }}
-        </span>
-
-        <span class="ml-1">
-            {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
-        </span>
-
-    @else
-
-        <span class="text-gray-400">
-            Sin consulta
-        </span>
-
-    @endif
-
-</div>
+            <div class="col-span-full min-w-0 @min-[40rem]/filtros-programacion:col-span-2 @min-[56rem]/filtros-programacion:col-span-4">
+                @if ($hayFiltroAplicado)
+                    <p class="mb-1.5 text-right text-xs leading-5 text-texto-secundario">
+                        <span class="font-semibold text-texto">{{ number_format($horarios->count(), 0, ',', '.') }}</span>
+                        {{ $horarios->count() === 1 ? 'horario' : 'horarios' }}
+                    </p>
+                @endif
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="submit" id="aplicar-filtros" class="boton boton-primario">Aplicar</button>
+                    <a href="{{ route('programacion.index') }}" class="boton boton-secundario">Limpiar</a>
+                </div>
             </div>
         </div>
         <p data-estado-filtros role="status" aria-live="polite" class="mt-3 hidden text-sm text-gray-500"></p>
@@ -283,7 +257,7 @@
         </div>
 
         <div class="mt-1 text-xs text-gray-400">
-            Puedes filtrar por sede, carrera, semestre, sección, ramo o profesor.
+            Puedes filtrar por sede, carrera, semestre, sección, ramo o docente.
         </div>
 
     </div>
@@ -306,9 +280,7 @@
 
         <div class="min-w-0 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
 
-            <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 xl:hidden">Desliza la tabla para ver todos los días.</p>
-
-            <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación anterior" tabindex="0">
+            <div id="cuadricula-programacion-anterior" data-calendario-semanal class="min-w-0 max-w-full overflow-x-auto overscroll-x-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Horario de programación anterior" tabindex="0">
 
                 <table class="w-full min-w-[900px] table-fixed border-collapse">
 
@@ -323,12 +295,12 @@
                     <thead>
                         <tr class="bg-gray-100">
 
-                            <th class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-1.5 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                            <th scope="col" data-eje-horas class="sticky left-0 z-20 border-b border-r border-gray-200 bg-gray-100 px-1.5 py-2 text-left text-xs font-semibold text-gray-700">
                                 Módulo
                             </th>
 
                             @foreach ($diasVisualizacion as $dia)
-                                <th class="border-b border-r border-gray-200 px-1.5 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-gray-700 last:border-r-0">
+                                <th scope="col" data-dia-semanal="{{ $dia->nombre }}" class="border-b border-r border-gray-200 px-1.5 py-2 text-center text-xs font-semibold text-gray-700 last:border-r-0">
                                     {{ $dia->nombre }}
                                 </th>
                             @endforeach
@@ -450,7 +422,7 @@
                                                                 >
 
                                                                     <span class="font-semibold text-gray-700">
-                                                                        Prof.:
+                                                                        Docente:
                                                                     </span>
 
                                                                     @foreach ($horario->profesores as $horarioProfesor)
@@ -470,7 +442,7 @@
                                                                 <div>
 
                                                                     <span class="font-semibold text-gray-700">
-                                                                        Prof.:
+                                                                        Docente:
                                                                     </span>
 
                                                                     @foreach ($seccion->profesores as $seccionProfesor)

@@ -210,8 +210,8 @@ class AsignacionHorarioController extends Controller
             'grupo_seccion_id.*' => 'Selecciona un grupo válido.',
             'version_id.*' => 'Vuelve a abrir la asignación para confirmar la versión semestral vigente.',
             'dia_id.*' => 'Selecciona un día válido.',
-            'profesores_ids.*' => 'Selecciona al menos un profesor del grupo (hasta 100).',
-            'profesores_ids.*.*' => 'Los profesores deben ser válidos y no repetirse.',
+            'profesores_ids.*' => 'Selecciona al menos un docente del grupo (hasta 100).',
+            'profesores_ids.*.*' => 'Los docentes deben ser válidos y no repetirse.',
             'bloques_horarios.*' => 'Selecciona al menos un módulo (hasta 255).',
             'bloques_horarios.*.*' => 'Los módulos deben ser válidos y no repetirse.',
             'observaciones.*' => 'Las observaciones admiten hasta 255 caracteres.',
@@ -238,12 +238,12 @@ class AsignacionHorarioController extends Controller
             'profesor_id' => ['required', 'integer', 'exists:profesores,id'],
             'accion_docente' => ['required', 'in:reemplazar,agregar'],
             'huella_profesores' => ['required', 'string', 'regex:/^[a-f0-9]{64}$/D'],
-        ], ['profesor_id.*' => 'Selecciona un profesor registrado.', 'accion_docente.*' => 'Selecciona cómo asignar el profesor.',
-            'version_id.*' => 'Actualiza la página para revisar la versión vigente.', 'huella_profesores.*' => 'Actualiza la página antes de modificar los profesores.']);
+        ], ['profesor_id.*' => 'Selecciona un docente registrado.', 'accion_docente.*' => 'Selecciona cómo asignar el docente.',
+            'version_id.*' => 'Actualiza la página para revisar la versión vigente.', 'huella_profesores.*' => 'Actualiza la página antes de modificar los docentes.']);
         $resultado = $asignador->asignarProfesor($horario, $datos, $request->user()->id, $request->ip());
         return redirect()->route('programacion.asignacion.horarios', ['periodo_id' => $resultado['periodo_id'], 'seccion_id' => $resultado['seccion_id'],
             'carrera_id' => $request->integer('carrera_id') ?: null, 'semestre' => $request->integer('semestre') ?: null])
-            ->with('success', 'Profesor asignado al horario correctamente.'.($resultado['sin_declaracion'] ? ' El profesor no ha informado disponibilidad para este período.' : ''));
+            ->with('success', 'Docente asignado al horario correctamente.'.($resultado['sin_declaracion'] ? ' El docente no ha informado disponibilidad para este período.' : ''));
     }
 
     private function obtenerVersionSemestral(

@@ -14,8 +14,10 @@ class OpcionCambioHorario extends Model
         'bloque_horario_id',
         'prioridad',
         'observaciones',
-        'estado',
+        'estado', 'datos',
     ];
+
+    protected $casts = ['datos' => 'array'];
 
     public function solicitudCambioHorario()
     {

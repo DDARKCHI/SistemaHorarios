@@ -9,6 +9,11 @@
         request()->routeIs('programacion.semestral*')
 
         || request()->routeIs('programacion.generar*')
+        || request()->routeIs('programacion.preparacion*')
+        || request()->routeIs('programacion.reorganizacion*')
+        || request()->routeIs('programacion.completar*')
+        || request()->routeIs('programacion.version*')
+        || request()->routeIs('programacion.cambios*')
 
         || request()->routeIs('programacion.asignacion*')
 
@@ -70,7 +75,7 @@
 
     id="sidebar-escritorio"
 
-    class="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-borde bg-superficie transition-all duration-300 lg:block"
+    class="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-borde bg-superficie transition-[width] duration-300 lg:block"
 
 >
 
@@ -130,19 +135,21 @@
 
             id="contenedor-logo-prosec"
 
-            class="flex justify-center border-b border-borde px-5 py-5 transition-all duration-300"
+            class="flex h-24 shrink-0 items-center justify-center border-b border-borde px-5 py-5"
 
         >
 
             <img
 
                 id="logo-prosec-completo"
+                width="179"
+                height="56"
 
-                src="{{ asset('images/prosec-logo.svg') }}"
+                src="{{ $identidad['principal_url'] }}"
 
-                alt="PROSEC"
+                alt="{{ $identidad['nombre'] }}"
 
-                class="h-auto w-full max-w-[178.5px]"
+                class="h-full w-full max-w-[178.5px] object-contain"
 
             >
 
@@ -151,12 +158,15 @@
             <img
 
                 id="logo-prosec-mini"
+                width="55"
+                height="55"
+                hidden
 
-                src="{{ asset('images/prosec-mini.svg') }}"
+                src="{{ $identidad['compacto_url'] }}"
 
-                alt="PROSEC"
+                alt="{{ $identidad['nombre'] }}"
 
-                class="hidden h-auto w-full max-w-[55px]"
+                class="hidden h-full w-full max-w-[55px] object-contain"
 
             >
 
@@ -165,7 +175,7 @@
 
 
         <nav class="flex-1 overflow-y-auto px-4 py-5">
-            @include('components.enlace-disponibilidad')
+
 
 
 
@@ -184,7 +194,7 @@
                     aria-label="Inicio"
                     title="Inicio"
 
-                    class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+                    class="group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors
 
                         {{ $inicioActivo
 
@@ -229,6 +239,7 @@
             </div>
 
             @endcan
+            @include('components.enlace-disponibilidad')
 
 
 
@@ -345,37 +356,7 @@
 
                     @can('ver programacion semestral')
 
-                    <a
-
-                        href="{{ route('programacion.semestral') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('programacion.semestral')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('programacion.semestral')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
-
-
-
-                        <span>Visualizar programación</span>
-
-                    </a>
+                    <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Visualizar programación</x-enlace-submenu>
 
                     @endcan
 
@@ -383,15 +364,7 @@
 
                     @can('generar programacion semestral')
 
-                    <div class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-400">
-
-                        <span class="h-1.5 w-1.5 rounded-full bg-gray-300"></span>
-
-                        <span class="flex-1">Generar programación</span>
-
-                        <span class="text-[10px]">Próximamente</span>
-
-                    </div>
+                    <x-enlace-submenu :href="route('programacion.completar.index')" :activo="request()->routeIs('programacion.completar*')">Completar programación</x-enlace-submenu>
 
                     @endcan
 
@@ -399,22 +372,7 @@
 
                     @can('asignar profesores')
 
-<a
-    href="{{ route('programacion.asignacion.profesores') }}"
-    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-        {{ request()->routeIs('programacion.asignacion.profesores*')
-            ? 'bg-gray-100 text-gray-800'
-            : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
->
-    <span
-        class="h-1.5 w-1.5 rounded-full
-            {{ request()->routeIs('programacion.asignacion.profesores*')
-                ? 'bg-institucional'
-                : 'bg-gray-300' }}"
-    ></span>
-
-    <span>Asignación de profesores</span>
-</a>
+<x-enlace-submenu :href="route('programacion.asignacion.profesores')" :activo="request()->routeIs('programacion.asignacion.profesores*')">Asignación de docentes</x-enlace-submenu>
 
 @endcan
 
@@ -422,22 +380,7 @@
 
                    @can('asignar horarios')
 
-<a
-    href="{{ route('programacion.asignacion.horarios') }}"
-    class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-        {{ request()->routeIs('programacion.asignacion.horarios*')
-            ? 'bg-gray-100 text-gray-800'
-            : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
->
-    <span
-        class="h-1.5 w-1.5 rounded-full
-            {{ request()->routeIs('programacion.asignacion.horarios*')
-                ? 'bg-institucional'
-                : 'bg-gray-300' }}"
-    ></span>
-
-    <span>Asignación de horarios</span>
-</a>
+<x-enlace-submenu :href="route('programacion.asignacion.horarios')" :activo="request()->routeIs('programacion.asignacion.horarios*')">Asignación de horarios</x-enlace-submenu>
 
 @endcan
 
@@ -445,13 +388,8 @@
 
                     @can('gestionar conflictos')
 
-                    <a href="{{ route('programacion.validacion') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('programacion.validacion') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 rounded-full {{ request()->routeIs('programacion.validacion') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
-                        <span>Revisión de conflictos</span>
-                    </a>
-                    <a href="{{ route('programacion.requerimientos.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('programacion.requerimientos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 rounded-full {{ request()->routeIs('programacion.requerimientos.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span><span>Requerimientos de actividades</span>
-                    </a>
+                    <x-enlace-submenu :href="route('programacion.validacion')" :activo="request()->routeIs('programacion.validacion')">Revisión de conflictos</x-enlace-submenu>
+                    <x-enlace-submenu :href="route('programacion.requerimientos.index')" :activo="request()->routeIs('programacion.requerimientos.*')">Requerimientos de actividades</x-enlace-submenu>
 
                     @endcan
 
@@ -459,22 +397,7 @@
 
                     @if (auth()->user()->can('enviar propuesta horario') && ! auth()->user()->hasRole('Administrador'))
 
-                    <a
-                        href="{{ route('programacion.propuesta') }}"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-                            {{ request()->routeIs('programacion.propuesta*')
-                                ? 'bg-gray-100 text-gray-800'
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-                    >
-                        <span
-                            class="h-1.5 w-1.5 rounded-full
-                                {{ request()->routeIs('programacion.propuesta*')
-                                    ? 'bg-institucional'
-                                    : 'bg-gray-300' }}"
-                        ></span>
-
-                        <span>Propuesta de horario</span>
-                    </a>
+                    <x-enlace-submenu :href="route('programacion.propuesta')" :activo="request()->routeIs('programacion.propuesta*')">Propuesta de horario</x-enlace-submenu>
 
                     @endif
 
@@ -597,44 +520,11 @@
 
                 >
 
-                    <a
-
-                        href="{{ route('programacion.intercambio') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('programacion.intercambio')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('programacion.intercambio')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
+                    <x-enlace-submenu :href="route('programacion.intercambio')" :activo="request()->routeIs('programacion.intercambio')">Consultar reemplazo</x-enlace-submenu>
 
 
 
-                        <span>Consultar reemplazo</span>
-
-                    </a>
-
-
-
-                    <a href="{{ route('programacion.intercambio.historial') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
-                        <span>Historial de reemplazos</span>
-                    </a>
+                    <x-enlace-submenu :href="route('programacion.intercambio.historial')" :activo="request()->routeIs('programacion.intercambio.historial*')">Historial de reemplazos</x-enlace-submenu>
 
                 </div>
 
@@ -755,59 +645,18 @@
 
                 >
 
-                    <a
-
-                        href="{{ route('salas.index') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('salas.index')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('salas.index')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
+                    <x-enlace-submenu :href="route('salas.index')" :activo="request()->routeIs('salas.index')">Catálogo de salas</x-enlace-submenu>
 
 
 
-                        <span>Catálogo de salas</span>
+                    <x-enlace-submenu :href="route('laboratorios.index')" :activo="request()->routeIs('laboratorios.*')">Laboratorios</x-enlace-submenu>
 
-                    </a>
-
-
-
-                    <a href="{{ route('laboratorios.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('laboratorios.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('laboratorios.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
-                        <span>Laboratorios</span>
-                    </a>
-
-                    <a href="{{ route('salas.horario') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('salas.horario') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('salas.horario') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
-                        <span>Horario de espacios</span>
-                    </a>
+                    <x-enlace-submenu :href="route('salas.horario')" :activo="request()->routeIs('salas.horario')">Horario de espacios</x-enlace-submenu>
 
 
 
-                    <a href="{{ route('recursos.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('recursos.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span>
-                        <span>Equipamiento y recursos</span>
-                    </a>
-                    <a href="{{ route('prioridades.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {{ request()->routeIs('prioridades.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50 hover:text-institucional' }}">
-                        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ request()->routeIs('prioridades.*') ? 'bg-institucional' : 'bg-gray-300' }}"></span><span>Prioridades de recursos</span>
-                    </a>
+                    <x-enlace-submenu :href="route('recursos.index')" :activo="request()->routeIs('recursos.*')">Equipamiento y recursos</x-enlace-submenu>
+                    <x-enlace-submenu :href="route('prioridades.index')" :activo="request()->routeIs('prioridades.*')">Prioridades de recursos</x-enlace-submenu>
 
                 </div>
 
@@ -928,71 +777,13 @@
 
                 >
 
-                    <a
-
-                        href="{{ route('programacion.index') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('programacion.index')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('programacion.index')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
+                    <x-enlace-submenu :href="route('programacion.index')" :activo="request()->routeIs('programacion.index')">Consultar programación anterior</x-enlace-submenu>
 
 
 
-                        <span>Consultar programación anterior</span>
-
-                    </a>
-
-
-
-                    <a
-
-                        href="{{ route('programacion.importar') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('programacion.importar*')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('programacion.importar*')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
-
-
-
-                        <span>Cargar programación anterior</span>
-
-                    </a>
+                    @can('importar programacion anterior')
+<x-enlace-submenu :href="route('programacion.importar')" :activo="request()->routeIs('programacion.importar*')">Cargar programación anterior</x-enlace-submenu>
+@endcan
 
                 </div>
 
@@ -1113,41 +904,12 @@
 
                 >
 
-                    <a
-
-                        href="{{ route('administracion.index') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('administracion.index')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('administracion.index')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
+                    <x-enlace-submenu :href="route('administracion.index')" :activo="request()->routeIs('administracion.index')">Usuarios</x-enlace-submenu>
+                    @include('components.enlaces-estructura')
 
 
 
-                        <span>Usuarios</span>
 
-                    </a>
-
-
-
-                    
                 </div>
 
             </div>
@@ -1281,37 +1043,8 @@
 
                 >
 
-                    <a
-
-                        href="{{ route('configuracion.index') }}"
-
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-
-                            {{ request()->routeIs('configuracion.index')
-
-                                ? 'bg-gray-100 text-gray-800'
-
-                                : 'text-texto hover:bg-gray-50 hover:text-institucional' }}"
-
-                    >
-
-                        <span
-
-                            class="h-1.5 w-1.5 rounded-full
-
-                                {{ request()->routeIs('configuracion.index')
-
-                                    ? 'bg-institucional'
-
-                                    : 'bg-gray-300' }}"
-
-                        ></span>
-
-
-
-                        <span>Configuración general</span>
-
-                    </a>
+                    <x-enlace-submenu :href="route('configuracion.index')" :activo="request()->routeIs('configuracion.index')">Configuración general</x-enlace-submenu>
+<x-enlace-submenu :href="route('configuracion.identidad')" :activo="request()->routeIs('configuracion.identidad*')">Identidad visual</x-enlace-submenu>
 
                 </div>
 
@@ -1329,10 +1062,11 @@
 
             <img
 
-                src="{{ asset('images/main-logo.svg') }}"
+                src="{{ $identidad['institucion_url'] }}"
 
-                alt="Universidad Católica de la Santísima Concepción"
+                alt="{{ $identidad['institucion'] }}"
 
+                width="120" height="36"
                 class="h-9 w-auto"
 
             >
@@ -1380,6 +1114,7 @@
 <div
 
     id="sidebar-movil"
+    hidden
 
     class="fixed inset-0 z-50 hidden lg:hidden"
 
@@ -1417,7 +1152,7 @@
 
                     aria-label="Cerrar menú"
 
-                    class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-lg text-texto-secundario hover:bg-fondo"
+                    class="boton boton-secundario absolute right-4 top-4 size-11 px-0"
 
                 >
 
@@ -1455,10 +1190,11 @@
 
                     <img
 
-                        src="{{ asset('images/prosec-logo.svg') }}"
+                        src="{{ $identidad['principal_url'] }}"
 
-                        alt="PROSEC"
+                        alt="{{ $identidad['nombre'] }}"
 
+                        width="220" height="69"
                         class="h-auto w-full max-w-[220px]"
 
                     >
@@ -1472,7 +1208,7 @@
 
 
             <nav class="flex-1 overflow-y-auto px-4 py-5">
-            @include('components.enlace-disponibilidad')
+
 
 
 
@@ -1484,7 +1220,7 @@
 
                     data-sidebar-main
 
-                    class="mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
+                    class="mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold
 
                         {{ $inicioActivo
 
@@ -1499,6 +1235,7 @@
                 </a>
 
                 @endcan
+            @include('components.enlace-disponibilidad')
 
 
 
@@ -1580,23 +1317,7 @@
 
                         @can('ver programacion semestral')
 
-                        <a
-
-                            href="{{ route('programacion.semestral') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('programacion.semestral')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Visualizar programación
-
-                        </a>
+                        <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Visualizar programación</x-enlace-submenu>
 
                         @endcan
 
@@ -1604,11 +1325,7 @@
 
                         @can('generar programacion semestral')
 
-                        <div class="px-3 py-2 text-sm text-gray-400">
-
-                            Generar programación
-
-                        </div>
+                        <x-enlace-submenu :href="route('programacion.completar.index')" :activo="request()->routeIs('programacion.completar*')">Completar programación</x-enlace-submenu>
 
                         @endcan
 
@@ -1616,15 +1333,7 @@
 
                         @can('asignar profesores')
 
-<a
-    href="{{ route('programacion.asignacion.profesores') }}"
-    class="block rounded-lg px-3 py-2 text-sm font-medium
-        {{ request()->routeIs('programacion.asignacion.profesores*')
-            ? 'bg-gray-100 text-gray-800'
-            : 'text-texto hover:bg-gray-50' }}"
->
-    Asignación de profesores
-</a>
+<x-enlace-submenu :href="route('programacion.asignacion.profesores')" :activo="request()->routeIs('programacion.asignacion.profesores*')">Asignación de docentes</x-enlace-submenu>
 
 @endcan
 
@@ -1632,15 +1341,7 @@
 
                         @can('asignar horarios')
 
-<a
-    href="{{ route('programacion.asignacion.horarios') }}"
-    class="block rounded-lg px-3 py-2 text-sm font-medium
-        {{ request()->routeIs('programacion.asignacion.horarios*')
-            ? 'bg-gray-100 text-gray-800'
-            : 'text-texto hover:bg-gray-50' }}"
->
-    Asignación de horarios
-</a>
+<x-enlace-submenu :href="route('programacion.asignacion.horarios')" :activo="request()->routeIs('programacion.asignacion.horarios*')">Asignación de horarios</x-enlace-submenu>
 
 @endcan
 
@@ -1648,8 +1349,8 @@
 
                         @can('gestionar conflictos')
 
-                        <a href="{{ route('programacion.validacion') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('programacion.validacion') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Revisión de conflictos</a>
-                        <a href="{{ route('programacion.requerimientos.index') }}" class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('programacion.requerimientos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Requerimientos de actividades</a>
+                        <x-enlace-submenu :href="route('programacion.validacion')" :activo="request()->routeIs('programacion.validacion')">Revisión de conflictos</x-enlace-submenu>
+                        <x-enlace-submenu :href="route('programacion.requerimientos.index')" :activo="request()->routeIs('programacion.requerimientos.*')">Requerimientos de actividades</x-enlace-submenu>
 
                         @endcan
 
@@ -1657,15 +1358,7 @@
 
                         @if (auth()->user()->can('enviar propuesta horario') && ! auth()->user()->hasRole('Administrador'))
 
-                        <a
-                            href="{{ route('programacion.propuesta') }}"
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-                                {{ request()->routeIs('programacion.propuesta*')
-                                    ? 'bg-gray-100 text-gray-800'
-                                    : 'text-texto hover:bg-gray-50' }}"
-                        >
-                            Propuesta de horario
-                        </a>
+                        <x-enlace-submenu :href="route('programacion.propuesta')" :activo="request()->routeIs('programacion.propuesta*')">Propuesta de horario</x-enlace-submenu>
 
                         @endif
 
@@ -1753,27 +1446,11 @@
 
                     >
 
-                        <a
-
-                            href="{{ route('programacion.intercambio') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('programacion.intercambio')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Consultar reemplazo
-
-                        </a>
+                        <x-enlace-submenu :href="route('programacion.intercambio')" :activo="request()->routeIs('programacion.intercambio')">Consultar reemplazo</x-enlace-submenu>
 
 
 
-                        <a href="{{ route('programacion.intercambio.historial') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('programacion.intercambio.historial*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Historial de reemplazos</a>
+                        <x-enlace-submenu :href="route('programacion.intercambio.historial')" :activo="request()->routeIs('programacion.intercambio.historial*')">Historial de reemplazos</x-enlace-submenu>
 
                     </div>
 
@@ -1859,34 +1536,18 @@
 
                     >
 
-                        <a
-
-                            href="{{ route('salas.index') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('salas.index')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Catálogo de salas
-
-                        </a>
+                        <x-enlace-submenu :href="route('salas.index')" :activo="request()->routeIs('salas.index')">Catálogo de salas</x-enlace-submenu>
 
 
 
-                        <a href="{{ route('laboratorios.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('laboratorios.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Laboratorios</a>
+                        <x-enlace-submenu :href="route('laboratorios.index')" :activo="request()->routeIs('laboratorios.*')">Laboratorios</x-enlace-submenu>
 
-                        <a href="{{ route('salas.horario') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('salas.horario') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Horario de espacios</a>
+                        <x-enlace-submenu :href="route('salas.horario')" :activo="request()->routeIs('salas.horario')">Horario de espacios</x-enlace-submenu>
 
 
 
-                        <a href="{{ route('recursos.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('recursos.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Equipamiento y recursos</a>
-                        <a href="{{ route('prioridades.index') }}" class="block min-h-11 rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('prioridades.*') ? 'bg-gray-100 text-gray-800' : 'text-texto hover:bg-gray-50' }}">Prioridades de recursos</a>
+                        <x-enlace-submenu :href="route('recursos.index')" :activo="request()->routeIs('recursos.*')">Equipamiento y recursos</x-enlace-submenu>
+                        <x-enlace-submenu :href="route('prioridades.index')" :activo="request()->routeIs('prioridades.*')">Prioridades de recursos</x-enlace-submenu>
 
                     </div>
 
@@ -1972,43 +1633,13 @@
 
                     >
 
-                        <a
-
-                            href="{{ route('programacion.index') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('programacion.index')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Consultar programación anterior
-
-                        </a>
+                        <x-enlace-submenu :href="route('programacion.index')" :activo="request()->routeIs('programacion.index')">Consultar programación anterior</x-enlace-submenu>
 
 
 
-                        <a
-
-                            href="{{ route('programacion.importar') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('programacion.importar*')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Cargar programación anterior
-
-                        </a>
+                        @can('importar programacion anterior')
+<x-enlace-submenu :href="route('programacion.importar')" :activo="request()->routeIs('programacion.importar*')">Cargar programación anterior</x-enlace-submenu>
+@endcan
 
                     </div>
 
@@ -2094,27 +1725,12 @@
 
                     >
 
-                        <a
-
-                            href="{{ route('administracion.index') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('administracion.index')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Usuarios
-
-                        </a>
+                        <x-enlace-submenu :href="route('administracion.index')" :activo="request()->routeIs('administracion.index')">Usuarios</x-enlace-submenu>
+                    @include('components.enlaces-estructura')
 
 
 
-                        
+
 
                     </div>
 
@@ -2200,23 +1816,8 @@
 
                     >
 
-                        <a
-
-                            href="{{ route('configuracion.index') }}"
-
-                            class="block rounded-lg px-3 py-2 text-sm font-medium
-
-                                {{ request()->routeIs('configuracion.index')
-
-                                    ? 'bg-gray-100 text-gray-800'
-
-                                    : 'text-texto hover:bg-gray-50' }}"
-
-                        >
-
-                            Configuración general
-
-                        </a>
+                        <x-enlace-submenu :href="route('configuracion.index')" :activo="request()->routeIs('configuracion.index')">Configuración general</x-enlace-submenu>
+<x-enlace-submenu :href="route('configuracion.identidad')" :activo="request()->routeIs('configuracion.identidad*')">Identidad visual</x-enlace-submenu>
 
                     </div>
 
@@ -2234,10 +1835,11 @@
 
                 <img
 
-                    src="{{ asset('images/main-logo.svg') }}"
+                    src="{{ $identidad['institucion_url'] }}"
 
-                    alt="Universidad Católica de la Santísima Concepción"
+                    alt="{{ $identidad['institucion'] }}"
 
+                    width="107" height="32"
                     class="h-8 w-auto"
 
                 >

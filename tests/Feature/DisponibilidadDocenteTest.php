@@ -63,7 +63,14 @@ class DisponibilidadDocenteTest extends IsolatedDatabaseTestCase
         $this->assertSame('No disponible', $vieja->fresh()->tipo_disponibilidad);
         $this->assertSame('En revisión', $s->fresh()->estado);
         $this->get(route('disponibilidad.show', $s))->assertOk()->assertSee('Aprobar disponibilidad');
-        $this->post(route('disponibilidad.revisar', $s), ['decision' => 'aprobar'])->assertSessionHasNoErrors();
+        $filtros = ['periodo_id' => $this->periodo->id, 'q' => 'Ana', 'estado' => 'En revisión'];
+        $panel = route('disponibilidad.index', $filtros);
+        $detalle = route('disponibilidad.index', $filtros + ['solicitud' => $s->id]);
+        $this->get($panel)->assertOk()->assertSee($detalle.'#detalle-disponibilidad')->assertSee('Revisar respuesta');
+        $this->get($detalle)->assertOk()->assertSee('Disponibilidad informada')->assertSee('08:10–09:00')
+            ->assertSee('Aprobar disponibilidad')->assertSee($panel.'#listado-disponibilidad');
+        $this->from($detalle)->post(route('disponibilidad.revisar', $s), ['decision' => 'aprobar'])
+            ->assertSessionHasNoErrors()->assertRedirect($detalle);
         $this->assertSame('Disponible', $vieja->fresh()->tipo_disponibilidad);
         $this->assertSame('Aprobada', $s->fresh()->estado);
         $this->assertDatabaseHas('respuestas_disponibilidad', ['revisado_por' => $this->usuario->id, 'respuesta' => 'Aprobada']);
@@ -158,6 +165,9 @@ class DisponibilidadDocenteTest extends IsolatedDatabaseTestCase
     {
         $s = $this->crear(); $url = $this->enlace($s);
         $this->profesor->update(['estado' => false]);
+        $this->get(route('disponibilidad.index', ['q' => 'Ana']))->assertOk()
+            ->assertSee('Docente fuera del padrón activo del período.')->assertSee('Ver solicitud')
+            ->assertViewHas('seleccionables', []);
         $this->get($url)->assertGone();
         $this->post($url, ['sin_disponibilidad' => 1])->assertGone();
         $this->assertDatabaseCount('respuestas_disponibilidad', 0);
@@ -180,5 +190,22 @@ class DisponibilidadDocenteTest extends IsolatedDatabaseTestCase
         $this->get(route('disponibilidad.show', $s))->assertRedirect();
         $this->post(route('disponibilidad.revisar', $s), ['decision' => 'aprobar'])->assertRedirect();
         $this->assertSame('Pendiente', $s->fresh()->estado);
+    }
+
+    public function test_respuesta_anterior_activa_sigue_disponible_cuando_hay_una_solicitud_mas_reciente(): void
+    {
+        $anterior = $this->crear();
+        $this->respuesta($anterior);
+        $this->post(route('disponibilidad.revisar', $anterior), ['decision' => 'aprobar'])->assertSessionHasNoErrors();
+        $this->crear();
+        $this->bloque->update(['estado' => false]);
+        $filtros = ['periodo_id' => $this->periodo->id, 'q' => 'Ana'];
+
+        $this->get(route('disponibilidad.index', $filtros))->assertOk()
+            ->assertSee('Ver solicitud')->assertSee('Historial de solicitudes (1)')->assertSee('Aprobada');
+        $this->get(route('disponibilidad.index', $filtros + ['estado' => 'Aprobada']))
+            ->assertOk()->assertSee('Ver disponibilidad');
+        $this->get(route('disponibilidad.index', $filtros + ['solicitud' => $anterior->id]))
+            ->assertOk()->assertSee('Disponibilidad informada')->assertSee('08:10–09:00')->assertSee('Disponible');
     }
 }

@@ -3,16 +3,25 @@
 @section('content')
 
 <x-encabezado-pagina titulo="Administración">
-    Administra los usuarios que tendrán acceso al sistema y sus roles.
+    Administra los accesos y los catálogos institucionales y académicos.
     <x-slot:acciones>
         <a
             href="{{ route('usuarios.create') }}"
-            class="inline-flex min-h-11 items-center justify-center rounded-lg bg-institucional px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            class="boton boton-primario"
         >
             Nuevo usuario
         </a>
     </x-slot:acciones>
 </x-encabezado-pagina>
+
+<nav aria-label="Catálogos institucionales y académicos" class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <a class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm transition hover:border-institucional focus-visible:outline focus-visible:outline-2 focus-visible:outline-institucional" href="{{ route('administracion.perfiles.index') }}"><span class="block text-sm font-semibold">Perfiles y permisos</span><span class="mt-1 block text-xs text-texto-secundario">Funciones permitidas y cuentas vinculadas a cada perfil</span></a>
+    <a class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm transition hover:border-institucional focus-visible:outline focus-visible:outline-2 focus-visible:outline-institucional" href="{{ route('administracion.docentes.index') }}"><span class="block text-sm font-semibold">Docentes</span><span class="mt-1 block text-xs text-texto-secundario">Registro y datos académicos de los docentes</span></a>
+    <a class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm transition hover:border-institucional focus-visible:outline focus-visible:outline-2 focus-visible:outline-institucional" href="{{ route('administracion.secciones.index') }}"><span class="block text-sm font-semibold">Oferta por período</span><span class="mt-1 block text-xs text-texto-secundario">Secciones, actividades y grupos para programar</span></a>
+    @foreach ([['Sedes', 'Espacios y sedes de la institución', 'administracion.estructura.index', 'sedes'], ['Carreras', 'Carreras y las sedes donde se imparten', 'administracion.estructura.index', 'carreras'], ['Facultades e institutos', 'Unidades académicas y sus carreras', 'administracion.academicos.index', 'facultades'], ['Asignaturas y ramos', 'Identificación y módulos de referencia', 'administracion.oferta.index', 'asignaturas'], ['Períodos académicos', 'Semestres de trabajo y archivo', 'administracion.oferta.index', 'periodos']] as [$tituloCatalogo, $detalleCatalogo, $rutaCatalogo, $tipoCatalogo])
+    <a class="min-w-0 rounded-xl border border-borde bg-superficie p-4 shadow-sm transition hover:border-institucional focus-visible:outline focus-visible:outline-2 focus-visible:outline-institucional" href="{{ route($rutaCatalogo, $tipoCatalogo) }}"><span class="block text-sm font-semibold">{{ $tituloCatalogo }}</span><span class="mt-1 block text-xs text-texto-secundario">{{ $detalleCatalogo }}</span></a>
+    @endforeach
+</nav>
 
 <div class="min-w-0 w-full">
 
@@ -28,66 +37,66 @@
         </div>
     @endif
 
-    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div class="overflow-hidden rounded-xl border border-borde bg-white shadow-sm">
 
-        <div class="overflow-x-auto overscroll-x-contain" role="region" aria-label="Listado de usuarios" tabindex="0">
-            <table class="min-w-full divide-y divide-gray-200">
+        <div class="listado-adaptable overflow-x-auto overscroll-x-contain" role="region" aria-label="Listado de usuarios">
+            <table role="table" class="min-w-full divide-y divide-gray-200">
 
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <thead role="rowgroup" class="bg-gray-50">
+                    <tr role="row">
+                        <th role="columnheader" scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Nombre
                         </th>
 
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <th role="columnheader" scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                             RUT
                         </th>
 
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <th role="columnheader" scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Correo
                         </th>
 
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <th role="columnheader" scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Rol
                         </th>
 
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <th role="columnheader" scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
                             Acciones
                         </th>
                     </tr>
                 </thead>
 
-                <tbody class="divide-y divide-gray-100 bg-white">
+                <tbody role="rowgroup" class="divide-y divide-gray-100 bg-white">
 
                     @forelse ($usuarios as $usuario)
 
-                        <tr class="hover:bg-gray-50">
+                        <tr role="row" class="hover:bg-gray-50">
 
-                            <td class="min-w-[10rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm font-medium text-gray-800 [overflow-wrap:anywhere]">
+                            <td role="cell" data-principal-listado class="min-w-[10rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm font-medium text-gray-800 [overflow-wrap:anywhere]">
                                 {{ $usuario->name }}
                             </td>
 
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                            <td role="cell" class="whitespace-nowrap px-4 py-3 text-sm text-gray-600"><span class="etiqueta-listado" aria-hidden="true">RUT</span><div class="dato-listado">
                                 {{ $usuario->rut }}
-                            </td>
+                            </div></td>
 
-                            <td class="min-w-[12rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm text-gray-600 [overflow-wrap:anywhere]">
+                            <td role="cell" class="min-w-[12rem] max-w-[16rem] whitespace-normal px-4 py-3 text-sm text-gray-600 [overflow-wrap:anywhere]"><span class="etiqueta-listado" aria-hidden="true">Correo</span><div class="dato-listado">
                                 {{ $usuario->email }}
-                            </td>
+                            </div></td>
 
-                            <td class="whitespace-normal px-4 py-3">
+                            <td role="cell" class="whitespace-normal px-4 py-3"><span class="etiqueta-listado" aria-hidden="true">Rol</span><div class="dato-listado">
                                 <span class="inline-block max-w-[10rem] rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 [overflow-wrap:anywhere]">
                                     {{ $usuario->getRoleNames()->first() ?? 'Sin rol' }}
                                 </span>
-                            </td>
+                            </div></td>
 
-                            <td class="whitespace-nowrap px-4 py-3 text-right">
+                            <td role="cell" data-acciones-listado class="whitespace-nowrap px-4 py-3 text-right">
 
                                 <div class="flex justify-end gap-2">
 
                                     <a
                                         href="{{ route('usuarios.edit', $usuario) }}"
-                                        class="inline-flex min-h-10 items-center justify-center rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-gray-50"
+                                        class="boton boton-secundario"
                                     >
                                         Editar
                                     </a>
@@ -96,14 +105,16 @@
                                         <form
                                             action="{{ route('usuarios.destroy', $usuario) }}"
                                             method="POST"
-                                            onsubmit="return confirm('¿Deseas eliminar este usuario?');"
+                                            data-confirmar="Se eliminará la cuenta de {{ $usuario->name }}."
+                                            data-confirmar-titulo="Eliminar usuario"
+                                            data-confirmar-accion="Eliminar cuenta"
                                         >
                                             @csrf
                                             @method('DELETE')
 
                                             <button
                                                 type="submit"
-                                                class="inline-flex min-h-10 items-center justify-center rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50"
+                                                class="boton boton-peligro"
                                             >
                                                 Eliminar
                                             </button>
@@ -118,8 +129,8 @@
 
                     @empty
 
-                        <tr>
-                            <td
+                        <tr role="row">
+                            <td role="cell"
                                 colspan="5"
                                 class="px-4 py-10 text-center text-sm text-gray-400"
                             >

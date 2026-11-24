@@ -62,7 +62,7 @@ class InicioController extends Controller
         $urlProgramacion = route('programacion.semestral', $filtrosProgramacion);
 
         $accesos = collect([
-            ['asignar profesores', 'Asignar profesores', 'programacion.asignacion.profesores', $filtroPeriodo],
+            ['asignar profesores', 'Asignar docentes', 'programacion.asignacion.profesores', $filtroPeriodo],
             ['asignar horarios', 'Asignar horarios', 'programacion.asignacion.horarios', $filtroPeriodo],
             ['enviar propuesta horario', 'Mi disponibilidad', 'programacion.propuesta', []],
             ['ver intercambio docente', 'Consultar intercambio docente', 'programacion.intercambio', []],

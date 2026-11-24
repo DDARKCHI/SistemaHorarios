@@ -208,8 +208,8 @@ class AsignacionProfesorController extends Controller
         ], [
             'grupo_seccion_id.required' => 'Debes seleccionar un grupo.',
             'grupo_seccion_id.exists' => 'El grupo seleccionado no es válido.',
-            'profesor_id.required' => 'Debes seleccionar un profesor.',
-            'profesor_id.exists' => 'El profesor seleccionado no es válido.',
+            'profesor_id.required' => 'Debes seleccionar un docente.',
+            'profesor_id.exists' => 'El docente seleccionado no es válido.',
             'tipo_participacion.required' => 'Debes seleccionar un tipo de participación.',
             'tipo_participacion.in' => 'El tipo de participación seleccionado no es válido.',
             'observaciones.max' => 'Las observaciones no pueden superar los 1000 caracteres.',
@@ -235,7 +235,7 @@ class AsignacionProfesorController extends Controller
             && $profesor->universidad_id != $universidadAsignatura
         ) {
             throw ValidationException::withMessages([
-                'profesor_id' => 'El profesor seleccionado no pertenece a la misma institución de la asignatura.',
+                'profesor_id' => 'El docente seleccionado no pertenece a la misma institución de la asignatura.',
             ]);
         }
 
@@ -246,6 +246,8 @@ class AsignacionProfesorController extends Controller
             $grupo,
             $esPrincipal
         ) {
+            $this->exigirBorradorActual($grupo->actividadSeccion->seccion->periodo_academico_id);
+            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
             if ($esPrincipal) {
                 GrupoProfesor::where(
                     'grupo_seccion_id',
@@ -281,7 +283,7 @@ class AsignacionProfesorController extends Controller
             )
             ->with(
                 'success',
-                'Profesor asignado al grupo correctamente.'
+                'Docente asignado al grupo correctamente.'
             );
     }
 
@@ -297,6 +299,7 @@ class AsignacionProfesorController extends Controller
         $seccion = $grupo->actividadSeccion->seccion;
 
         DB::transaction(function () use ($asignacion, $grupo, $seccion) {
+            $this->exigirBorradorActual($seccion->periodo_academico_id);
             // El guardado de horarios utiliza el mismo bloqueo del grupo.
             GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
 
@@ -315,7 +318,7 @@ class AsignacionProfesorController extends Controller
 
             if ($tieneHorarios) {
                 throw ValidationException::withMessages([
-                    'asignacion' => 'No puedes quitar este profesor del grupo mientras tenga horarios asignados en la programación semestral actual. Revisa primero sus módulos en Asignación de horarios.',
+                    'asignacion' => 'No puedes quitar este docente del grupo mientras tenga horarios asignados en la programación semestral actual. Revisa primero sus módulos en Asignación de horarios.',
                 ]);
             }
 
@@ -334,10 +337,16 @@ class AsignacionProfesorController extends Controller
             )
             ->with(
                 'success',
-                'Asignación del profesor eliminada correctamente.'
+                'Asignación del docente eliminada correctamente.'
             );
     }
 
+    private function exigirBorradorActual(int $periodoId): void
+    {
+        PeriodoAcademico::whereKey($periodoId)->lockForUpdate()->firstOrFail();
+        $version = \App\Models\VersionPlanificacion::where('periodo_academico_id', $periodoId)->where('tipo', 'semestral')->where('es_actual', true)->lockForUpdate()->first();
+        if ($version && $version->estado !== 'Borrador') throw ValidationException::withMessages(['asignacion' => 'La programación actual está aprobada o publicada. Crea y activa un borrador nuevo antes de cambiar docentes.']);
+    }
     private function buscarProfesores(Request $request)
     {
         $seccionId = $request->integer('seccion_id');

@@ -2,11 +2,17 @@
 
 @section('content')
 
-<x-encabezado-pagina titulo="Asignación de profesores">
-    Selecciona una sección y asigna profesores a cada actividad y grupo.
+<x-encabezado-pagina titulo="Asignación de docentes">
+    Selecciona una sección y asigna docentes a cada actividad y grupo.
 </x-encabezado-pagina>
 
 <div class="min-w-0 w-full">
+@php
+    $programacionCerrada = \App\Models\VersionPlanificacion::where('periodo_academico_id', $periodoId)->where('tipo', 'semestral')->where('es_actual', true)->whereIn('estado', ['Aprobado', 'Publicado'])->exists();
+@endphp
+@if ($programacionCerrada)
+<p role="status" class="mb-4 rounded-xl border border-borde bg-superficie p-4 text-sm text-texto-secundario">La programación actual está aprobada o publicada. Puedes consultar los docentes; para cambiarlos, crea y activa un borrador nuevo.</p>
+@endif
 
     @if (session('success'))
         <div class="mb-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-xs font-medium text-green-700">
@@ -20,131 +26,117 @@
         </div>
     @endif
 
-    <form
+    <x-filtros-compactos
         id="filtros-form"
-        method="GET"
+        :campos="4"
         action="{{ route('programacion.asignacion.profesores') }}"
-        class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
+        class="mb-2"
+        aria-label="Filtros para asignar docentes"
     >
-        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:items-end [&>div]:min-w-0">
+        <div>
+            <label for="periodo_id" class="mb-2 block text-sm font-semibold">
+                Período
+            </label>
 
-            <div>
-                <label for="periodo_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
-                    Período
-                </label>
-
-                <select data-select-buscable
-                    id="periodo_id"
-                    name="periodo_id"
-                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                >
-                    @foreach ($periodos as $periodo)
-                        <option
-                            value="{{ $periodo->id }}"
-                            @selected($periodoId == $periodo->id)
-                        >
-                            {{ $periodo->anio }}-{{ $periodo->numero_semestre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="carrera_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
-                    Carrera
-                </label>
-
-                <select data-select-buscable
-                    id="carrera_id"
-                    name="carrera_id"
-                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                >
-                    <option value="">Todas las carreras</option>
-
-                    @foreach ($carreras as $carrera)
-                        <option
-                            value="{{ $carrera->id }}"
-                            @selected($carreraId == $carrera->id)
-                        >
-                            {{ $carrera->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="semestre" class="mb-1 block text-[11px] font-semibold text-gray-600">
-                    Semestre
-                </label>
-
-                <select data-select-buscable
-                    id="semestre"
-                    name="semestre"
-                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                >
-                    <option value="">Todos</option>
-
-                    @foreach ($semestres as $valorSemestre)
-                        <option
-                            value="{{ $valorSemestre }}"
-                            @selected((string) $semestre === (string) $valorSemestre)
-                        >
-                            {{ $valorSemestre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="seccion_id" class="mb-1 block text-[11px] font-semibold text-gray-600">
-                    Sección
-                </label>
-
-                <select data-select-buscable
-                    id="seccion_id"
-                    name="seccion_id"
-                    class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
-                >
-                    <option value="">Seleccionar sección</option>
-
-                    @foreach ($seccionesFiltro as $seccionFiltro)
-                        <option
-                            value="{{ $seccionFiltro->id }}"
-                            @selected($seccionId == $seccionFiltro->id)
-                        >
-                            {{ $seccionFiltro->codigo }}
-                            —
-                            {{ $seccionFiltro->asignatura?->codigo }}
-                            {{ $seccionFiltro->asignatura?->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="flex min-w-0 flex-wrap gap-2 sm:col-span-2 xl:col-span-4">
-            <button
-                type="submit"
-                class="h-9 w-full rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800 sm:w-auto"
+            <select data-select-buscable
+                id="periodo_id"
+                name="periodo_id"
+                class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto focus:border-institucional focus:ring-institucional"
             >
-                Aplicar
-            </button>
-
-            <a
-                href="{{ route('programacion.asignacion.profesores') }}"
-                class="flex h-9 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
-            >
-                Limpiar
-            </a>
-            </div>
-
+                @foreach ($periodos as $periodo)
+                    <option
+                        value="{{ $periodo->id }}"
+                        @selected($periodoId == $periodo->id)
+                    >
+                        {{ $periodo->anio }}-{{ $periodo->numero_semestre }}
+                    </option>
+                @endforeach
+            </select>
         </div>
-    </form>
+
+        <div>
+            <label for="carrera_id" class="mb-2 block text-sm font-semibold">
+                Carrera
+            </label>
+
+            <select data-select-buscable
+                id="carrera_id"
+                name="carrera_id"
+                class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto focus:border-institucional focus:ring-institucional"
+            >
+                <option value="">Todas las carreras</option>
+
+                @foreach ($carreras as $carrera)
+                    <option
+                        value="{{ $carrera->id }}"
+                        @selected($carreraId == $carrera->id)
+                    >
+                        {{ $carrera->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label for="semestre" class="mb-2 block text-sm font-semibold">
+                Semestre
+            </label>
+
+            <select data-select-buscable
+                id="semestre"
+                name="semestre"
+                class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto focus:border-institucional focus:ring-institucional"
+            >
+                <option value="">Todos</option>
+
+                @foreach ($semestres as $valorSemestre)
+                    <option
+                        value="{{ $valorSemestre }}"
+                        @selected((string) $semestre === (string) $valorSemestre)
+                    >
+                        {{ $valorSemestre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
+            <label for="seccion_id" class="mb-2 block text-sm font-semibold">
+                Sección
+            </label>
+
+            <select data-select-buscable
+                id="seccion_id"
+                name="seccion_id"
+                class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto focus:border-institucional focus:ring-institucional"
+            >
+                <option value="">Seleccionar sección</option>
+
+                @foreach ($seccionesFiltro as $seccionFiltro)
+                    <option
+                        value="{{ $seccionFiltro->id }}"
+                        @selected($seccionId == $seccionFiltro->id)
+                    >
+                        {{ $seccionFiltro->codigo }}
+                        —
+                        {{ $seccionFiltro->asignatura?->codigo }}
+                        {{ $seccionFiltro->asignatura?->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <x-slot:acciones>
+            <a href="{{ route('programacion.asignacion.profesores') }}" class="boton boton-secundario">Limpiar</a>
+            <button type="submit" class="boton boton-primario">Aplicar</button>
+        </x-slot:acciones>
+    </x-filtros-compactos>
 
     @if (!$seccion)
 
-        <div class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
+        <div class="rounded-xl border border-borde bg-white px-4 py-10 text-center shadow-sm">
             <div class="text-sm font-semibold text-gray-700">
-                Selecciona una sección para administrar sus profesores.
+                Selecciona una sección para administrar sus docentes.
             </div>
 
             <div class="mt-1 text-xs text-gray-400">
@@ -154,7 +146,7 @@
 
     @else
 
-        <div class="mb-2 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
 
             <div class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
 
@@ -164,12 +156,12 @@
                             {{ $seccion->asignatura?->codigo ?? 'Sin código' }}
                         </span>
 
-                        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
                             Sección {{ $seccion->codigo }}
                         </span>
 
                         @if ($seccion->semestre)
-                            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">
                                 Semestre {{ $seccion->semestre }}
                             </span>
                         @endif
@@ -180,7 +172,7 @@
                     </div>
 
                     @if ($seccion->carreras->isNotEmpty())
-                        <div class="mt-1 text-[10px] text-gray-500">
+                        <div class="mt-1 text-xs text-gray-500">
                             <span class="font-semibold text-gray-600">
                                 Carrera:
                             </span>
@@ -192,7 +184,7 @@
                     @endif
                 </div>
 
-                <div class="text-[10px] text-gray-500">
+                <div class="text-xs text-gray-500">
                     {{ $seccion->actividades->count() }}
                     {{ $seccion->actividades->count() === 1 ? 'actividad' : 'actividades' }}
                 </div>
@@ -202,7 +194,7 @@
 
         @if ($seccion->actividades->isEmpty())
 
-            <div class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center shadow-sm">
+            <div class="rounded-xl border border-borde bg-white px-4 py-10 text-center shadow-sm">
                 <div class="text-sm font-semibold text-gray-700">
                     Esta sección no tiene actividades registradas.
                 </div>
@@ -214,7 +206,7 @@
 
                 @foreach ($seccion->actividades as $actividad)
 
-                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div class="overflow-hidden rounded-xl border border-borde bg-white shadow-sm">
 
                         <div class="border-b border-gray-200 bg-gray-50 px-4 py-2.5">
 
@@ -225,14 +217,14 @@
                                         {{ $actividad->tipo }}
                                     </div>
 
-                                    <div class="mt-0.5 text-[10px] text-gray-500">
+                                    <div class="mt-0.5 text-xs text-gray-500">
                                         {{ $actividad->cantidad_horas ?? 0 }} horas
                                         ·
                                         {{ $actividad->cantidad_estudiantes ?? 0 }} estudiantes
                                     </div>
                                 </div>
 
-                                <div class="text-[10px] text-gray-500">
+                                <div class="text-xs text-gray-500">
                                     {{ $actividad->grupos->count() }}
                                     {{ $actividad->grupos->count() === 1 ? 'grupo' : 'grupos' }}
                                 </div>
@@ -256,7 +248,7 @@
                                         {{ $grupo->codigo }}
                                     </div>
 
-                                    <div class="mt-1 space-y-0.5 text-[10px] text-gray-500">
+                                    <div class="mt-1 space-y-0.5 text-xs text-gray-500">
                                         <div>
                                             <span class="font-semibold text-gray-600">Cupos:</span>
                                             {{ $grupo->cupos ?? '—' }}
@@ -270,14 +262,14 @@
                                 </div>
 
                                 <div>
-                                    <div class="mb-2 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                                        Profesores asignados
+                                    <div class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                                        Docentes asignados
                                     </div>
 
                                     @if ($asignaciones->isEmpty())
 
                                         <div class="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-4 text-center text-xs text-gray-400">
-                                            Sin profesor asignado.
+                                            Sin docente asignado.
                                         </div>
 
                                     @else
@@ -301,29 +293,32 @@
                                                                 </span>
 
                                                                 @if ($asignacion->es_principal)
-                                                                    <span class="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                                                                    <span class="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
                                                                         Principal
                                                                     </span>
                                                                 @endif
                                                             </div>
 
-                                                            <div class="mt-1 text-[10px] text-gray-500">
-                                                                {{ $asignacion->tipo_participacion }}
+                                                            <div class="mt-1 text-xs text-gray-500">
+                                                                {{ strtr($asignacion->tipo_participacion ?? '', ['PROFESOR' => 'DOCENTE', 'Profesor' => 'Docente', 'profesor' => 'docente']) }}
                                                             </div>
 
-                                                            <div class="mt-0.5 text-[10px] text-gray-400">
+                                                            <div class="mt-0.5 text-xs text-gray-400">
                                                                 RUT:
                                                                 {{ $asignacion->profesor?->rut ?? '—' }}
                                                             </div>
                                                         </div>
 
+                                                        @unless ($programacionCerrada)
                                                         <form class="shrink-0"
                                                             method="POST"
                                                             action="{{ route(
                                                                 'programacion.asignacion.profesores.eliminar',
                                                                 $asignacion
                                                             ) }}"
-                                                            onsubmit="return confirm('¿Deseas eliminar esta asignación?')"
+                                                            data-confirmar="Se quitará esta asignación docente de la programación."
+                                                            data-confirmar-titulo="Quitar asignación docente"
+                                                            data-confirmar-accion="Quitar asignación"
                                                         >
                                                             @csrf
                                                             @method('DELETE')
@@ -334,11 +329,12 @@
 
                                                             <button
                                                                 type="submit"
-                                                                class="rounded-md border border-red-200 bg-white px-2 py-1 text-[10px] font-semibold text-red-700 hover:bg-red-50"
+                                                                class="shrink-0 whitespace-nowrap rounded-md border border-red-200 bg-white px-2 py-1 text-xs font-semibold text-red-700 [overflow-wrap:normal] hover:bg-red-50"
                                                             >
                                                                 Eliminar
                                                             </button>
                                                         </form>
+                                                        @endunless
 
                                                     </div>
 
@@ -352,15 +348,19 @@
                                 </div>
 
                                 <div>
-                                    <div class="mb-2 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                                        Asignar profesor
+                                    <div class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">
+                                        Asignar docente
                                     </div>
 
+                                    @unless ($programacionCerrada)
                                     <form
                                         method="POST"
                                         action="{{ route('programacion.asignacion.profesores.guardar') }}"
                                         class="min-w-0 space-y-2 formulario-profesor"
                                         data-seccion-id="{{ $seccion->id }}"
+                                        data-confirmar="Se registrará la asignación del docente seleccionado."
+                                        data-confirmar-titulo="Asignar docente"
+                                        data-confirmar-accion="Asignar docente"
                                     >
                                         @csrf
 
@@ -370,16 +370,16 @@
                                         <input type="hidden" name="semestre" value="{{ $semestre }}">
 
                                         <div>
-                                            <label class="mb-1 block text-[10px] font-semibold text-gray-600">
-                                                Profesores sugeridos
+                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
+                                                Docentes sugeridos
                                             </label>
 
                                             <select
                                                 name="profesor_id"
-                                                class="profesor-select h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                                class="profesor-select h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                             >
                                                 <option value="">
-                                                    Seleccionar profesor
+                                                    Seleccionar docente
                                                 </option>
 
                                                 @foreach ($profesoresSugeridos as $profesor)
@@ -393,21 +393,21 @@
 
                                         <div class="rounded-md border border-gray-200 bg-gray-50 p-2">
 
-                                            <label class="mb-1 block text-[10px] font-semibold text-gray-600">
-                                                Buscar otro profesor
+                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
+                                                Buscar otro docente
                                             </label>
 
                                             <div class="flex gap-2">
 
                                                 <input
                                                     type="text"
-                                                    class="buscar-profesor h-9 min-w-0 flex-1 rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                                    class="buscar-profesor h-9 min-w-0 flex-1 rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                                     placeholder="Nombre, RUT o correo"
                                                 >
 
                                                 <button
                                                     type="button"
-                                                    class="boton-buscar rounded-md border border-gray-300 bg-white px-3 text-[10px] font-semibold text-gray-700 hover:bg-gray-100"
+                                                    class="boton-buscar rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 hover:bg-gray-100"
                                                 >
                                                     Buscar
                                                 </button>
@@ -421,14 +421,14 @@
                                         <select
                                             name="tipo_participacion"
                                             required
-                                            class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                            class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                         >
                                             <option value="PROFESOR RESPONSABLE">
-                                                Profesor responsable
+                                                Docente responsable
                                             </option>
 
                                             <option value="PROFESOR COLABORADOR">
-                                                Profesor colaborador
+                                                Docente colaborador
                                             </option>
 
                                             <option value="AYUDANTE">
@@ -441,7 +441,7 @@
                                             rows="2"
                                             maxlength="1000"
                                             placeholder="Observaciones opcionales"
-                                            class="w-full resize-none rounded-md border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-red-600 focus:ring-red-600"
+                                            class="w-full resize-none rounded-md border-gray-300 bg-white px-2.5 py-2 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                         ></textarea>
 
                                         <label class="flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
@@ -449,22 +449,23 @@
                                                 type="checkbox"
                                                 name="es_principal"
                                                 value="1"
-                                                class="h-4 w-4 shrink-0 rounded border-gray-300 text-red-700 focus:ring-red-600"
+                                                class="h-4 w-4 shrink-0 rounded border-gray-300 text-red-700 focus:ring-institucional"
                                             >
 
-                                            <span class="text-[10px] font-medium text-gray-700">
-                                                Profesor principal del grupo
+                                            <span class="text-xs font-medium text-gray-700">
+                                                Docente principal del grupo
                                             </span>
                                         </label>
 
                                         <button
                                             type="submit"
-                                            class="h-9 min-w-0 w-full max-w-full rounded-md bg-red-700 px-4 text-xs font-semibold text-white hover:bg-red-800"
+                                            class="boton boton-primario w-full"
                                         >
                                             Asignar
                                         </button>
 
                                     </form>
+                                    @endunless
                                 </div>
 
                             </div>
@@ -651,7 +652,7 @@
             if (termino.length < 2) {
                 resultados.classList.remove('hidden');
                 resultados.innerHTML = `
-                    <div class="text-[10px] text-gray-500">
+                    <div class="text-xs text-gray-500">
                         Escribe al menos 2 caracteres.
                     </div>
                 `;
@@ -660,7 +661,7 @@
 
             resultados.classList.remove('hidden');
             resultados.innerHTML = `
-                <div class="text-[10px] text-gray-500">
+                <div class="text-xs text-gray-500">
                     Buscando...
                 </div>
             `;
@@ -677,19 +678,24 @@
 
             if (!datos || datos.profesores.length === 0) {
                 resultados.innerHTML = `
-                    <div class="text-[10px] text-gray-500">
-                        No se encontraron profesores.
+                    <div class="text-xs text-gray-500">
+                        No se encontraron docentes.
                     </div>
                 `;
                 return;
             }
 
             datos.profesores.forEach(function (profesor) {
+                const tipoDocente = (profesor.tipo_profesor ?? '').replace(/\bprofesor(?:a)?\b/gi, (termino) => ({
+                    PROFESOR: 'DOCENTE', PROFESORA: 'DOCENTE',
+                    Profesor: 'Docente', Profesora: 'Docente',
+                    profesor: 'docente', profesora: 'docente',
+                }[termino] ?? 'Docente'));
                 const boton = document.createElement('button');
 
                 boton.type = 'button';
                 boton.className =
-                    'block min-w-0 w-full break-words rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-[11px] hover:bg-gray-50';
+                    'block min-w-0 w-full break-words rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-xs hover:bg-gray-50';
 
                 boton.innerHTML = `
                     <div class="font-semibold text-gray-700">
@@ -697,7 +703,7 @@
                     </div>
                     <div class="text-gray-500">
                         RUT: ${profesor.rut ?? '—'}
-                        ${profesor.tipo_profesor ? ' · ' + profesor.tipo_profesor : ''}
+                        ${tipoDocente ? ' · ' + tipoDocente : ''}
                     </div>
                 `;
 

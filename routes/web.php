@@ -21,8 +21,6 @@ use App\Http\Controllers\PrioridadRecursoController;
 use App\Http\Controllers\HorarioEspacioController;
 use App\Http\Controllers\ValidacionProgramacionController;
 use App\Http\Controllers\RequerimientoActividadController;
-use App\Imports\PruebaImport;
-use Maatwebsite\Excel\Facades\Excel;
 
 Route::get('/login', [LoginController::class, 'mostrarLogin'])
     ->name('login');
@@ -224,7 +222,7 @@ Route::middleware('auth')->group(function () {
         [ImportacionProgramacionController::class, 'index']
     )
         ->middleware(
-            'permission.redirect:ver programacion anterior'
+            'permission.redirect:importar programacion anterior'
         )
         ->name('programacion.importar');
 
@@ -233,7 +231,7 @@ Route::middleware('auth')->group(function () {
         [ImportacionProgramacionController::class, 'analizar']
     )
         ->middleware(
-            'permission.redirect:ver programacion anterior'
+            'permission.redirect:importar programacion anterior'
         )
         ->name('programacion.importar.analizar');
 
@@ -242,7 +240,7 @@ Route::middleware('auth')->group(function () {
         [ImportacionProgramacionController::class, 'confirmar']
     )
         ->middleware(
-            'permission.redirect:ver programacion anterior'
+            'permission.redirect:importar programacion anterior'
         )
         ->name('programacion.importar.confirmar');
 
@@ -251,7 +249,7 @@ Route::middleware('auth')->group(function () {
         [ImportacionProgramacionController::class, 'cancelar']
     )
         ->middleware(
-            'permission.redirect:ver programacion anterior'
+            'permission.redirect:importar programacion anterior'
         )
         ->name('programacion.importar.cancelar');
 
@@ -376,39 +374,70 @@ Route::middleware('auth')->group(function () {
         )
         ->name('usuarios.destroy');
 
-    Route::get('/configuracion', function () {
-        return view('configuracion.index');
-    })
+    Route::get('/configuracion', [\App\Http\Controllers\ConfiguracionController::class, 'index'])
         ->middleware(
             'permission.redirect:ver configuracion'
         )
         ->name('configuracion.index');
 });
 
-Route::get('/prueba-excel', function () {
-    $archivo = storage_path('app/prueba.xlsx');
-
-    $datos = Excel::toArray(
-        new PruebaImport,
-        $archivo
-    );
-
-    return response()->json([
-        'hojas' => count($datos),
-        'filas_primera_hoja' => count($datos[0] ?? []),
-        'primeras_filas' => array_slice(
-            $datos[0] ?? [],
-            0,
-            5
-        ),
-    ]);
-})
-    ->middleware([
-        'auth',
-        'permission.redirect:ver panel inicio',
-    ]);
-
 require __DIR__.'/disponibilidad.php';
+
+Route::get('/programacion/preparar-generacion', [\App\Http\Controllers\PreparacionGeneracionController::class, 'index'])
+    ->middleware(['auth', 'permission.redirect:generar programacion semestral'])->name('programacion.preparacion');
+
+Route::middleware(['auth', 'permission.redirect:generar programacion semestral'])->prefix('programacion/reorganizacion')->name('programacion.reorganizacion.')->group(function () {
+    Route::post('/', [\App\Http\Controllers\ReorganizacionAutomaticaController::class, 'generar'])->middleware('throttle:5,1')->name('generar');
+    Route::get('/{token}', [\App\Http\Controllers\ReorganizacionAutomaticaController::class, 'show'])->whereUuid('token')->name('show');
+    Route::post('/{token}', [\App\Http\Controllers\ReorganizacionAutomaticaController::class, 'guardar'])->whereUuid('token')->name('guardar');
+});
+
+Route::middleware(['auth', 'permission.redirect:generar programacion semestral'])->prefix('programacion/version/{version}')->whereNumber('version')->group(function () {
+    Route::get('/activar', [\App\Http\Controllers\ActivacionVersionController::class, 'show'])->name('programacion.version.revisar');
+    Route::post('/activar', [\App\Http\Controllers\ActivacionVersionController::class, 'store'])->name('programacion.version.activar');
+});
+
+Route::middleware(['auth', 'permission.redirect:generar programacion semestral'])->prefix('programacion/version/{version}')->whereNumber('version')->group(function () {
+    Route::get('/cierre', [\App\Http\Controllers\CierreProgramacionController::class, 'show'])->name('programacion.version.cierre');
+    Route::post('/cierre', [\App\Http\Controllers\CierreProgramacionController::class, 'store'])->name('programacion.version.cerrar');
+});
+Route::get('/programacion/version/{version}/publicada', [\App\Http\Controllers\CierreProgramacionController::class, 'publicada'])
+    ->whereNumber('version')->middleware(['auth', 'permission.redirect:ver programacion semestral'])->name('programacion.version.publicada');
+
+Route::middleware(['auth', 'permission.redirect:generar programacion semestral'])->prefix('programacion/version/{version}')->whereNumber('version')->group(function () {
+    Route::get('/copiar', [\App\Http\Controllers\CopiaBorradorController::class, 'show'])->name('programacion.version.copia');
+    Route::post('/copiar', [\App\Http\Controllers\CopiaBorradorController::class, 'store'])->name('programacion.version.copiar');
+});
+Route::get('/programacion/version/{version}/publicada/pdf', [\App\Http\Controllers\CierreProgramacionController::class, 'pdf'])
+    ->whereNumber('version')->middleware(['auth', 'permission.redirect:ver programacion semestral', 'throttle:10,1'])->name('programacion.version.pdf');
+
+require __DIR__.'/cambios-horario.php';
+
+require __DIR__.'/estructura-institucional.php';
+
+require __DIR__.'/catalogos-academicos.php';
+
+require __DIR__.'/oferta-academica.php';
+
+require __DIR__.'/secciones-academicas.php';
+
+require __DIR__.'/docentes.php';
+
+require __DIR__.'/completar-programacion.php';
+
+require __DIR__.'/configuracion.php';
+
+require __DIR__.'/perfiles.php';
+require __DIR__.'/identidad.php';
+
+Route::middleware('auth')->group(function () {
+    Route::get('/mi-cuenta/cambiar-contrasena', [\App\Http\Controllers\CambiarContrasenaController::class, 'edit'])->name('cuenta.password.edit');
+    Route::put('/mi-cuenta/cambiar-contrasena', [\App\Http\Controllers\CambiarContrasenaController::class, 'update'])->middleware('throttle:6,1')->name('cuenta.password.update');
+});
+
+require __DIR__.'/manual.php';
+require __DIR__.'/accesos-docentes.php';
+require __DIR__.'/mi-disponibilidad.php';
 
 Route::fallback(function () {
     return redirect()->route('login');

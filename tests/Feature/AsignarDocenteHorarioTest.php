@@ -42,7 +42,7 @@ class AsignarDocenteHorarioTest extends IsolatedDatabaseTestCase
 
     public function test_puede_asignar_en_un_grupo_completo_sin_docentes_de_grupo_y_sin_declaracion(): void
     {
-        $this->get($this->pantalla())->assertOk()->assertSee('Asignar profesor')->assertSee('Nuevo Docente')
+        $this->get($this->pantalla())->assertOk()->assertSee('Asignar docente')->assertSee('Nuevo Docente')
             ->assertSee('data-asignar-docente', false)->assertDontSee('action="'.e(route('programacion.asignacion.horarios.guardar')).'"', false);
         $antes = $this->horario->fresh()->getAttributes();
         $this->put($this->url(), $this->datos())->assertSessionHasNoErrors()->assertRedirect($this->pantalla())

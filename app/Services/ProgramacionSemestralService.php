@@ -17,14 +17,18 @@ class ProgramacionSemestralService
         int $versionAnteriorId,
         int $usuarioId
     ): VersionPlanificacion {
+        $periodoId = VersionPlanificacion::whereKey($versionAnteriorId)->where('tipo', 'anterior')->firstOrFail()->periodo_academico_id;
         return DB::transaction(function () use (
             $versionAnteriorId,
-            $usuarioId
+            $usuarioId,
+            $periodoId
         ) {
+            \App\Models\PeriodoAcademico::lockForUpdate()->findOrFail($periodoId);
             $versionAnterior = VersionPlanificacion::query()
                 ->where('id', $versionAnteriorId)
                 ->where('tipo', 'anterior')
-                ->firstOrFail();
+                ->where('periodo_academico_id', $periodoId)
+                ->lockForUpdate()->firstOrFail();
 
             $versionSemestral = VersionPlanificacion::create([
                 'periodo_academico_id' => $versionAnterior->periodo_academico_id,
@@ -203,8 +207,7 @@ class ProgramacionSemestralService
             $periodoId
         )
             ->where('tipo', 'semestral')
-            ->orderByDesc('version')
-            ->value('version');
+            ->pluck('version')->map(fn ($valor) => (float) $valor)->max();
 
         if ($ultima === null) {
             return 0.1;

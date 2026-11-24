@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Restablecer contraseña | PROSEC</title>
+    <title>Restablecer contraseña | {{ $identidad['nombre'] }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -22,6 +22,7 @@
     </style>
 
     <x-favicon />
+    <x-identidad-estilos />
 </head>
 
 <body class="min-h-screen bg-fondo">
@@ -38,9 +39,9 @@
                 <div class="flex justify-center">
 
                     <img
-                        src="{{ asset('images/prosec-logo.svg') }}"
-                        alt="PROSEC - Programación Semestral de Cursos"
-                        style="width: 245px; max-width: 100%; height: auto;"
+                        src="{{ $identidad['principal_url'] }}"
+                        alt="{{ $identidad['nombre'] }}"
+                        style="width: 245px; max-width: 100%; max-height: 100px; height: auto; object-fit: contain;"
                     >
 
                 </div>
@@ -259,7 +260,7 @@
 
                     <button
                         type="submit"
-                        class="flex w-full items-center justify-center rounded-lg bg-institucional font-semibold text-white transition-colors hover:bg-institucional-oscuro"
+                        class="flex w-full shrink-0 items-center justify-center whitespace-nowrap rounded-lg bg-institucional font-semibold text-white transition-colors [overflow-wrap:normal] hover:bg-institucional-oscuro"
                         style="
                             height: 50px;
                             font-size: 15px;
@@ -313,8 +314,8 @@
                 >
 
                     <img
-                        src="{{ asset('images/main-logo.svg') }}"
-                        alt="Universidad Católica de la Santísima Concepción"
+                        src="{{ $identidad['institucion_url'] }}"
+                        alt="{{ $identidad['institucion'] }}"
                         style="
                             height: 48px;
                             width: auto;
@@ -334,7 +335,7 @@
                     font-size: 12px;
                 "
             >
-                PROSEC · Programación Semestral de Cursos
+                {{ $identidad['nombre'] }} · {{ $identidad['lema'] }}
             </div>
 
         </div>

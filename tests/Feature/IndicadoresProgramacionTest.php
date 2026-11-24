@@ -109,6 +109,55 @@ class IndicadoresProgramacionTest extends IsolatedDatabaseTestCase
         $this->assertSame(['actividades_sin_grupos' => 1, 'grupos_sin_carga' => 1, 'modulos_sin_grupo' => 1, 'excedentes' => 0], $datos['pendientes']);
     }
 
+    public function test_cuenta_docentes_efectivos_del_grupo_y_la_seccion_sin_duplicar_modulos(): void
+    {
+        $profesor = Profesor::create([
+            'universidad_id' => $this->universidad, 'nombre' => 'Ana', 'apellido' => 'Prueba', 'estado' => true,
+        ]);
+        $this->actividad->seccion->profesores()->create(['profesor_id' => $profesor->id, 'estado' => true]);
+        $conPlantilla = $this->grupo('G:1');
+        $conPlantilla->profesores()->create(['profesor_id' => $profesor->id, 'estado' => true]);
+        $sinPlantilla = $this->grupo('G:2');
+        $this->horario($conPlantilla, 1);
+        $this->horario($sinPlantilla, 2);
+        $this->horario($sinPlantilla, 3, ['grupo_seccion_id' => null]);
+
+        $datos = $this->calcular()['graficos'];
+
+        $this->assertSame([3, 3, 0, 100.0], $this->medidas($datos['docentes']));
+    }
+
+    public function test_la_cobertura_docente_respeta_precedencia_e_institucion_de_las_asignaciones_activas(): void
+    {
+        $profesor = Profesor::create([
+            'universidad_id' => $this->universidad, 'nombre' => 'Ana', 'apellido' => 'Prueba', 'estado' => true,
+        ]);
+        $ajena = Universidad::create(['nombre' => 'Otra institución', 'sigla' => 'OTRA']);
+        $otroProfesor = Profesor::create([
+            'universidad_id' => $ajena->id, 'nombre' => 'Pedro', 'apellido' => 'Ajeno', 'estado' => true,
+        ]);
+        $this->actividad->seccion->profesores()->create(['profesor_id' => $profesor->id, 'estado' => true]);
+
+        $grupoAjeno = $this->grupo('G:1');
+        $grupoAjeno->profesores()->create(['profesor_id' => $otroProfesor->id, 'estado' => true]);
+        $this->horario($grupoAjeno, 1);
+
+        $grupoValido = $this->grupo('G:2');
+        $grupoValido->profesores()->create(['profesor_id' => $profesor->id, 'estado' => true]);
+        $expresoAjeno = $this->horario($grupoValido, 2);
+        $expresoAjeno->profesores()->create(['profesor_id' => $otroProfesor->id, 'estado' => true]);
+
+        $grupoSinAsignacionesActivas = $this->grupo('G:3');
+        $grupoSinAsignacionesActivas->profesores()->create(['profesor_id' => $otroProfesor->id, 'estado' => false]);
+        $this->horario($grupoSinAsignacionesActivas, 3);
+        $expresoInactivo = $this->horario($grupoSinAsignacionesActivas, 4);
+        $expresoInactivo->profesores()->create(['profesor_id' => $otroProfesor->id, 'estado' => false]);
+
+        $datos = $this->calcular()['graficos'];
+
+        $this->assertSame([2, 4, 2, 50.0], $this->medidas($datos['docentes']));
+    }
+
     private function grupo(string $codigo, array $cambios = []): GrupoSeccion
     {
         return GrupoSeccion::create(array_replace(['actividad_seccion_id' => $this->actividad->id, 'codigo' => $codigo, 'estado_activo' => true], $cambios));

@@ -19,13 +19,14 @@ class PropuestaHorarioController extends Controller
 
     public function index()
     {
+        if (Auth::user()->profesor_id) return redirect()->route('mi.disponibilidad.index');
         $profesor = $this->obtenerProfesor();
 
         if (! $profesor) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
-                    'profesor' => 'No se encontró un profesor asociado a tu usuario.',
+                    'profesor' => 'No se encontró un docente asociado a tu usuario.',
                 ]);
         }
 
@@ -70,13 +71,14 @@ class PropuestaHorarioController extends Controller
 
     public function guardar(Request $request)
     {
+        if ($request->user()->profesor_id) return redirect()->route('mi.disponibilidad.index');
         $profesor = $this->obtenerProfesor();
 
         if (! $profesor) {
             return redirect()
                 ->route('programacion.semestral')
                 ->withErrors([
-                    'profesor' => 'No se encontró un profesor asociado a tu usuario.',
+                    'profesor' => 'No se encontró un docente asociado a tu usuario.',
                 ]);
         }
 

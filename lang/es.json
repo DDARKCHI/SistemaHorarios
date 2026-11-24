@@ -1,0 +1,19 @@
+{
+  "Showing": "Mostrando",
+  "to": "a",
+  "of": "de",
+  "results": "resultados",
+  "Go to page :page": "Ir a la página :page",
+  "Pagination Navigation": "Navegación de páginas",
+  "Previous": "Anterior",
+  "Next": "Siguiente",
+  "Not Found": "Página no encontrada",
+  "Forbidden": "Acceso denegado",
+  "Server Error": "Error del servidor",
+  "Page Expired": "La página ha vencido",
+  "Too Many Requests": "Demasiadas solicitudes",
+  "Service Unavailable": "Servicio no disponible",
+  "Unauthorized": "Acceso no autorizado",
+  "All rights reserved.": "Todos los derechos reservados.",
+  "The given data was invalid.": "Los datos proporcionados no son válidos."
+}

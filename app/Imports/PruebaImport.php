@@ -6,8 +6,8 @@ use Maatwebsite\Excel\Concerns\ToArray;
 
 class PruebaImport implements ToArray
 {
-    public function array(array $array)
+    public function array(array $array): void
     {
-        return $array;
+        // Las filas se obtienen mediante Excel::toArray.
     }
 }

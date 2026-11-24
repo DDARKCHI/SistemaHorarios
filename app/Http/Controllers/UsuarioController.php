@@ -23,7 +23,7 @@ class UsuarioController extends Controller
 
     public function create()
     {
-        $roles = Role::orderBy('name')->get();
+        $roles = Role::where('guard_name', 'web')->orderBy('name')->get();
 
         return view('administracion.create', compact('roles'));
     }
@@ -35,7 +35,7 @@ class UsuarioController extends Controller
             'rut' => ['required', 'string', 'max:20', 'unique:users,rut'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'exists:roles,name'],
+            'role' => ['required', Rule::exists('roles', 'name')->where('guard_name', 'web')],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser válido.',
@@ -60,14 +60,14 @@ class UsuarioController extends Controller
             'role.exists' => 'El rol seleccionado no es válido.',
         ]);
 
-        $usuario = User::create([
-            'name' => $datos['name'],
-            'rut' => $datos['rut'],
-            'email' => $datos['email'],
-            'password' => $datos['password'],
-        ]);
-
-        $usuario->syncRoles([$datos['role']]);
+        DB::transaction(function () use ($datos) {
+            $this->bloquearRolAdministrador();
+            $rol = Role::where('guard_name', 'web')->where('name', $datos['role'])->first();
+            if (! $rol) throw ValidationException::withMessages(['role' => 'El perfil cambió. Revisa la selección.']);
+            $usuario = User::create(collect($datos)->only(['name', 'rut', 'email', 'password'])->all());
+            $usuario->syncRoles([$rol]);
+            $this->auditar('Crear cuenta', $usuario, ['perfil' => $rol->name]);
+        }, 3);
 
         return redirect()
             ->route('administracion.index')
@@ -76,7 +76,7 @@ class UsuarioController extends Controller
 
     public function edit(User $usuario)
     {
-        $roles = Role::orderBy('name')->get();
+        $roles = Role::where('guard_name', 'web')->orderBy('name')->get();
 
         return view('administracion.edit', compact('usuario', 'roles'));
     }
@@ -98,7 +98,7 @@ class UsuarioController extends Controller
                 Rule::unique('users', 'email')->ignore($usuario->id),
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'exists:roles,name'],
+            'role' => ['required', Rule::exists('roles', 'name')->where('guard_name', 'web')],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'name.string' => 'El nombre debe ser válido.',
@@ -125,6 +125,9 @@ class UsuarioController extends Controller
         DB::transaction(function () use ($datos, $usuario) {
             $rolAdministrador = $this->bloquearRolAdministrador();
             $usuario = User::query()->lockForUpdate()->findOrFail($usuario->id);
+            $rol = Role::where('guard_name', 'web')->where('name', $datos['role'])->first();
+            if (! $rol) throw ValidationException::withMessages(['role' => 'El perfil cambió. Revisa la selección.']);
+            $rolesAntes = $usuario->getRoleNames()->sort()->values()->all();
 
             if ($datos['role'] !== 'Administrador' && $this->esUltimoAdministrador($usuario, $rolAdministrador)) {
                 throw ValidationException::withMessages([
@@ -141,7 +144,11 @@ class UsuarioController extends Controller
             }
 
             $usuario->save();
-            $usuario->syncRoles([$datos['role']]);
+            $usuario->syncRoles([$rol]);
+            if ($usuario->id === Auth::id() && ! $usuario->fresh()->can('administrar usuarios')) {
+                throw ValidationException::withMessages(['role' => 'Conserva tu permiso para administrar accesos. Otro administrador puede cambiar tu perfil.']);
+            }
+            $this->auditar('Actualizar cuenta', $usuario, ['perfiles_antes' => $rolesAntes, 'perfil' => $rol->name, 'clave_actualizada' => ! empty($datos['password'])]);
         });
 
         return redirect()
@@ -165,6 +172,7 @@ class UsuarioController extends Controller
                 return false;
             }
 
+            $this->auditar('Eliminar cuenta', $usuario, ['perfiles' => $usuario->getRoleNames()->sort()->values()->all()]);
             $usuario->delete();
 
             return true;
@@ -184,10 +192,18 @@ class UsuarioController extends Controller
     private function bloquearRolAdministrador(): ?Role
     {
         // Compartir este bloqueo evita retirar a los últimos administradores en solicitudes simultáneas.
-        return Role::where('name', 'Administrador')
-            ->where('guard_name', 'web')
-            ->lockForUpdate()
-            ->first();
+        return Role::orderBy('id')->lockForUpdate()->get()
+            ->first(fn ($rol) => $rol->name === 'Administrador' && $rol->guard_name === 'web');
+    }
+
+    private function auditar(string $accion, User $usuario, array $datos): void
+    {
+        DB::table('historial_acciones')->insert([
+            'usuario_id' => Auth::id(), 'accion' => $accion, 'modulo' => 'Administración',
+            'tabla_afectada' => 'users', 'registro_id' => $usuario->id,
+            'descripcion' => 'Gestión de la cuenta '.$usuario->id.'.',
+            'datos' => json_encode($datos, JSON_THROW_ON_ERROR), 'created_at' => now(), 'updated_at' => now(),
+        ]);
     }
 
     private function esUltimoAdministrador(User $usuario, ?Role $rolAdministrador): bool

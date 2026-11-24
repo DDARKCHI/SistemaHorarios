@@ -3,7 +3,7 @@
 @section('content')
 
 <x-encabezado-pagina titulo="Intercambio Docente">
-    Consulta profesores que actualmente imparten una asignatura y revisa su carga, ubicación y horarios para evaluar posibles reemplazos.
+    Consulta docentes que actualmente imparten una asignatura y revisa su carga, ubicación y horarios para evaluar posibles reemplazos.
     <x-slot:acciones>
         @if ($asignatura)
             <div class="min-w-0 break-words rounded-md bg-gray-100 px-3 py-2 xl:text-right">
@@ -67,7 +67,7 @@
         autocomplete="off"
         spellcheck="false"
         placeholder="Buscar por código o nombre..."
-        class="h-9 min-w-0 w-full max-w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-red-600 focus:ring-1 focus:ring-red-600"
+        class="h-9 min-w-0 w-full max-w-full rounded-md border border-gray-300 bg-white px-2.5 pr-8 text-xs text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional"
     >
 
     <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400">
@@ -98,9 +98,9 @@
 
             <button
                 type="submit"
-                class="h-9 whitespace-nowrap rounded-md bg-red-700 px-5 text-xs font-semibold text-white transition hover:bg-red-800"
+                class="boton boton-primario"
             >
-                Buscar profesores
+                Buscar docentes
             </button>
 
         </div>
@@ -118,7 +118,7 @@
             </div>
 
             <div class="mt-1 text-xs text-gray-400">
-                Podrás consultar los profesores que actualmente la imparten,
+                Podrás consultar los docentes que actualmente la imparten,
                 sus sedes, carga horaria y horarios ocupados.
             </div>
 
@@ -131,11 +131,11 @@
         <div class="rounded-lg border border-gray-200 bg-white px-4 py-12 text-center shadow-sm">
 
             <div class="text-sm font-semibold text-gray-700">
-                No se encontraron profesores
+                No se encontraron docentes
             </div>
 
             <div class="mt-1 text-xs text-gray-400">
-                La asignatura seleccionada no tiene profesores asociados
+                La asignatura seleccionada no tiene docentes asociados
                 en la programación actual.
             </div>
 
@@ -151,7 +151,7 @@
             <div class="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
 
                 <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-                    Profesores
+                    Docentes
                 </div>
 
                 <div class="mt-0.5 text-lg font-bold text-gray-800">
@@ -199,35 +199,32 @@
                 <div class="border-b border-gray-200 bg-gray-100 px-4 py-2">
 
                     <div class="text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                        Profesores que imparten la asignatura
+                        Docentes que imparten la asignatura
                     </div>
 
                 </div>
 
+                <div class="listado-adaptable min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Resultados de intercambio docente">
 
-                <p class="border-b border-gray-200 px-3 py-2 text-[11px] text-gray-500 2xl:hidden">Desliza la tabla para ver todas las columnas.</p>
+                    <table role="table" class="w-full min-w-[680px] border-collapse">
 
-                <div class="min-w-0 max-w-full overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-institucional" role="region" aria-label="Resultados de intercambio docente" tabindex="0">
+                        <thead role="rowgroup">
 
-                    <table class="w-full min-w-[680px] border-collapse">
+                            <tr role="row" class="bg-gray-50">
 
-                        <thead>
-
-                            <tr class="bg-gray-50">
-
-                                <th class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                                    Profesor
+                                <th role="columnheader" scope="col" class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                                    Docente
                                 </th>
 
-                                <th class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                                <th role="columnheader" scope="col" class="border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                     Sede(s)
                                 </th>
 
-                                <th class="min-w-28 border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                                <th role="columnheader" scope="col" class="min-w-28 border-b border-r border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                     Carga actual
                                 </th>
 
-                                <th class="border-b border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                                <th role="columnheader" scope="col" class="border-b border-gray-200 px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-gray-600">
                                     Asignaturas actuales
                                 </th>
 
@@ -236,7 +233,7 @@
                         </thead>
 
 
-                        <tbody>
+                        <tbody role="rowgroup">
 
                             @foreach ($resultados as $indice => $resultado)
 
@@ -261,16 +258,16 @@
                                 @endphp
 
 
-                                <tr
+                                <tr role="row"
                                     class="align-top hover:bg-gray-50"
                                     data-profesor-row="{{ $indice }}"
                                 >
 
                                     {{-- PROFESOR --}}
-                                    <td class="border-b border-r border-gray-200 px-3 py-3">
+                                    <td role="cell" data-principal-listado class="border-b border-r border-gray-200 px-3 py-3">
 
                                         <div class="text-xs font-bold text-gray-800">
-                                            {{ trim(($profesor?->nombre ?? '') . ' ' . ($profesor?->apellido ?? '')) ?: 'Sin profesor' }}
+                                            {{ trim(($profesor?->nombre ?? '') . ' ' . ($profesor?->apellido ?? '')) ?: 'Sin docente' }}
                                         </div>
 
 
@@ -288,7 +285,7 @@
                                             <div class="mt-1">
 
                                                 <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                                                    {{ $profesor->tipo_profesor }}
+                                                    {{ strtr($profesor->tipo_profesor, ['PROFESORAS' => 'DOCENTES', 'PROFESORES' => 'DOCENTES', 'PROFESORA' => 'DOCENTE', 'PROFESOR' => 'DOCENTE', 'Profesoras' => 'Docentes', 'Profesores' => 'Docentes', 'Profesora' => 'Docente', 'Profesor' => 'Docente', 'profesoras' => 'docentes', 'profesores' => 'docentes', 'profesora' => 'docente', 'profesor' => 'docente']) }}
                                                 </span>
 
                                             </div>
@@ -299,7 +296,7 @@
 
 
                                     {{-- SEDES --}}
-                                    <td class="border-b border-r border-gray-200 px-3 py-3">
+                                    <td role="cell" class="border-b border-r border-gray-200 px-3 py-3"><span class="etiqueta-listado" aria-hidden="true">Sede(s)</span><div class="dato-listado">
 
                                         @if ($sedes->isEmpty())
 
@@ -323,11 +320,11 @@
 
                                         @endif
 
-                                    </td>
+                                    </div></td>
 
 
                                     {{-- CARGA --}}
-                                    <td class="min-w-28 border-b border-r border-gray-200 px-3 py-3">
+                                    <td role="cell" class="min-w-28 border-b border-r border-gray-200 px-3 py-3"><span class="etiqueta-listado" aria-hidden="true">Carga actual</span><div class="dato-listado">
 
                                         <div class="text-lg font-bold text-gray-800">
                                             {{ $cantidadHorarios }}
@@ -342,11 +339,11 @@
                                             {{ $cantidadAsignaturas == 1 ? 'asignatura' : 'asignaturas' }}
                                         </div>
 
-                                    </td>
+                                    </div></td>
 
 
                                     {{-- ASIGNATURAS --}}
-                                    <td class="border-b border-gray-200 px-3 py-3">
+                                    <td role="cell" class="border-b border-gray-200 px-3 py-3"><span class="etiqueta-listado" aria-hidden="true">Asignaturas actuales</span><div class="dato-listado">
 
                                         @if ($cargaPorAsignatura->isEmpty())
 
@@ -465,7 +462,7 @@
 
                                         @endif
 
-                                    </td>
+                                    </div></td>
 
                                 </tr>
 

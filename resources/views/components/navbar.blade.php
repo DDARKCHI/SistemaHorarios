@@ -13,12 +13,12 @@
 
 <header class="sticky top-0 z-30 border-b border-borde bg-superficie">
 
-    <div class="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-3 px-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-6 lg:px-6">
+    <div class="ancho-pagina grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-center gap-x-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-x-6">
 
         <button
             type="button"
             id="boton-menu-movil"
-            class="col-start-1 row-start-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-borde text-texto transition-colors hover:bg-fondo lg:hidden"
+            class="col-start-1 row-start-1 boton boton-secundario size-11 px-0 lg:hidden"
             aria-label="Abrir menú"
             aria-controls="sidebar-movil"
             aria-expanded="false"
@@ -41,9 +41,9 @@
 
         <div class="col-start-2 row-start-1 flex h-16 items-center justify-center lg:hidden">
             <img
-                src="{{ asset('images/main-logo.svg') }}"
-                alt="Universidad Católica de la Santísima Concepción"
-                class="h-10 w-auto"
+                src="{{ $identidad['institucion_url'] }}"
+                alt="{{ $identidad['institucion'] }}"
+                class="h-10 max-w-full w-auto object-contain"
             >
         </div>
 
@@ -98,11 +98,15 @@
 
             <div
                 id="menu-usuario"
-                class="absolute right-0 top-full z-50 mt-2 hidden w-44 overflow-hidden rounded-lg border border-borde bg-superficie shadow-lg"
+                class="absolute right-0 top-full z-50 mt-2 hidden w-60 overflow-hidden rounded-lg border border-borde bg-superficie shadow-lg"
             >
+<a href="{{ route('ayuda.manual') }}" class="flex min-h-11 items-center gap-2 border-b border-borde px-4 py-3 text-sm font-semibold text-texto hover:bg-fondo"><svg aria-hidden="true" class="h-4 w-4 shrink-0 text-texto-secundario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 4h6a3 3 0 0 1 3 3v14a3 3 0 0 0-3-3H4Zm9 3a3 3 0 0 1 3-3h5v14h-5a3 3 0 0 0-3 3"/></svg>Manual de usuario</a><a href="{{ route('cuenta.password.edit') }}" class="flex min-h-11 items-center gap-2 border-b border-borde px-4 py-3 text-sm font-semibold text-texto hover:bg-fondo"><svg aria-hidden="true" class="h-4 w-4 shrink-0 text-texto-secundario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8" cy="8" r="5"/><path d="m12 12 9 9m-3-3 3-3m-6 0 3-3"/></svg>Cambiar contraseña</a>
                 <form
                     method="POST"
                     action="{{ route('logout') }}"
+                    data-confirmar="Tendrás que volver a ingresar a {{ $identidad['nombre'] }} para continuar."
+                    data-confirmar-titulo="¿Cerrar sesión?"
+                    data-confirmar-accion="Cerrar sesión"
                 >
                     @csrf
 

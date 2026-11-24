@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         semestre: ['semestres', 'Todos', item => [item, String(item)]],
         seccion_numero: ['secciones', 'Todas', item => [item, String(item)]],
         asignatura_id: ['asignaturas', 'Todos los ramos', item => [item.id, `${item.codigo} — ${item.nombre}`]],
-        profesor_id: ['profesores', 'Todos los profesores', item => [item.id, item.nombre]],
+        profesor_id: ['profesores', 'Todos los docentes', item => [item.id, item.nombre]],
     };
 
     async function actualizar(cambiado) {
@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pendiente = true;
         aplicar.disabled = true;
         form.setAttribute('aria-busy', 'true');
+        estado.classList.add('estado-filtros-cargando');
         mostrarEstado('Actualizando opciones disponibles…');
 
         try {
@@ -84,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pendiente = false;
                 aplicar.disabled = false;
                 form.removeAttribute('aria-busy');
+                estado.classList.remove('estado-filtros-cargando');
             }
         }
     }

@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Services\CuentasDocentes;
+use App\Support\PermisosSistema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,24 +18,37 @@ class LoginController extends Controller
     public function iniciarSesion(Request $request)
     {
         $credenciales = $request->validate([
-            'rut' => 'required',
-            'password' => 'required',
+            'rut' => ['required', 'string', 'max:40'],
+            'password' => ['required', 'string'],
         ]);
 
+        $cuenta = CuentasDocentes::buscarUsuario($credenciales['rut']);
+        $credenciales['rut'] = $cuenta?->rut ?? trim($credenciales['rut']);
         if (Auth::attempt($credenciales)) {
             $request->session()->regenerate();
 
             $usuario = Auth::user();
 
-            if ($usuario->can('ver panel inicio')) {
-                return redirect()->route('inicio');
+            $entrada = PermisosSistema::entrada($usuario);
+            if ($entrada) {
+                $ahora = now();
+                $primerIngreso = User::whereKey($usuario->id)->whereNull('primer_ingreso_en')
+                    ->update(['primer_ingreso_en' => $ahora, 'ultimo_ingreso_en' => $ahora]);
+                if (! $primerIngreso) {
+                    User::whereKey($usuario->id)->update(['ultimo_ingreso_en' => $ahora]);
+                }
+
+                return redirect()->route($usuario->debe_cambiar_password ? 'cuenta.password.edit' : $entrada);
             }
 
-            return redirect()->route('programacion.semestral');
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->withErrors(['rut' => 'Tu usuario no tiene permisos para acceder al sistema. Solicita la revisión de tu perfil.']);
         }
 
         return back()->withErrors([
-            'rut' => 'El RUT o la contraseña son incorrectos.',
+            'rut' => 'El usuario o la contraseña son incorrectos.',
         ])->onlyInput('rut');
     }
 

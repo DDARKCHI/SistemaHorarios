@@ -11,7 +11,7 @@ use App\Models\VersionPlanificacion;
 
 class ProgramacionComparacionService
 {
-    public function comparar(array $registros): array
+    public function comparar(array $registros, ?int $periodoId = null): array
     {
         $registros = $this->normalizarRegistros($registros);
 
@@ -74,9 +74,9 @@ class ProgramacionComparacionService
             $resultado['periodo_actual'] = $periodoNombre;
         }
 
-        $periodo = $periodoNombre !== null
+        $periodo = $periodoId !== null ? PeriodoAcademico::find($periodoId) : ($periodoNombre !== null
             ? PeriodoAcademico::where('nombre', $periodoNombre)->first()
-            : null;
+            : null);
 
         $versionAnterior = null;
 
@@ -263,6 +263,9 @@ class ProgramacionComparacionService
         $resultado['hay_cambios'] =
             $this->detectarCambios($resultado);
 
+        $resultado['detalle_cambios'] = app(DetalleComparacionImportacion::class)
+            ->comparar($registros, $versionAnterior, $periodo?->universidad_id);
+
         return $resultado;
     }
 
@@ -296,14 +299,14 @@ class ProgramacionComparacionService
             $cambios,
             $resultado['profesores']['nuevos'] ?? 0,
             'profesores',
-            'profesor nuevo'
+            'docente nuevo'
         );
 
         $this->agregarCambio(
             $cambios,
             $resultado['profesores']['modificados'] ?? 0,
             'profesores_modificados',
-            'profesor modificado'
+            'docente modificado'
         );
 
         $this->agregarCambio(
@@ -461,47 +464,12 @@ class ProgramacionComparacionService
         ];
     }
 
-    private function obtenerSeccionesVersion(
-        VersionPlanificacion $version
-    ): array {
+    private function obtenerSeccionesVersion(VersionPlanificacion $version): array
+    {
         $resultado = [];
-
-        $secciones = Seccion::query()
-            ->where(
-                'periodo_academico_id',
-                $version->periodo_academico_id
-            )
-            ->with([
-                'periodoAcademico',
-                'carreras',
-                'profesores.profesor',
-                'actividades.grupos',
-                'actividades.horarios' => function ($query) use ($version) {
-                    $query->where(
-                        'version_planificacion_id',
-                        $version->id
-                    )->with([
-                        'dia',
-                        'bloqueHorario',
-                        'grupoSeccion',
-                    ]);
-                },
-            ])
-            ->get();
-
-        foreach ($secciones as $seccion) {
-            $clave = implode('|', [
-                (string) $seccion->identificador_externo,
-                (string) $seccion->codigo,
-                (string) optional(
-                    $seccion->periodoAcademico
-                )->nombre,
-            ]);
-
-            $resultado[$clave] =
-                $this->normalizarSeccionAnterior($seccion);
-        }
-
+        $secciones = $this->seccionesComparadas($version)->with(['periodoAcademico', 'asignatura', 'carreras', 'profesores.profesor', 'actividades.grupos',
+            'actividades.horarios' => fn ($q) => $q->where('version_planificacion_id', $version->id)->with('dia', 'bloqueHorario', 'grupoSeccion')])->get();
+        foreach ($secciones as $s) $resultado[$this->claveSeccionModelo($s)] = $this->normalizarSeccionAnterior($s);
         return $resultado;
     }
 
@@ -610,297 +578,40 @@ class ProgramacionComparacionService
         return false;
     }
 
-    private function compararRelacionesConVersion(
-        array $registros,
-        VersionPlanificacion $version
-    ): array {
-        $actuales = [];
-
-        foreach ($registros as $registro) {
-            $idCurso = $this->texto(
-                $registro['ID_CURSO'] ?? null
-            );
-
-            $seccion = $this->texto(
-                $registro['SECC'] ?? null
-            );
-
-            $carrera = $this->texto(
-                $registro['NOM_CARR'] ?? null
-            );
-
-            $semestre = $this->texto(
-                $registro['SEMESTRE'] ?? null
-            );
-
-            if (
-                $idCurso === ''
-                || $seccion === ''
-                || $carrera === ''
-                || $semestre === ''
-            ) {
-                continue;
-            }
-
-            $clave = implode('|', [
-                $idCurso,
-                $seccion,
-                mb_strtoupper($carrera),
-                $semestre,
-            ]);
-
-            $actuales[$clave] = true;
-        }
-
-        $anteriores = [];
-
-        $secciones = Seccion::query()
-            ->where(
-                'periodo_academico_id',
-                $version->periodo_academico_id
-            )
-            ->with([
-                'periodoAcademico',
-                'carreras',
-            ])
-            ->get();
-
-        foreach ($secciones as $seccion) {
-            foreach ($seccion->carreras as $carrera) {
-                $clave = implode('|', [
-                    $seccion->identificador_externo,
-                    $seccion->codigo,
-                    mb_strtoupper(
-                        trim((string) $carrera->nombre)
-                    ),
-                    optional(
-                        $seccion->periodoAcademico
-                    )->nombre,
-                ]);
-
-                $anteriores[$clave] = true;
-            }
-        }
-
-        return [
-            'nuevas' => count(
-                array_diff_key(
-                    $actuales,
-                    $anteriores
-                )
-            ),
-
-            'eliminadas' => count(
-                array_diff_key(
-                    $anteriores,
-                    $actuales
-                )
-            ),
-
-            'modificadas' => 0,
-        ];
+    private function compararRelacionesConVersion(array $registros, VersionPlanificacion $version): array
+    {
+        $actuales = $anteriores = [];
+        foreach ($registros as $r) if ($clave = $this->claveSeccion($r)) $actuales[$clave.'|'.ConciliacionOfertaImportada::clave($r['NOM_CARR'] ?? '')] = true;
+        foreach ($this->seccionesComparadas($version)->with('asignatura', 'periodoAcademico', 'carreras')->get() as $s)
+            foreach ($s->carreras as $c) $anteriores[$this->claveSeccionModelo($s).'|'.ConciliacionOfertaImportada::clave($c->nombre)] = true;
+        return ['nuevas' => count(array_diff_key($actuales, $anteriores)), 'eliminadas' => count(array_diff_key($anteriores, $actuales)), 'modificadas' => 0];
     }
 
-    private function compararGruposConVersion(
-        array $registros,
-        VersionPlanificacion $version
-    ): array {
-        $actuales = [];
-
-        foreach ($registros as $registro) {
-            $idCurso = $this->texto(
-                $registro['ID_CURSO'] ?? null
-            );
-
-            $seccion = $this->texto(
-                $registro['SECC'] ?? null
-            );
-
-            $horario = $this->texto(
-                $registro['HORARIO'] ?? null
-            );
-
-            foreach ($this->extraerGrupos($horario) as $grupo) {
-                $actuales[
-                    $idCurso . '|' .
-                    $seccion . '|' .
-                    $grupo
-                ] = true;
-            }
-        }
-
-        $anteriores = [];
-
-        $secciones = Seccion::query()
-            ->where(
-                'periodo_academico_id',
-                $version->periodo_academico_id
-            )
-            ->with([
-                'actividades.grupos',
-            ])
-            ->get();
-
-        foreach ($secciones as $seccion) {
-            foreach ($seccion->actividades as $actividad) {
-                foreach ($actividad->grupos as $grupo) {
-                    $anteriores[
-                        $seccion->identificador_externo . '|' .
-                        $seccion->codigo . '|' .
-                        $grupo->codigo
-                    ] = true;
-                }
-            }
-        }
-
-        return [
-            'nuevos' => count(
-                array_diff_key(
-                    $actuales,
-                    $anteriores
-                )
-            ),
-
-            'eliminados' => count(
-                array_diff_key(
-                    $anteriores,
-                    $actuales
-                )
-            ),
-        ];
+    private function compararGruposConVersion(array $registros, VersionPlanificacion $version): array
+    {
+        $actuales = $anteriores = [];
+        foreach ($registros as $r) foreach (ConciliacionOfertaImportada::horarios($this->texto($r['HORARIO'] ?? null)) as $h)
+            if ($h['grupo'] !== null) $actuales[$this->claveSeccion($r).'|'.$h['tipo'].'|'.$h['grupo']] = true;
+        $horarios = $version->horarios()->with('actividadSeccion.seccion.asignatura', 'actividadSeccion.seccion.periodoAcademico', 'grupoSeccion')->get();
+        foreach ($horarios as $h) if ($h->grupoSeccion) $anteriores[$this->claveSeccionModelo($h->actividadSeccion->seccion).'|'.$h->actividadSeccion->tipo.'|'.$this->grupoComparacion($h->grupoSeccion)] = true;
+        return ['nuevos' => count(array_diff_key($actuales, $anteriores)), 'eliminados' => count(array_diff_key($anteriores, $actuales))];
     }
 
-    private function compararHorariosConVersion(
-        array $registros,
-        VersionPlanificacion $version
-    ): array {
-        $actuales = [];
-
-        foreach ($registros as $registro) {
-            $idCurso = $this->texto(
-                $registro['ID_CURSO'] ?? null
-            );
-
-            $seccion = $this->texto(
-                $registro['SECC'] ?? null
-            );
-
-            $horario = $this->texto(
-                $registro['HORARIO'] ?? null
-            );
-
-            foreach (
-                $this->parsearHorarios($horario)
-                as $dato
-            ) {
-                $actuales[
-                    implode('|', [
-                        $idCurso,
-                        $seccion,
-                        $dato['tipo'],
-                        $dato['dia'],
-                        $dato['bloque'],
-                        $dato['grupo'],
-                    ])
-                ] = true;
-            }
-        }
-
-        $anteriores = [];
-
-        $secciones = Seccion::query()
-            ->where(
-                'periodo_academico_id',
-                $version->periodo_academico_id
-            )
-            ->with([
-                'actividades.horarios' => function ($query) use (
-                    $version
-                ) {
-                    $query->where(
-                        'version_planificacion_id',
-                        $version->id
-                    )
-                        ->with([
-                            'dia',
-                            'bloqueHorario',
-                            'grupoSeccion',
-                        ]);
-                },
-            ])
-            ->get();
-
-        foreach ($secciones as $seccion) {
-            foreach ($seccion->actividades as $actividad) {
-                foreach ($actividad->horarios as $horario) {
-                    $anteriores[
-                        implode('|', [
-                            $seccion->identificador_externo,
-                            $seccion->codigo,
-                            $actividad->tipo,
-                            optional($horario->dia)->abreviatura,
-                            optional($horario->bloqueHorario)->numero,
-                            optional($horario->grupoSeccion)->codigo,
-                        ])
-                    ] = true;
-                }
-            }
-        }
-
-        return [
-            'nuevos' => count(
-                array_diff_key(
-                    $actuales,
-                    $anteriores
-                )
-            ),
-
-            'eliminados' => count(
-                array_diff_key(
-                    $anteriores,
-                    $actuales
-                )
-            ),
-
-            'modificados' => 0,
-        ];
+    private function compararHorariosConVersion(array $registros, VersionPlanificacion $version): array
+    {
+        $actuales = $anteriores = [];
+        foreach ($registros as $r) foreach (ConciliacionOfertaImportada::horarios($this->texto($r['HORARIO'] ?? null)) as $h)
+            $actuales[implode('|', [$this->claveSeccion($r), $h['tipo'], $h['dia'], $h['bloque'], $h['grupo']])] = true;
+        $horarios = $version->horarios()->with('actividadSeccion.seccion.asignatura', 'actividadSeccion.seccion.periodoAcademico', 'grupoSeccion', 'dia', 'bloqueHorario')->get();
+        foreach ($horarios as $h) $anteriores[implode('|', [$this->claveSeccionModelo($h->actividadSeccion->seccion), $h->actividadSeccion->tipo, $h->dia?->abreviatura, $h->bloqueHorario?->numero, $this->grupoComparacion($h->grupoSeccion)])] = true;
+        return ['nuevos' => count(array_diff_key($actuales, $anteriores)), 'eliminados' => count(array_diff_key($anteriores, $actuales)), 'modificados' => 0];
     }
 
-    private function contarHorariosExcel(
-        array $registros
-    ): int {
+    private function contarHorariosExcel(array $registros): int
+    {
         $horarios = [];
-
-        foreach ($registros as $registro) {
-            $idCurso = $this->texto(
-                $registro['ID_CURSO'] ?? null
-            );
-
-            $seccion = $this->texto(
-                $registro['SECC'] ?? null
-            );
-
-            $horario = $this->texto(
-                $registro['HORARIO'] ?? null
-            );
-
-            foreach (
-                $this->parsearHorarios($horario)
-                as $dato
-            ) {
-                $horarios[
-                    implode('|', [
-                        $idCurso,
-                        $seccion,
-                        $dato['tipo'],
-                        $dato['dia'],
-                        $dato['bloque'],
-                        $dato['grupo'],
-                    ])
-                ] = true;
-            }
-        }
-
+        foreach ($registros as $r) foreach (ConciliacionOfertaImportada::horarios($this->texto($r['HORARIO'] ?? null)) as $h)
+            $horarios[implode('|', [$this->claveSeccion($r), $h['tipo'], $h['dia'], $h['bloque'], $h['grupo']])] = true;
         return count($horarios);
     }
 
@@ -1613,31 +1324,31 @@ class ProgramacionComparacionService
         return null;
     }
 
-    private function claveSeccion(
-        array $registro
-    ): ?string {
-        if (
-            empty($registro['ID_CURSO'])
-            || empty($registro['SECC'])
-            || empty($registro['SEMESTRE'])
-        ) {
-            return null;
-        }
+    private function claveSeccion(array $registro): ?string
+    {
+        if (empty($registro['COD_RAMO']) || empty($registro['SECC']) || empty($registro['SEMESTRE'])) return null;
+        return ConciliacionOfertaImportada::claveSeccion($registro).'|'.str_replace('/', '-', ConciliacionOfertaImportada::texto($registro['SEMESTRE']));
+    }
 
-        return implode('|', [
-            trim(
-                (string)
-                $registro['ID_CURSO']
-            ),
-            trim(
-                (string)
-                $registro['SECC']
-            ),
-            trim(
-                (string)
-                $registro['SEMESTRE']
-            ),
-        ]);
+    private function claveSeccionModelo(Seccion $seccion): string
+    {
+        $p = $seccion->periodoAcademico;
+        $periodo = $p->anio && $p->numero_semestre ? $p->anio.'-'.$p->numero_semestre : $p->nombre;
+        return ConciliacionOfertaImportada::clave($seccion->asignatura?->codigo).'|'.ConciliacionOfertaImportada::clave($seccion->codigo).'|'.$periodo;
+    }
+
+    private function grupoComparacion($grupo): string
+    {
+        if (! $grupo) return '';
+        if ($grupo->numero) return 'G:'.$grupo->numero;
+        return preg_match('/\A(?:G\s*:\s*)?([0-9]+)\z/i', trim((string) $grupo->codigo), $n) ? 'G:'.(int) $n[1] : (string) $grupo->codigo;
+    }
+
+    private function seccionesComparadas(VersionPlanificacion $version)
+    {
+        $datos = \Illuminate\Support\Facades\DB::table('historial_acciones')->where('accion', 'Importar programación anterior')->where('registro_id', $version->id)->orderByDesc('id')->value('datos');
+        $ids = $datos ? (json_decode($datos, true)['secciones_importadas'] ?? []) : [];
+        return Seccion::where('periodo_academico_id', $version->periodo_academico_id)->where(fn ($s) => $s->whereHas('actividades.horarios', fn ($h) => $h->where('version_planificacion_id', $version->id))->orWhereIn('id', $ids));
     }
 
     private function claveProfesorModelo(

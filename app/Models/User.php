@@ -22,6 +22,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'clave_temporal',
     ];
 
     protected function casts(): array
@@ -29,7 +30,21 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'clave_temporal' => 'encrypted',
+            'debe_cambiar_password' => 'boolean',
+            'primer_ingreso_en' => 'datetime',
+            'ultimo_ingreso_en' => 'datetime',
         ];
+    }
+
+    public function profesor()
+    {
+        return $this->belongsTo(Profesor::class);
+    }
+
+    public function enviosAcceso()
+    {
+        return $this->hasMany(EnvioAccesoDocente::class);
     }
 
     public function sendPasswordResetNotification($token): void
