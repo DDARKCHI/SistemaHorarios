@@ -65,6 +65,21 @@ class ImportacionTemporalTest extends IsolatedDatabaseTestCase
         $this->assertDatabaseCount('versiones_planificacion', 0);
     }
 
+    public function test_archivo_ilegible_informa_error_de_archivo_sin_crear_un_pendiente(): void
+    {
+        $archivo = UploadedFile::fake()->create('dañado.xlsx', 1, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        Excel::shouldReceive('toArray')->once()->andThrow(new \PhpOffice\PhpSpreadsheet\Reader\Exception('Contenido de Excel ilegible'));
+
+        $this->from(route('programacion.importar'))
+            ->post(route('programacion.importar.analizar'), ['archivo' => $archivo])
+            ->assertRedirect(route('programacion.importar'))
+            ->assertSessionHasErrors('archivo');
+
+        $this->assertSame([], $this->pendientes());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertDatabaseCount('versiones_planificacion', 0);
+    }
+
     public function test_el_analisis_conserva_los_limites_de_tipo_y_tamano_del_archivo(): void
     {
         foreach ([

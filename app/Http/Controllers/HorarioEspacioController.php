@@ -108,6 +108,10 @@ class HorarioEspacioController extends Controller
                     'dia', 'bloqueHorario', 'actividadSeccion.seccion.asignatura', 'grupoSeccion',
                     'profesores' => fn ($query) => $query->where('estado', true)->orderBy('id'),
                     'profesores.profesor:id,nombre,apellido',
+                    'grupoSeccion.profesores' => fn ($query) => $query->where('estado', true)->orderBy('id'),
+                    'grupoSeccion.profesores.profesor:id,nombre,apellido',
+                    'actividadSeccion.seccion.profesores' => fn ($query) => $query->where('estado', true)->orderBy('id'),
+                    'actividadSeccion.seccion.profesores.profesor:id,nombre,apellido',
                     'asignacionesSalas' => fn ($query) => $query->where('estado', true)->orderBy('id'),
                     'asignacionesSalas.sala:id,codigo,nombre',
                     'asignacionesLaboratorios' => fn ($query) => $query->where('estado', true)->orderBy('id'),
@@ -187,16 +191,28 @@ class HorarioEspacioController extends Controller
 
     private function sesiones(Collection $horarios, ?VersionPlanificacion $version): Collection
     {
-        $profesoresIds = $horarios->flatMap(fn ($horario) => $horario->profesores->pluck('profesor_id'))->unique();
-        $nombres = $version && $profesoresIds->isNotEmpty()
+        $docentesPorHorario = $horarios->mapWithKeys(function (Horario $horario) {
+            $docentes = $horario->profesores;
+            if ($docentes->isEmpty()) {
+                $docentes = $horario->grupoSeccion?->profesores ?? collect();
+            }
+            if ($docentes->isEmpty()) {
+                $docentes = $horario->actividadSeccion?->seccion?->profesores ?? collect();
+            }
+
+            return [$horario->id => $docentes];
+        });
+        $profesoresIds = $docentesPorHorario->flatten(1)->pluck('profesor_id')->unique();
+        $borradorVigente = $version && $version->tipo === 'semestral' && $version->es_actual && $version->estado === 'Borrador';
+        $nombres = $version && ! $borradorVigente && $profesoresIds->isNotEmpty()
             ? ProfesorVersion::where('version_planificacion_id', $version->id)->whereIn('profesor_id', $profesoresIds)
                 ->get(['profesor_id', 'nombre', 'apellido'])->keyBy('profesor_id')
             : collect();
 
-        return $horarios->map(function ($horario) use ($nombres) {
+        return $horarios->map(function ($horario) use ($nombres, $docentesPorHorario) {
             $seccion = $horario->actividadSeccion?->seccion;
             $asignatura = $seccion?->asignatura;
-            $profesores = $horario->profesores->unique('profesor_id')->map(function ($participacion) use ($nombres) {
+            $profesores = $docentesPorHorario->get($horario->id)->unique('profesor_id')->map(function ($participacion) use ($nombres) {
                 $historico = $nombres->get($participacion->profesor_id);
                 $nombre = trim(($historico?->nombre ?? '').' '.($historico?->apellido ?? ''));
 

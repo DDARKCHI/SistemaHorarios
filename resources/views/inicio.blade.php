@@ -15,9 +15,6 @@
         <div class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
             <span class="text-xs font-semibold uppercase tracking-wide text-texto-secundario">Período académico</span>
             <span class="text-base font-semibold text-texto">{{ $periodoActivo?->nombre ?? 'Sin período activo' }}</span>
-            @if ($periodoActivo)
-                <span class="text-sm text-texto-secundario">Semestre {{ $periodoActivo->numero_semestre }} de {{ $periodoActivo->anio }}</span>
-            @endif
         </div>
         <span class="inline-flex w-fit items-center rounded-full bg-fondo px-3 py-1 text-xs font-medium text-texto-secundario">
             {{ $versionSemestral ? 'Semestral · ' . $versionSemestral->estado : 'Sin programación semestral' }}
@@ -240,8 +237,6 @@
                 <h2 id="resumen-programacion" class="font-semibold text-texto">Programación semestral</h2>
                 @if ($versionSemestral)
                     <p class="mt-1 text-sm text-texto-secundario">Versión {{ $versionSemestral->version }} · {{ $versionSemestral->estado }}</p>
-                @else
-                    <p class="mt-1 text-sm text-texto-secundario">Resumen del período activo.</p>
                 @endif
             </div>
 
@@ -256,17 +251,9 @@
                         @endforeach
                     </dl>
 
-                    @if ($resumen['modulos'] === 0)
-                        <p class="rounded-lg border border-borde bg-fondo p-4 text-sm text-texto-secundario">Esta versión todavía no tiene módulos programados.</p>
-                    @else
-                        <p class="text-xs text-texto-secundario">Se cuentan los módulos activos de esta versión. Abre la programación y aplica un filtro para consultar sus horarios.</p>
-                    @endif
                 @else
                     <div class="rounded-lg border border-dashed border-borde bg-fondo p-5">
                         <p class="font-medium text-texto">{{ $periodoActivo ? 'Sin programación semestral actual' : 'Sin período activo' }}</p>
-                        <p class="mt-1 text-sm text-texto-secundario">
-                            {{ $periodoActivo ? 'Todavía no hay una programación semestral vigente para este período.' : 'Cuando haya un período activo, aquí verás el resumen de su programación semestral.' }}
-                        </p>
                     </div>
                 @endif
 
@@ -282,7 +269,6 @@
         <section class="min-w-0 rounded-xl border border-borde bg-superficie shadow-sm" aria-labelledby="titulo-accesos">
             <div class="border-b border-borde px-5 py-4">
                 <h2 id="titulo-accesos" class="font-semibold text-texto">Accesos rápidos</h2>
-                <p class="mt-1 text-sm text-texto-secundario">Continúa con las tareas disponibles para tu cuenta.</p>
             </div>
 
             <nav class="p-5" aria-label="Accesos rápidos">

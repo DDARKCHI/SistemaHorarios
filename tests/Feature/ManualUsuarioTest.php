@@ -17,10 +17,12 @@ class ManualUsuarioTest extends IsolatedDatabaseTestCase
     public function test_manual_describe_las_funciones_y_permite_descargar_pdf(): void
     {
         $u=User::create(['name'=>'Ejemplo','rut'=>'12345678','email'=>'ejemplo@example.test','password'=>'ClaveFicticia123']);
+        $u->assignRole(Role::findOrCreate('Administrador', 'web'));
         foreach (PermisosSistema::NOMBRES as $permiso) $u->givePermissionTo(Permission::findOrCreate($permiso, 'web'));
         $this->actingAs($u);
         $this->get(route('ayuda.manual'))->assertOk()->assertSee('Descargar PDF completo')->assertSee('Intercambio y carga docente')->assertSee('Equipamiento y distribución')->assertSee('Perfiles y permisos')
-            ->assertViewHas('manual', fn ($m) => count($m['capitulos']) === 23);
+            ->assertSee('Mover una clase')
+            ->assertViewHas('manual', fn ($m) => count($m['capitulos']) === 24);
         $this->get(route('ayuda.pdf'))->assertOk()->assertDownload('Manual_de_usuario_PROSEC.pdf')->assertHeader('Content-Type','application/pdf');
         $this->assertDatabaseCount('historial_acciones',0);
     }
@@ -46,6 +48,37 @@ class ManualUsuarioTest extends IsolatedDatabaseTestCase
             ->assertViewHas('manual', fn ($m) => array_column($m['capitulos'], 'id') === [
                 'cuenta', 'navegacion', 'consulta', 'publicacion', 'dudas', 'glosario',
             ]);
+    }
+
+    public function test_jefatura_recibe_la_guia_del_panel_y_sus_acciones(): void
+    {
+        $u = $this->cuenta('Jefe de carrera', [
+            'ver programacion semestral', 'asignar profesores', 'asignar horarios', 'generar programacion semestral',
+        ]);
+        $this->actingAs($u)->get(route('ayuda.manual'))->assertOk()
+            ->assertSee('Mover una clase')->assertSee('Asignar y confirmar el docente')
+            ->assertSee('Preparar otra versión')->assertDontSee('Perfiles y permisos')
+            ->assertViewHas('manual', function (array $manual) {
+                $panel = collect($manual['capitulos'])->firstWhere('id', 'panel-carrera');
+
+                return $panel['enlace'] === route('programacion.panel-carrera')
+                    && array_column($panel['bloques'], 'id') === [
+                        'consultar-panel', 'responsable-grupo', 'modulos-espacios', 'mover-modulo', 'crear-version',
+                    ];
+            });
+    }
+
+    public function test_jefatura_de_consulta_recibe_solo_el_uso_de_lectura_del_panel(): void
+    {
+        $u = $this->cuenta('Jefe de carrera', ['ver programacion semestral']);
+        $this->actingAs($u)->get(route('ayuda.manual'))->assertOk()
+            ->assertSee('Consultar una carrera')->assertDontSee('Mover una clase')
+            ->assertDontSee('Asignar y confirmar el docente')->assertDontSee('Preparar otra versión')
+            ->assertViewHas('manual', function (array $manual) {
+                $panel = collect($manual['capitulos'])->firstWhere('id', 'panel-carrera');
+
+                return array_column($panel['bloques'], 'id') === ['consultar-panel'];
+            });
     }
 
     public function test_los_permisos_personalizados_prevalecen_sobre_el_nombre_del_perfil(): void

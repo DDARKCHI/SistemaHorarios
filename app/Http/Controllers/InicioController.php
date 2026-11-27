@@ -10,6 +10,7 @@ use App\Models\Sala;
 use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
 use App\Services\IndicadoresProgramacion;
+use App\Support\PanelCarrera;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -64,7 +65,7 @@ class InicioController extends Controller
         $accesos = collect([
             ['asignar profesores', 'Asignar docentes', 'programacion.asignacion.profesores', $filtroPeriodo],
             ['asignar horarios', 'Asignar horarios', 'programacion.asignacion.horarios', $filtroPeriodo],
-            ['enviar propuesta horario', 'Mi disponibilidad', 'programacion.propuesta', []],
+            ['enviar propuesta horario', 'Propuesta de horario', 'programacion.propuesta', []],
             ['ver intercambio docente', 'Consultar intercambio docente', 'programacion.intercambio', []],
             ['ver programacion anterior', 'Consultar programación anterior', 'programacion.index', $filtroPeriodo],
             ['administrar usuarios', 'Administrar usuarios', 'administracion.index', []],
@@ -74,6 +75,13 @@ class InicioController extends Controller
             ->map(fn (array $acceso) => ['titulo' => $acceso[1], 'url' => route($acceso[2], $acceso[3])])
             ->values()
             ->all();
+
+        if ($request->user()->profesor?->estado) {
+            array_unshift($accesos, ['titulo' => 'Mi disponibilidad', 'url' => route('mi.disponibilidad.index')]);
+        }
+        if (PanelCarrera::visible($request->user())) {
+            array_unshift($accesos, ['titulo' => 'Panel de carrera', 'url' => route('programacion.panel-carrera', $filtrosProgramacion)]);
+        }
 
         return view('inicio', compact(
             'periodoActivo', 'versionSemestral', 'totales', 'resumen', 'accesos', 'urlProgramacion', 'indicadores'

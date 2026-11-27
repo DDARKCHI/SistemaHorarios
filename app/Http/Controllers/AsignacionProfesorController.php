@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActividadSeccion;
 use App\Models\Carrera;
 use App\Models\GrupoProfesor;
 use App\Models\GrupoSeccion;
-use App\Models\HorarioProfesor;
+use App\Models\Horario;
 use App\Models\PeriodoAcademico;
 use App\Models\Profesor;
 use App\Models\Seccion;
+use App\Models\VersionPlanificacion;
+use App\Services\EdicionPanelCarrera;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -16,6 +19,10 @@ use Illuminate\Validation\ValidationException;
 
 class AsignacionProfesorController extends Controller
 {
+    public function __construct(private readonly EdicionPanelCarrera $edicion)
+    {
+    }
+
     public function index(Request $request)
     {
         $periodos = PeriodoAcademico::where('estado', true)
@@ -182,10 +189,12 @@ class AsignacionProfesorController extends Controller
         $datos = $request->validate([
             'grupo_seccion_id' => [
                 'required',
+                'integer',
                 'exists:grupos_seccion,id',
             ],
             'profesor_id' => [
                 'required',
+                'integer',
                 'exists:profesores,id',
             ],
             'tipo_participacion' => [
@@ -207,47 +216,38 @@ class AsignacionProfesorController extends Controller
             ],
         ], [
             'grupo_seccion_id.required' => 'Debes seleccionar un grupo.',
+            'grupo_seccion_id.integer' => 'El grupo seleccionado no es válido.',
             'grupo_seccion_id.exists' => 'El grupo seleccionado no es válido.',
             'profesor_id.required' => 'Debes seleccionar un docente.',
+            'profesor_id.integer' => 'El docente seleccionado no es válido.',
             'profesor_id.exists' => 'El docente seleccionado no es válido.',
             'tipo_participacion.required' => 'Debes seleccionar un tipo de participación.',
             'tipo_participacion.in' => 'El tipo de participación seleccionado no es válido.',
             'observaciones.max' => 'Las observaciones no pueden superar los 1000 caracteres.',
         ]);
 
-        $grupo = GrupoSeccion::with(
-            'actividadSeccion.seccion.asignatura'
-        )->findOrFail(
-            $datos['grupo_seccion_id']
-        );
-
-        $profesor = Profesor::where('estado', true)
-            ->findOrFail($datos['profesor_id']);
-
-        $universidadAsignatura = $grupo
-            ->actividadSeccion
-            ?->seccion
-            ?->asignatura
-            ?->universidad_id;
-
-        if (
-            $universidadAsignatura
-            && $profesor->universidad_id != $universidadAsignatura
-        ) {
-            throw ValidationException::withMessages([
-                'profesor_id' => 'El docente seleccionado no pertenece a la misma institución de la asignatura.',
-            ]);
-        }
-
+        $referencia = GrupoSeccion::with('actividadSeccion.seccion')->findOrFail($datos['grupo_seccion_id']);
+        $periodoId = $referencia->actividadSeccion->seccion->periodo_academico_id;
         $esPrincipal = $request->boolean('es_principal');
 
-        DB::transaction(function () use (
-            $datos,
-            $grupo,
-            $esPrincipal
-        ) {
-            $this->exigirBorradorActual($grupo->actividadSeccion->seccion->periodo_academico_id);
-            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
+        $seccionId = DB::transaction(function () use ($datos, $periodoId, $esPrincipal) {
+            [$periodo, $version] = $this->exigirBorradorActual($periodoId);
+            $profesor = Profesor::lockForUpdate()->find($datos['profesor_id']);
+            $grupo = GrupoSeccion::lockForUpdate()->findOrFail($datos['grupo_seccion_id']);
+            $actividad = ActividadSeccion::lockForUpdate()->findOrFail($grupo->actividad_seccion_id);
+            $seccion = Seccion::lockForUpdate()->findOrFail($actividad->seccion_id);
+
+            if (! $periodo->estado || ! $grupo->estado_activo || ! $actividad->estado || ! $seccion->estado_activo
+                || (int) $seccion->periodo_academico_id !== (int) $periodo->id) {
+                throw ValidationException::withMessages(['grupo_seccion_id' => 'El grupo, la actividad o la sección ya no están activos en este período. Actualiza la página.']);
+            }
+            if (! $profesor?->estado || (int) $profesor->universidad_id !== (int) $periodo->universidad_id
+                || (int) $profesor->universidad_id !== (int) $seccion->asignatura->universidad_id) {
+                throw ValidationException::withMessages(['profesor_id' => 'Selecciona un docente activo de la institución de esta sección.']);
+            }
+
+            $responsableAnterior = $version ? $this->edicion->responsableGrupo($grupo, $version) : null;
+
             if ($esPrincipal) {
                 GrupoProfesor::where(
                     'grupo_seccion_id',
@@ -269,16 +269,22 @@ class AsignacionProfesorController extends Controller
                     'estado' => true,
                 ]
             );
-        });
+
+            if ($version && $responsableAnterior !== $this->edicion->responsableGrupo($grupo, $version)) {
+                $this->edicion->invalidarConfirmacion($grupo, $version);
+            }
+
+            return $seccion->id;
+        }, 3);
 
         return redirect()
             ->route(
                 'programacion.asignacion.profesores',
                 [
-                    'periodo_id' => $request->integer('periodo_id'),
+                    'periodo_id' => $periodoId,
                     'carrera_id' => $request->integer('carrera_id') ?: null,
                     'semestre' => $request->input('semestre'),
-                    'seccion_id' => $grupo->actividadSeccion->seccion_id,
+                    'seccion_id' => $seccionId,
                 ]
             )
             ->with(
@@ -299,22 +305,20 @@ class AsignacionProfesorController extends Controller
         $seccion = $grupo->actividadSeccion->seccion;
 
         DB::transaction(function () use ($asignacion, $grupo, $seccion) {
-            $this->exigirBorradorActual($seccion->periodo_academico_id);
+            [, $version] = $this->exigirBorradorActual($seccion->periodo_academico_id);
             // El guardado de horarios utiliza el mismo bloqueo del grupo.
-            GrupoSeccion::whereKey($grupo->id)->lockForUpdate()->firstOrFail();
+            $grupo = GrupoSeccion::lockForUpdate()->findOrFail($grupo->id);
 
-            $tieneHorarios = HorarioProfesor::where('profesor_id', $asignacion->profesor_id)
-                ->where('estado', true)
-                ->whereHas('horario', function ($query) use ($grupo, $seccion) {
-                    $query->where('grupo_seccion_id', $grupo->id)
-                        ->where('estado', true)
-                        ->whereHas('versionPlanificacion', function ($version) use ($seccion) {
-                            $version->where('periodo_academico_id', $seccion->periodo_academico_id)
-                                ->where('tipo', 'semestral')
-                                ->where('es_actual', true);
-                        });
-                })
-                ->exists();
+            $vigente = GrupoProfesor::lockForUpdate()->findOrFail($asignacion->id);
+            $tieneHorarios = Horario::where('grupo_seccion_id', $grupo->id)->where('estado', true)
+                ->whereHas('versionPlanificacion', fn ($version) => $version->where('periodo_academico_id', $seccion->periodo_academico_id)
+                    ->where('tipo', 'semestral')->where('es_actual', true))
+                ->where(function ($horarios) use ($vigente) {
+                    $horarios->whereHas('profesores', fn ($docentes) => $docentes->where('estado', true)->where('profesor_id', $vigente->profesor_id));
+                    if ($vigente->estado) {
+                        $horarios->orWhereDoesntHave('profesores', fn ($docentes) => $docentes->where('estado', true));
+                    }
+                })->exists();
 
             if ($tieneHorarios) {
                 throw ValidationException::withMessages([
@@ -322,8 +326,12 @@ class AsignacionProfesorController extends Controller
                 ]);
             }
 
-            $asignacion->delete();
-        });
+            $responsableAnterior = $version ? $this->edicion->responsableGrupo($grupo, $version) : null;
+            $vigente->delete();
+            if ($version && $responsableAnterior !== $this->edicion->responsableGrupo($grupo, $version)) {
+                $this->edicion->invalidarConfirmacion($grupo, $version);
+            }
+        }, 3);
 
         return redirect()
             ->route(
@@ -341,12 +349,16 @@ class AsignacionProfesorController extends Controller
             );
     }
 
-    private function exigirBorradorActual(int $periodoId): void
+    /** @return array{PeriodoAcademico, VersionPlanificacion|null} */
+    private function exigirBorradorActual(int $periodoId): array
     {
-        PeriodoAcademico::whereKey($periodoId)->lockForUpdate()->firstOrFail();
-        $version = \App\Models\VersionPlanificacion::where('periodo_academico_id', $periodoId)->where('tipo', 'semestral')->where('es_actual', true)->lockForUpdate()->first();
+        $periodo = PeriodoAcademico::lockForUpdate()->findOrFail($periodoId);
+        $version = VersionPlanificacion::where('periodo_academico_id', $periodoId)->where('tipo', 'semestral')->where('es_actual', true)
+            ->orderByDesc('id')->lockForUpdate()->first();
         if ($version && $version->estado !== 'Borrador') throw ValidationException::withMessages(['asignacion' => 'La programación actual está aprobada o publicada. Crea y activa un borrador nuevo antes de cambiar docentes.']);
+        return [$periodo, $version];
     }
+
     private function buscarProfesores(Request $request)
     {
         $seccionId = $request->integer('seccion_id');

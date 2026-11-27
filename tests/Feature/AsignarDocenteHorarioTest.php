@@ -43,7 +43,7 @@ class AsignarDocenteHorarioTest extends IsolatedDatabaseTestCase
     public function test_puede_asignar_en_un_grupo_completo_sin_docentes_de_grupo_y_sin_declaracion(): void
     {
         $this->get($this->pantalla())->assertOk()->assertSee('Asignar docente')->assertSee('Nuevo Docente')
-            ->assertSee('data-asignar-docente', false)->assertDontSee('action="'.e(route('programacion.asignacion.horarios.guardar')).'"', false);
+            ->assertSee('data-asignar-docente', false)->assertDontSee('class="js-form-horario ', false);
         $antes = $this->horario->fresh()->getAttributes();
         $this->put($this->url(), $this->datos())->assertSessionHasNoErrors()->assertRedirect($this->pantalla())
             ->assertSessionHas('success', fn ($texto) => str_contains($texto, 'no ha informado disponibilidad'));
@@ -135,6 +135,21 @@ class AsignarDocenteHorarioTest extends IsolatedDatabaseTestCase
         $this->assertDatabaseCount('historial_acciones', 0);
     }
 
+    public function test_muestra_docencia_heredada_y_rechaza_un_cambio_posterior_en_la_seccion(): void
+    {
+        $this->horario->profesores()->delete();
+        $heredado = Models\SeccionProfesor::create(['seccion_id' => $this->grupo->actividadSeccion->seccion_id,
+            'profesor_id' => $this->origen->id, 'estado' => true]);
+
+        $this->get($this->pantalla())->assertOk()->assertSee('Asignación de la sección')
+            ->assertSee('data-docentes-actuales="Docente Actual"', false);
+        $datos = $this->datos();
+        $heredado->update(['profesor_id' => $this->candidato->id]);
+        $this->put($this->url(), $datos)->assertSessionHasErrors('horario');
+
+        $this->assertDatabaseCount('horarios_profesores', 0);
+    }
+
     public function test_un_fallo_del_historial_revierte_la_sustitucion_completa(): void
     {
         $this->withoutExceptionHandling();
@@ -147,8 +162,11 @@ class AsignarDocenteHorarioTest extends IsolatedDatabaseTestCase
 
     private function datos(array $cambios = []): array
     {
+        $directos = $this->horario->profesores()->where('estado', true)->get();
+        $delGrupo = $this->grupo->profesores()->where('estado', true)->get();
+        $efectivos = $directos->isNotEmpty() ? $directos : ($delGrupo->isNotEmpty() ? $delGrupo : $this->grupo->actividadSeccion->seccion->profesores()->where('estado', true)->get());
         return array_replace(['version_id' => $this->version->id, 'profesor_id' => $this->candidato->id, 'accion_docente' => 'reemplazar',
-            'huella_profesores' => AsignacionModulosHorario::firmaDocentes($this->horario->profesores()->where('estado', true)->get())], $cambios);
+            'huella_profesores' => AsignacionModulosHorario::firmaDocentes($efectivos)], $cambios);
     }
 
     private function url(): string { return route('programacion.asignacion.horarios.profesor', $this->horario); }

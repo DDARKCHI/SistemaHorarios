@@ -2,15 +2,19 @@
 @php
     $restaurar = is_scalar(old('horario_id')) && old('accion_docente') && $errors->any() ? (string) old('horario_id') : '';
     $profesorAnterior = is_scalar(old('profesor_id')) ? (string) old('profesor_id') : '';
-    $accionAnterior = is_scalar(old('accion_docente')) ? (string) old('accion_docente') : 'reemplazar';
+    $accionAnterior = is_scalar(old('accion_docente')) ? (string) old('accion_docente') : 'agregar';
 @endphp
-<dialog id="asignar-docente-horario" aria-labelledby="titulo-asignar-docente" class="fixed inset-0 m-auto w-[calc(100%_-_2rem)] max-w-xl rounded-xl border border-gray-200 bg-white p-5 text-gray-800 shadow-xl backdrop:bg-gray-900/40 sm:p-6"
+<dialog id="asignar-docente-horario" aria-labelledby="titulo-asignar-docente" class="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-gray-800 shadow-xl backdrop:bg-gray-900/40 sm:p-6"
     data-restaurar-horario="{{ $restaurar }}" data-profesor-anterior="{{ $profesorAnterior }}" data-accion-anterior="{{ $accionAnterior }}">
     <div class="flex items-start justify-between gap-4">
         <div><h2 id="titulo-asignar-docente" class="text-lg font-semibold">Asignar docente al horario</h2><p data-resumen-horario class="mt-1 text-sm text-gray-500"></p></div>
         <button type="button" data-cerrar-docente class="boton boton-secundario size-11 shrink-0 px-0" aria-label="Cerrar">✕</button>
     </div>
-    <p class="mt-4 text-sm leading-6 text-gray-600">Puedes asignar un docente aunque no haya informado disponibilidad. El cambio afecta solo este módulo.</p>
+    <div class="mt-4 rounded-lg bg-fondo px-3 py-2 text-sm text-texto-secundario">
+        <p class="font-semibold text-texto">Docentes de este módulo</p>
+        <p data-docentes-actuales></p>
+    </div>
+    <p class="mt-3 text-sm text-texto-secundario">Puedes asignar un docente aunque aún no haya informado disponibilidad.</p>
     @if ($restaurar)<ul role="alert" class="mt-3 list-inside list-disc rounded-lg bg-red-50 p-3 text-sm text-red-800">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>@endif
     <form method="POST" class="mt-4 space-y-4" data-form-docente data-confirmar="La asignación de docentes se actualizará para el módulo seleccionado." data-confirmar-titulo="Guardar asignación del horario" data-confirmar-accion="Guardar asignación">
         @csrf
@@ -30,8 +34,8 @@
         <div>
             <label for="accion-del-docente" class="mb-1.5 block text-sm font-semibold">Asignación *</label>
             <select id="accion-del-docente" name="accion_docente" required class="h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm">
-                <option value="reemplazar">Reemplazar los docentes de este módulo</option>
-                <option value="agregar">Añadir a los docentes actuales</option>
+                <option value="agregar">Añadir docente</option>
+                <option value="reemplazar">Reemplazar a todos los docentes del módulo</option>
             </select>
         </div>
         <div class="flex flex-wrap justify-end gap-2 border-t border-gray-100 pt-4">
@@ -46,6 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const formulario = dialogo.querySelector('[data-form-docente]');
     const profesor = document.getElementById('profesor-del-horario');
     const accion = document.getElementById('accion-del-docente');
+    const confirmar = () => {
+        formulario.dataset.confirmar = accion.value === 'reemplazar'
+            ? 'El docente elegido quedará a cargo del módulo y sustituirá a sus docentes actuales.'
+            : 'Se añadirá el docente elegido a este módulo.';
+        formulario.dataset.confirmarDetalle = dialogo.querySelector('[data-resumen-horario]').textContent;
+        formulario.dataset.confirmarEtiqueta = 'Módulo';
+    };
+    accion.addEventListener('change', confirmar);
     const abrir = (boton, restaurar = false) => {
         formulario.action = boton.dataset.url;
         formulario.elements.horario_id.value = boton.dataset.horario;
@@ -53,7 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dialogo.querySelector('[data-resumen-horario]').textContent = boton.dataset.resumen;
         profesor.value = restaurar ? dialogo.dataset.profesorAnterior : '';
         profesor.dispatchEvent(new Event('change', {bubbles:true}));
-        accion.value = restaurar ? dialogo.dataset.accionAnterior : 'reemplazar';
+        dialogo.querySelector('[data-docentes-actuales]').textContent = boton.dataset.docentesActuales || 'Sin docente asignado';
+        accion.value = restaurar ? dialogo.dataset.accionAnterior : 'agregar';
+        confirmar();
         dialogo.showModal();
         (document.getElementById('profesor-del-horario-busqueda') || profesor).focus();
     };

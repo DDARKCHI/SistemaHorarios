@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Support\PanelCarrera;
 
 class ManualUsuario
 {
@@ -112,8 +113,23 @@ class ManualUsuario
                     $c['ruta'] = 'Salas y recursos → Horario de espacios';
                 } elseif (! $espacios) {
                     $c['titulo'] = 'Consultar programación semestral';
-                    $c['ruta'] = 'Programación semestral';
+                    $c['ruta'] = 'Programación semestral → Consultar horarios';
                     $c['objetivo'] = 'Revisar las clases de una versión de la programación.';
+                }
+                return $c;
+            case 'panel-carrera':
+                if (! PanelCarrera::visible($u)) return null;
+                $editaHorarios = $puede('asignar horarios');
+                $c['bloques'] = $this->bloques($c, array_filter([
+                    'consultar-panel',
+                    $gestionaDisponibilidad ? 'responsable-grupo' : null,
+                    $editaHorarios ? 'modulos-espacios' : null,
+                    $editaHorarios ? 'mover-modulo' : null,
+                    $genera ? 'crear-version' : null,
+                ]));
+                $c['enlace'] = route('programacion.panel-carrera');
+                if (! $gestionaDisponibilidad && ! $editaHorarios) {
+                    unset($c['nota']);
                 }
                 return $c;
             case 'asignar-docentes':

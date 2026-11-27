@@ -186,7 +186,7 @@ class RevisionDisponibilidadProgramacionTest extends IsolatedDatabaseTestCase
         $antes = $snapshot();
         $this->get($this->url(['tipo' => 'disponibilidad']))->assertOk()
             ->assertViewHas('observaciones', fn ($p) => $p->total() === 21 && $p->count() === 20)
-            ->assertSee('¿Qué comprueba la revisión?');
+            ->assertSee('Un módulo puede tener más de una observación.');
         $this->get($this->url(['tipo' => 'disponibilidad', 'page' => 2]))->assertOk()
             ->assertViewHas('observaciones', fn ($p) => $p->count() === 1 && str_contains($p->previousPageUrl(), 'tipo=disponibilidad'));
         $this->assertSame($antes, $snapshot());

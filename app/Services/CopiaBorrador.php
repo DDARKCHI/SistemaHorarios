@@ -19,12 +19,16 @@ class CopiaBorrador
         $docentes = Models\Horario::where('version_planificacion_id', $version->id)->where('estado', true)->orderBy('id')->with([
             'grupoSeccion.profesores' => fn ($q) => $q->orderBy('id'), 'actividadSeccion.seccion.profesores' => fn ($q) => $q->orderBy('id'),
         ])->get()->toArray();
-        return ['firma' => hash('sha256', $revision['firma'].json_encode($docentes, JSON_THROW_ON_ERROR)), 'bloqueos' => $bloqueos, 'reporte' => $revision['reporte']];
+        $confirmaciones = DB::table('confirmaciones_grupo_programacion')->where('version_planificacion_id', $version->id)
+            ->orderBy('grupo_seccion_id')->get(['grupo_seccion_id', 'profesor_id', 'usuario_id']);
+
+        return ['firma' => hash('sha256', $revision['firma'].json_encode([$docentes, $confirmaciones], JSON_THROW_ON_ERROR)),
+            'bloqueos' => $bloqueos, 'reporte' => $revision['reporte'], 'confirmaciones' => $confirmaciones];
     }
 
-    public function crear(Models\VersionPlanificacion $referencia, string $firma, bool $activar, string $solicitud, int $usuarioId, ?string $ip): Models\VersionPlanificacion
+    public function crear(Models\VersionPlanificacion $referencia, string $firma, bool $activar, string $solicitud, int $usuarioId, ?string $ip, ?string $nombre = null): Models\VersionPlanificacion
     {
-        return DB::transaction(function () use ($referencia, $firma, $activar, $solicitud, $usuarioId, $ip) {
+        return DB::transaction(function () use ($referencia, $firma, $activar, $solicitud, $usuarioId, $ip, $nombre) {
             $periodo = Models\PeriodoAcademico::lockForUpdate()->findOrFail($referencia->periodo_academico_id);
             Models\VersionPlanificacion::where('periodo_academico_id', $periodo->id)->orderBy('id')->lockForUpdate()->get();
             $fuente = Models\VersionPlanificacion::findOrFail($referencia->id);
@@ -35,7 +39,7 @@ class CopiaBorrador
             if (! hash_equals($revision['firma'], $firma)) $this->rechazar('La fuente o la versión actual cambiaron. Revisa de nuevo antes de crear el borrador.');
             if ($revision['bloqueos']) $this->rechazar(implode(' ', $revision['bloqueos']));
             $maximo = Models\VersionPlanificacion::where('periodo_academico_id', $periodo->id)->where('tipo', 'semestral')->pluck('version')->map(fn ($v) => (float) $v)->max() ?? 0;
-            $nueva = Models\VersionPlanificacion::create(['periodo_academico_id' => $periodo->id, 'tipo' => 'semestral', 'nombre' => 'Programación semestral',
+            $nueva = Models\VersionPlanificacion::create(['periodo_academico_id' => $periodo->id, 'tipo' => 'semestral', 'nombre' => $nombre ?: 'Programación semestral',
                 'version' => (round($maximo * 10) + 1) / 10, 'estado' => 'Borrador', 'es_actual' => $activar, 'usuario_id' => $usuarioId,
                 'descripcion' => 'Borrador para ajustes desde V'.$fuente->version.' (#'.$fuente->id.'). La fuente se conserva sin modificar sus horarios.']);
             $horarios = Models\Horario::where('version_planificacion_id', $fuente->id)->where('estado', true)->orderBy('id')->with([
@@ -64,6 +68,11 @@ class CopiaBorrador
                 $original = $historicos->get($profesor->id) ?? $profesor;
                 Models\ProfesorVersion::create($original->only(['rut', 'nombre', 'apellido', 'correo_institucional', 'correo_personal', 'tipo_contrato', 'tipo_profesor', 'unidad_academica'])
                     + ['version_planificacion_id' => $nueva->id, 'profesor_id' => $profesor->id]);
+            }
+            foreach ($revision['confirmaciones']->chunk(300) as $parte) {
+                DB::table('confirmaciones_grupo_programacion')->insert($parte->map(fn ($c) => (array) $c + [
+                    'version_planificacion_id' => $nueva->id, 'created_at' => now(), 'updated_at' => now(),
+                ])->all());
             }
             $antes = Models\VersionPlanificacion::where('periodo_academico_id', $periodo->id)->where('tipo', 'semestral')->where('es_actual', true)->whereKeyNot($nueva->id)->pluck('id')->all();
             if ($activar) Models\VersionPlanificacion::whereIn('id', $antes)->update(['es_actual' => false]);

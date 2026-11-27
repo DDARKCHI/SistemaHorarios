@@ -1,6 +1,8 @@
 @php
 
     $inicioActivo = request()->routeIs('inicio');
+    $panelCarreraVisible = \App\Support\PanelCarrera::visible(auth()->user());
+    $primeraRutaProgramacion = $panelCarreraVisible ? 'programacion.panel-carrera' : 'programacion.semestral';
 
 
 
@@ -12,6 +14,7 @@
         || request()->routeIs('programacion.preparacion*')
         || request()->routeIs('programacion.reorganizacion*')
         || request()->routeIs('programacion.completar*')
+        || request()->routeIs('programacion.panel-carrera*')
         || request()->routeIs('programacion.version*')
         || request()->routeIs('programacion.cambios*')
 
@@ -262,7 +265,7 @@
                     aria-label="Programación semestral"
                     title="Programación semestral"
 
-                    data-first-url="{{ route('programacion.semestral') }}"
+                    data-first-url="{{ route($primeraRutaProgramacion) }}"
 
                     data-target="submenu-programacion-semestral"
 
@@ -354,10 +357,11 @@
 
                 >
 
+                    @if ($panelCarreraVisible)
+                        <x-enlace-submenu :href="route('programacion.panel-carrera')" :activo="request()->routeIs('programacion.panel-carrera*')">Panel de carrera</x-enlace-submenu>
+                    @endif
                     @can('ver programacion semestral')
-
-                    <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Visualizar programación</x-enlace-submenu>
-
+                        <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Consultar horarios</x-enlace-submenu>
                     @endcan
 
 
@@ -1251,7 +1255,7 @@
 
                         data-sidebar-main
 
-                        data-first-url="{{ route('programacion.semestral') }}"
+                        data-first-url="{{ route($primeraRutaProgramacion) }}"
 
                         data-target="movil-programacion-semestral"
 
@@ -1315,10 +1319,11 @@
 
                     >
 
+                        @if ($panelCarreraVisible)
+                            <x-enlace-submenu :href="route('programacion.panel-carrera')" :activo="request()->routeIs('programacion.panel-carrera*')">Panel de carrera</x-enlace-submenu>
+                        @endif
                         @can('ver programacion semestral')
-
-                        <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Visualizar programación</x-enlace-submenu>
-
+                            <x-enlace-submenu :href="route('programacion.semestral')" :activo="request()->routeIs('programacion.semestral')">Consultar horarios</x-enlace-submenu>
                         @endcan
 
 

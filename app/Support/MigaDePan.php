@@ -14,6 +14,7 @@ class MigaDePan
         'mi.disponibilidad.index' => ['Mi disponibilidad'],
         'mi.disponibilidad.show' => ['Informar disponibilidad', 'mi.disponibilidad.index'],
         'programacion.completar.index' => ['Completar programación', 'programacion.semestral'],
+        'programacion.panel-carrera' => ['Panel de carrera', 'programacion.semestral'],
         'programacion.completar.show' => ['Propuesta de carga pendiente', 'programacion.completar.index'],
         'administracion.docentes.index' => ['Docentes', 'administracion.index'],
         'administracion.docentes.create' => ['Registrar docente', 'administracion.docentes.index'],

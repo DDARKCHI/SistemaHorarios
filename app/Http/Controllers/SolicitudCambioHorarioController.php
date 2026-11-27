@@ -7,6 +7,7 @@ use App\Services\{AlternativasCambioHorario, SolicitudesCambio};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class SolicitudCambioHorarioController extends Controller
 {
@@ -31,8 +32,17 @@ class SolicitudCambioHorarioController extends Controller
     }
     public function create(Request $request, Models\Horario $horario, AlternativasCambioHorario $alternativas)
     {
-        $datos = $request->validate(['espacio' => ['nullable', 'string', 'regex:/^(actual|sala:\d+|laboratorio:\d+)$/']]);
-        return response()->view('programacion.cambios.crear', $alternativas->preparar($horario, $datos['espacio'] ?? 'actual'))->header('Cache-Control', 'no-store, private');
+        try {
+            $datos = $request->validate(['espacio' => ['nullable', 'string', 'regex:/^(actual|sala:\d+|laboratorio:\d+)$/']]);
+            $propuesta = $alternativas->preparar($horario, $datos['espacio'] ?? 'actual');
+        } catch (ValidationException $error) {
+            return redirect()->route('programacion.cambios.index', [
+                'periodo_id' => $horario->versionPlanificacion->periodo_academico_id,
+                'q' => $horario->actividadSeccion?->seccion?->asignatura?->codigo,
+            ])->withErrors($error->errors());
+        }
+
+        return response()->view('programacion.cambios.crear', $propuesta)->header('Cache-Control', 'no-store, private');
     }
     public function store(Request $request, Models\Horario $horario, SolicitudesCambio $servicio)
     {

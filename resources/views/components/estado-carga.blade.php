@@ -10,6 +10,8 @@
         route('salas.horario') => 'consulta',
         route('programacion.validacion') => 'revision',
         route('programacion.semestral.generar') => 'generacion',
+        route('programacion.completar.generar') => 'completar',
+        route('programacion.reorganizacion.generar') => 'reorganizar',
     ]) }}"
     class="fixed inset-0 m-auto max-h-[calc(100dvh_-_2rem)] w-[calc(100%_-_2rem)] max-w-md overflow-y-auto rounded-xl border border-borde bg-superficie p-0 text-texto shadow-xl backdrop:bg-gray-900/40"
 >

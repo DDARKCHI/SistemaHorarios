@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const enlaces = [...manual.querySelectorAll('[data-vista-manual]')];
     const paneles = [...manual.querySelectorAll('[data-panel-manual]')];
     const pdf = manual.querySelector('[data-pdf-manual]');
-    const descripcion = manual.querySelector('[data-descripcion-manual]');
     const clasesActivas = ['border-institucional/20', 'bg-institucional/5', 'text-institucional'];
 
     function mostrar(vista) {
@@ -17,9 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clasesActivas.forEach(clase => enlace.classList.toggle(clase, activo));
             enlace.classList.toggle('boton-secundario', !activo);
         }
-        descripcion.textContent = vista === 'pdf'
-            ? 'Consulta el documento completo de la plataforma.'
-            : 'Instrucciones de las funciones habilitadas para tu cuenta.';
         // Cargar una sola vez y conservar la posición del lector entre vistas.
         if (vista === 'pdf' && !pdf.hasAttribute('src')) pdf.src = pdf.dataset.pdfManual;
     }

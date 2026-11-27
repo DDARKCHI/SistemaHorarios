@@ -42,23 +42,13 @@
                 <div class="flex min-w-0 flex-col items-start justify-between gap-3 rounded-xl border border-borde bg-white p-4 shadow-sm sm:block"><dt class="text-sm font-semibold text-gray-700">{{ $etiqueta }}</dt><dd class="text-3xl font-bold tabular-nums sm:mt-3 {{ $clave === 'conflictos' ? 'text-institucional' : 'text-texto' }}">{{ number_format($reporte[$clave], 0, ',', '.') }}</dd></div>
             @endforeach
         </dl>
-        <div class="rounded-xl border border-borde bg-superficie px-5 py-4 text-sm leading-6">
-            <p><span class="font-semibold">{{ number_format($reporte['observaciones']->count(), 0, ',', '.') }} observaciones en total.</span>
-                @if ($reporte['conflictos'])
-                    {{ number_format($reporte['conflictos'], 0, ',', '.') }} {{ $reporte['conflictos'] === 1 ? 'corresponde a un tope de horario' : 'corresponden a topes de horario' }}.
-                @else
-                    No se detectaron topes de horario.
-                @endif
-                Las demás revisan asignaciones, capacidades, disponibilidad y carga.
-            </p>
-            <p class="mt-1 text-texto-secundario">Cada módulo se revisa por separado y puede tener más de una observación. Una disponibilidad sin registrar requiere confirmación del docente.</p>
-        </div>
         <section aria-labelledby="resumen-carga" class="min-w-0 rounded-xl border border-borde bg-white p-5 shadow-sm sm:p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="resumen-carga" class="text-base font-semibold text-gray-800">Cumplimiento de módulos</h2>
-                <a class="boton boton-secundario" href="{{ route('programacion.validacion', ['periodo_id' => $periodoId, 'version_id' => $version->id, 'tipo' => 'carga']) }}">Revisar carga</a>
+                @if ($tipo !== 'carga')
+                    <a class="boton boton-secundario" href="{{ route('programacion.validacion', ['periodo_id' => $periodoId, 'version_id' => $version->id, 'tipo' => 'carga']) }}">Revisar carga</a>
+                @endif
             </div>
-            <p class="mt-3 text-sm leading-6 text-gray-500">Compara la carga requerida con los módulos asignados a cada grupo.</p>
             <dl class="mt-5 grid grid-cols-2 gap-4 rounded-xl bg-fondo p-4 lg:grid-cols-4">
                 @foreach (['requeridos' => 'Requeridos', 'cubiertos' => 'Cubiertos', 'pendientes' => 'Pendientes', 'excedentes' => 'En exceso'] as $clave => $etiqueta)
                     <div class="min-w-0"><dt class="text-sm font-semibold text-gray-700">{{ $etiqueta }}</dt><dd class="mt-1 text-2xl font-semibold text-gray-800">{{ number_format($reporte['carga'][$clave], 0, ',', '.') }}</dd></div>
@@ -69,7 +59,6 @@
             @endif
             <p class="mt-4 text-xs leading-5 text-texto-secundario">Los módulos cubiertos y pendientes completan la carga requerida. Los módulos en exceso se cuentan aparte, por grupo.</p>
         </section>
-        <details class="rounded-xl border border-borde bg-white px-5 py-4 text-sm"><summary class="cursor-pointer font-semibold">¿Qué comprueba la revisión?</summary><p class="mt-3 leading-6 text-texto-secundario">Carga, cruces, asignaciones, capacidades, disponibilidad y requerimientos de recursos. Corrige las observaciones antes de activar, aprobar o publicar.</p></details>
         @if ($observaciones->isEmpty())
             <div class="rounded-xl border border-borde bg-white p-8 text-center shadow-sm">
                 <h2 class="text-base font-semibold text-gray-800">{{ $reporte['modulos'] === 0 ? 'Esta versión no tiene módulos activos' : ($tipo === 'todos' ? 'Sin observaciones detectadas' : 'Sin observaciones para este filtro') }}</h2>
@@ -77,10 +66,13 @@
             </div>
         @else
             <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-sm text-gray-500">{{ $observaciones->total() }} {{ $observaciones->total() === 1 ? 'observación' : 'observaciones' }}</p>
-                <a class="boton boton-secundario" href="{{ route('programacion.validacion.exportar', ['periodo_id' => $periodoId, 'version_id' => $version->id, 'tipo' => $tipo]) }}">Exportar a Excel</a>
+                <div>
+                    <h2 class="text-base font-semibold text-texto">{{ number_format($observaciones->total(), 0, ',', '.') }} {{ $observaciones->total() === 1 ? 'observación' : 'observaciones' }}</h2>
+                    <p class="mt-1 text-sm text-texto-secundario">Un módulo puede tener más de una observación.</p>
+                </div>
+                <a class="boton boton-secundario" href="{{ route('programacion.validacion.exportar', ['periodo_id' => $periodoId, 'version_id' => $version->id, 'tipo' => $tipo]) }}"
+                    aria-label="Exportar a Excel todas las páginas del filtro aplicado">Exportar a Excel</a>
             </div>
-            <p class="text-sm text-gray-500">La descarga incluye todas las páginas del filtro aplicado.</p>
             <div class="space-y-3">
                 @foreach ($observaciones as $observacion)
                     <article class="min-w-0 overflow-hidden rounded-xl border border-borde border-l-4 border-l-institucional/40 bg-white p-5 shadow-sm sm:p-6">

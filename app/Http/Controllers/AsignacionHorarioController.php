@@ -64,6 +64,8 @@ class AsignacionHorarioController extends Controller
             $seccion = Seccion::with([
                 'asignatura',
                 'carreras',
+                'profesores' => fn ($q) => $q->where('estado', true)->orderByDesc('es_principal'),
+                'profesores.profesor.disponibilidades' => fn ($q) => $q->where('periodo_academico_id', $periodoId)->where('estado', true),
 
                 'actividades' => function ($query) {
                     $query->where('estado', true)
@@ -104,6 +106,12 @@ class AsignacionHorarioController extends Controller
 
                 'actividades.grupos.horarios.dia',
                 'actividades.grupos.horarios.bloqueHorario',
+                'actividades.grupos.horarios.asignacionesSalas' => fn ($q) => $q->where('estado', true),
+                'actividades.grupos.horarios.asignacionesSalas.sala',
+                'actividades.grupos.horarios.asignacionesLaboratorios' => fn ($q) => $q->where('estado', true),
+                'actividades.grupos.horarios.asignacionesLaboratorios.laboratorio.sala',
+                'actividades.grupos.horarios.asignacionesLaboratoriosMoviles' => fn ($q) => $q->where('estado', true),
+                'actividades.grupos.horarios.asignacionesLaboratoriosMoviles.laboratorioMovil',
                 'actividades.grupos.horarios.profesores' => fn ($q) => $q->where('estado', true),
                 'actividades.grupos.horarios.profesores.profesor',
                 'actividades.grupos.horarios.profesores.profesor.disponibilidades' => fn ($q) => $q->where('periodo_academico_id', $periodoId)->where('estado', true),

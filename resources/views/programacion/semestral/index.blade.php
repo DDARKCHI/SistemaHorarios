@@ -7,7 +7,6 @@
 @endphp
 
 <x-encabezado-pagina titulo="Programación semestral">
-    Consulta horarios y prepara la programación del período.
     <x-slot:acciones>
         @can('generar programacion semestral')
         <a class="boton boton-primario" href="{{ route('programacion.completar.index', ['periodo_id' => $periodoId, 'version_id' => $versionId]) }}">Completar programación</a>
@@ -121,6 +120,7 @@
 
     <form
         id="filtros-form"
+        data-filtros-url="{{ route('programacion.semestral.filtros') }}"
         method="GET"
         action="{{ route('programacion.semestral') }}"
         class="@container/filtros-programacion mb-2 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5"
@@ -369,6 +369,7 @@
             </div>
 
         </div>
+        <p id="estado-filtros-semestral" role="status" class="mt-3 hidden text-sm text-texto-secundario"></p>
     </form>
 
     @if ($versiones->isEmpty())
@@ -408,9 +409,6 @@
                 Selecciona un filtro para consultar los horarios.
             </div>
 
-            <div class="mt-1 text-xs text-gray-500">
-                Elige una sede, carrera, semestre, sección, ramo o docente y pulsa Aplicar.
-            </div>
         </div>
 
     @elseif ($horarios->isEmpty())
@@ -422,7 +420,7 @@
             </div>
 
             <div class="mt-1 text-xs text-gray-400">
-                Prueba seleccionando otro período, versión, sede, carrera, semestre, sección, ramo o docente.
+                Cambia los filtros y vuelve a aplicar.
             </div>
 
         </div>
@@ -558,42 +556,11 @@
                                                                 {{ $actividad?->tipo ?? '—' }}
                                                             </div>
 
-                                                            @if ($horario->profesores->isNotEmpty())
-
+                                                            @if ($horario->docentesEfectivos->isNotEmpty())
                                                                 <div>
-                                                                    <span class="font-semibold text-gray-700">
-                                                                        Docente:
-                                                                    </span>
-
-                                                                    @foreach ($horario->profesores as $horarioProfesor)
-
-                                                                        {{ trim(($horarioProfesor->profesor?->nombre ?? '') . ' ' . ($horarioProfesor->profesor?->apellido ?? '')) }}
-
-                                                                        @if (!$loop->last)
-                                                                            ,
-                                                                        @endif
-
-                                                                    @endforeach
+                                                                    <span class="font-semibold text-gray-700">Docente:</span>
+                                                                    {{ $horario->docentesEfectivos->map(fn ($asignacion) => trim($asignacion->profesor?->nombre.' '.$asignacion->profesor?->apellido))->filter()->implode(', ') }}
                                                                 </div>
-
-                                                            @elseif ($seccion?->profesores?->isNotEmpty())
-
-                                                                <div>
-                                                                    <span class="font-semibold text-gray-700">
-                                                                        Docente:
-                                                                    </span>
-
-                                                                    @foreach ($seccion->profesores as $seccionProfesor)
-
-                                                                        {{ trim(($seccionProfesor->profesor?->nombre ?? '') . ' ' . ($seccionProfesor->profesor?->apellido ?? '')) }}
-
-                                                                        @if (!$loop->last)
-                                                                            ,
-                                                                        @endif
-
-                                                                    @endforeach
-                                                                </div>
-
                                                             @endif
 
                                                             @if ($horario->asignacionesSalas->isNotEmpty())
@@ -687,414 +654,91 @@
 </div>
 
 <script>
-    const filtrosUrl = @json(route('programacion.semestral.filtros'));
+(() => {
+    const formulario = document.getElementById('filtros-form');
+    const estado = document.getElementById('estado-filtros-semestral');
+    const aplicar = formulario.querySelector('button[type="submit"]');
+    const campos = [...formulario.querySelectorAll('select[name]')];
+    const [periodo, version, sede, ...dependientes] = campos;
+    const opciones = [
+        ['carreras', 'Todas las carreras', ({ id, nombre }) => new Option(nombre, id)],
+        ['semestres', 'Todos', semestre => new Option(semestre, semestre)],
+        ['secciones', 'Todas', seccion => new Option(seccion, seccion)],
+        ['asignaturas', 'Todos los ramos', ({ id, codigo, nombre }) => new Option(`${codigo} — ${nombre}`, id)],
+        ['profesores', 'Todos los docentes', ({ id, nombre }) => new Option(nombre, id)],
+    ];
+    let actual;
 
-    const periodoSelect = document.getElementById('periodo_id');
-    const versionSelect = document.getElementById('version_id');
-    const sedeSelect = document.getElementById('sede_id');
-    const carreraSelect = document.getElementById('carrera_id');
-    const semestreSelect = document.getElementById('semestre');
-    const seccionSelect = document.getElementById('seccion_numero');
-    const asignaturaSelect = document.getElementById('asignatura_id');
-    const profesorSelect = document.getElementById('profesor_id');
-
-    const carreraSeleccionada = @json($carreraId);
-    const semestreSeleccionado = @json($semestre);
-    const seccionSeleccionada = @json($seccionNumero);
-    const asignaturaSeleccionada = @json($asignaturaId);
-    const profesorSeleccionado = @json($profesorId);
-
-    function limpiarSelect(select, texto) {
-        select.innerHTML = '';
-
-        const option = document.createElement('option');
-
-        option.value = '';
-        option.textContent = texto;
-
-        select.appendChild(option);
+    function mostrarEstado(texto, error = false) {
+        estado.textContent = texto;
+        estado.classList.toggle('hidden', !texto);
+        estado.classList.toggle('text-red-700', error);
     }
 
-    function cargarCarreras(carreras, valorSeleccionado = null) {
-        limpiarSelect(
-            carreraSelect,
-            'Todas las carreras'
-        );
+    function restablecerEstado() {
+        actual = null;
+        aplicar.disabled = false;
+        dependientes.forEach(campo => { campo.disabled = false; });
+        formulario.removeAttribute('aria-busy');
+        estado.classList.remove('estado-filtros-cargando');
+    }
 
-        carreras.forEach(function (carrera) {
-            const option = document.createElement('option');
-
-            option.value = carrera.id;
-            option.textContent = carrera.nombre;
-
-            if (String(carrera.id) === String(valorSeleccionado)) {
-                option.selected = true;
-            }
-
-            carreraSelect.appendChild(option);
+    async function actualizarFiltros(indice) {
+        actual?.abort();
+        const consulta = new AbortController();
+        actual = consulta;
+        const parametros = new URLSearchParams(campos.slice(0, indice + 3)
+            .filter(campo => campo.value).map(campo => [campo.name, campo.value]));
+        dependientes.forEach((campo, posicion) => {
+            campo.disabled = posicion >= indice;
+            if (campo.disabled) campo.replaceChildren(new Option(opciones[posicion][1], ''));
         });
-    }
+        aplicar.disabled = true;
+        formulario.setAttribute('aria-busy', 'true');
+        estado.classList.add('estado-filtros-cargando');
+        mostrarEstado('Actualizando filtros…');
 
-    function cargarSemestres(semestres, valorSeleccionado = null) {
-        limpiarSelect(
-            semestreSelect,
-            'Todos'
-        );
-
-        semestres.forEach(function (semestre) {
-            const option = document.createElement('option');
-
-            option.value = semestre;
-            option.textContent = semestre;
-
-            if (String(semestre) === String(valorSeleccionado)) {
-                option.selected = true;
-            }
-
-            semestreSelect.appendChild(option);
-        });
-    }
-
-    function cargarSecciones(secciones, valorSeleccionado = null) {
-        limpiarSelect(
-            seccionSelect,
-            'Todas'
-        );
-
-        secciones.forEach(function (seccion) {
-            const option = document.createElement('option');
-
-            option.value = seccion;
-            option.textContent = seccion;
-
-            if (String(seccion) === String(valorSeleccionado)) {
-                option.selected = true;
-            }
-
-            seccionSelect.appendChild(option);
-        });
-    }
-
-    function cargarAsignaturas(asignaturas, valorSeleccionado = null) {
-        limpiarSelect(
-            asignaturaSelect,
-            'Todos los ramos'
-        );
-
-        asignaturas.forEach(function (asignatura) {
-            const option = document.createElement('option');
-
-            option.value = asignatura.id;
-            option.textContent =
-                asignatura.codigo + ' — ' + asignatura.nombre;
-
-            if (String(asignatura.id) === String(valorSeleccionado)) {
-                option.selected = true;
-            }
-
-            asignaturaSelect.appendChild(option);
-        });
-    }
-
-    function cargarProfesores(profesores, valorSeleccionado = null) {
-        limpiarSelect(
-            profesorSelect,
-            'Todos los docentes'
-        );
-
-        profesores.forEach(function (profesor) {
-            const option = document.createElement('option');
-
-            option.value = profesor.id;
-            option.textContent = profesor.nombre;
-
-            if (String(profesor.id) === String(valorSeleccionado)) {
-                option.selected = true;
-            }
-
-            profesorSelect.appendChild(option);
-        });
-    }
-
-    let ultimaConsultaFiltros = 0;
-
-    async function actualizarFiltros(opciones = {}) {
-        const consultaActual = ++ultimaConsultaFiltros;
-        const parametros = new URLSearchParams();
-
-        if (periodoSelect.value) {
-            parametros.set(
-                'periodo_id',
-                periodoSelect.value
-            );
-        }
-
-        if (
-            versionSelect
-            && !versionSelect.disabled
-            && versionSelect.value
-        ) {
-            parametros.set(
-                'version_id',
-                versionSelect.value
-            );
-        }
-
-        if (sedeSelect.value) {
-            parametros.set(
-                'sede_id',
-                sedeSelect.value
-            );
-        }
-
-        if (carreraSelect.value) {
-            parametros.set(
-                'carrera_id',
-                carreraSelect.value
-            );
-        }
-
-        if (opciones.semestre !== undefined) {
-            parametros.set(
-                'semestre',
-                opciones.semestre
-            );
-        } else if (semestreSelect.value) {
-            parametros.set(
-                'semestre',
-                semestreSelect.value
-            );
-        }
-
-        if (opciones.seccionNumero) {
-            parametros.set(
-                'seccion_numero',
-                opciones.seccionNumero
-            );
-        } else if (seccionSelect.value) {
-            parametros.set(
-                'seccion_numero',
-                seccionSelect.value
-            );
-        }
-
-        if (opciones.asignaturaId) {
-            parametros.set(
-                'asignatura_id',
-                opciones.asignaturaId
-            );
-        } else if (asignaturaSelect.value) {
-            parametros.set(
-                'asignatura_id',
-                asignaturaSelect.value
-            );
-        }
-
+        const espera = setTimeout(() => consulta.abort(), 15000);
         try {
-            const respuesta = await fetch(
-                filtrosUrl + '?' + parametros.toString(),
-                {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }
-            );
-
-            if (!respuesta.ok) {
-                throw new Error(
-                    'No fue posible actualizar los filtros.'
-                );
-            }
-
+            const respuesta = await fetch(`${formulario.dataset.filtrosUrl}?${parametros}`, {
+                signal: consulta.signal,
+                headers: { Accept: 'application/json' },
+            });
+            if (!respuesta.ok) throw new Error('No fue posible actualizar los filtros.');
             const datos = await respuesta.json();
-            if (consultaActual !== ultimaConsultaFiltros) return;
-
-            if (opciones.actualizarCarreras) {
-                cargarCarreras(
-                    datos.carreras,
-                    opciones.carreraSeleccionada ?? null
-                );
-            }
-
-            if (opciones.actualizarSemestres) {
-                cargarSemestres(
-                    datos.semestres,
-                    opciones.semestreSeleccionado ?? null
-                );
-            }
-
-            if (opciones.actualizarSecciones) {
-                cargarSecciones(
-                    datos.secciones,
-                    opciones.seccionSeleccionada ?? null
-                );
-            }
-
-            if (opciones.actualizarAsignaturas) {
-                cargarAsignaturas(
-                    datos.asignaturas,
-                    opciones.asignaturaSeleccionada ?? null
-                );
-            }
-
-            if (opciones.actualizarProfesores) {
-                cargarProfesores(
-                    datos.profesores,
-                    opciones.profesorSeleccionado ?? null
-                );
-            }
-
-        } catch (error) {
-            console.error(error);
+            if (actual !== consulta) return;
+            const listas = opciones.slice(indice).map(([clave, vacio, crear]) => [
+                new Option(vacio, ''), ...datos[clave].map(crear),
+            ]);
+            listas.forEach((lista, posicion) => dependientes[indice + posicion].replaceChildren(...lista));
+            mostrarEstado('');
+        } catch {
+            if (actual === consulta) mostrarEstado('Presiona Aplicar para actualizar los filtros y consultar.', true);
+        } finally {
+            clearTimeout(espera);
+            if (actual === consulta) restablecerEstado();
         }
     }
 
-    sedeSelect.addEventListener('change', async function () {
-        limpiarSelect(
-            carreraSelect,
-            'Cargando carreras...'
-        );
-
-        limpiarSelect(
-            semestreSelect,
-            'Cargando semestres...'
-        );
-
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
-
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando docentes...'
-        );
-
-        await actualizarFiltros({
-            actualizarCarreras: true,
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-        });
+    [sede, ...dependientes.slice(0, -1)].forEach((campo, indice) => {
+        campo.addEventListener('change', () => actualizarFiltros(indice));
     });
-
-    carreraSelect.addEventListener('change', async function () {
-        limpiarSelect(
-            semestreSelect,
-            'Cargando semestres...'
-        );
-
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
-
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando docentes...'
-        );
-
-        await actualizarFiltros({
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-        });
+    periodo.addEventListener('change', () => {
+        actual?.abort();
+        restablecerEstado();
+        version.selectedIndex = -1;
+        dependientes.forEach(campo => { campo.value = ''; });
+        formulario.requestSubmit();
     });
-
-    semestreSelect.addEventListener('change', async function () {
-        limpiarSelect(
-            seccionSelect,
-            'Cargando secciones...'
-        );
-
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando docentes...'
-        );
-
-        await actualizarFiltros({
-            semestre: semestreSelect.value,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-        });
+    version.addEventListener('change', () => {
+        actual?.abort();
+        restablecerEstado();
+        formulario.requestSubmit();
     });
-
-    seccionSelect.addEventListener('change', async function () {
-        limpiarSelect(
-            asignaturaSelect,
-            'Cargando ramos...'
-        );
-
-        limpiarSelect(
-            profesorSelect,
-            'Cargando docentes...'
-        );
-
-        await actualizarFiltros({
-            semestre: semestreSelect.value,
-            seccionNumero: seccionSelect.value,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true
-        });
+    formulario.addEventListener('submit', evento => {
+        if (actual) evento.preventDefault();
     });
-
-    asignaturaSelect.addEventListener('change', async function () {
-        limpiarSelect(
-            profesorSelect,
-            'Cargando docentes...'
-        );
-
-        await actualizarFiltros({
-            semestre: semestreSelect.value,
-            seccionNumero: seccionSelect.value,
-            asignaturaId: asignaturaSelect.value,
-            actualizarProfesores: true
-        });
-    });
-
-    periodoSelect.addEventListener('change', function () {
-        document.getElementById('filtros-form').requestSubmit();
-    });
-
-    if (versionSelect && !versionSelect.disabled) {
-        versionSelect.addEventListener('change', function () {
-            document.getElementById('filtros-form').requestSubmit();
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', async function () {
-        await actualizarFiltros({
-            actualizarCarreras: true,
-            actualizarSemestres: true,
-            actualizarSecciones: true,
-            actualizarAsignaturas: true,
-            actualizarProfesores: true,
-
-            carreraSeleccionada: carreraSeleccionada,
-            semestreSeleccionado: semestreSeleccionado,
-            seccionSeleccionada: seccionSeleccionada,
-            asignaturaSeleccionada: asignaturaSeleccionada,
-            profesorSeleccionado: profesorSeleccionado
-        });
-    });
+})();
 </script>
 
 @endsection

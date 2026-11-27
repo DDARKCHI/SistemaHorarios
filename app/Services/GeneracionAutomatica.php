@@ -163,17 +163,23 @@ class GeneracionAutomatica
         $dias = Models\Dia::where('estado', true)->orderBy('numero')->orderBy('id')->get();
         $bloques = Models\BloqueHorario::where('estado', true)->orderBy('hora_inicio')->orderBy('id')->get();
         $opciones = [];
+        $opcionesAutomaticas = [];
         foreach ($dias as $dia) {
             foreach ($bloques as $bloque) {
-                if (! $this->carga->utilizable($bloque)) continue;
-                [$inicio, $fin] = IntervalosHorario::deBloque($bloque);
-                $opciones[$dia->id.':'.$bloque->id] = [
+                $intervalo = IntervalosHorario::deBloque($bloque);
+                if (! $intervalo) continue;
+                [$inicio, $fin] = $intervalo;
+                $clave = $dia->id.':'.$bloque->id;
+                $opciones[$clave] = [
                     'dia_id' => (int) $dia->id, 'bloque_id' => (int) $bloque->id,
                     'inicio' => $inicio, 'fin' => $fin, 'orden' => count($opciones) + 1,
                 ];
+                if ($this->carga->utilizable($bloque)) {
+                    $opcionesAutomaticas[$clave] = $opciones[$clave];
+                }
             }
         }
-        if (! $opciones) $this->rechazar('El calendario no tiene módulos activos de clases fuera del almuerzo.');
+        if (! $opciones) $this->rechazar('El calendario no tiene módulos activos con un intervalo válido.');
 
         $plantillas = collect();
         $docentes = collect();
@@ -189,6 +195,7 @@ class GeneracionAutomatica
             $asignados = $grupo->profesores->isNotEmpty() ? $grupo->profesores : $seccion->profesores;
             $plantillas->put($grupo->id, $asignados->unique('profesor_id')->values());
             if ($porGrupo->get($grupo->id, collect())->count() < $grupo->actividadSeccion->cantidad_horas) {
+                if (! $opcionesAutomaticas) $this->rechazar('El calendario no tiene módulos activos de clases fuera del almuerzo.');
                 $this->agregarDocentes($docentes, $asignados, $periodo, $this->nombreGrupo($grupo));
             }
         }
@@ -231,7 +238,7 @@ class GeneracionAutomatica
             ];
             $this->comprobarReserva($reserva, $reservas);
             $requiereLaboratorio = Models\RequerimientoActividad::tipoNormalizado($grupo->actividadSeccion->tipo) === 'Laboratorio'
-                && $horario->asignacionesLaboratorios->isEmpty();
+                && $horario->asignacionesLaboratorios->isEmpty() && $horario->asignacionesLaboratoriosMoviles->isEmpty();
             if ($asignaciones['asignaciones'] || $recursos->revisar($horario) || $requiereLaboratorio) {
                 $incompletos->push($horario);
             } else {
@@ -283,7 +290,7 @@ class GeneracionAutomatica
                 ];
             }
             $admitidas = array_keys(array_filter(
-                $opciones, fn ($opcion) => $this->disponibles($asignados, $opcion, $disponibilidad)
+                $opcionesAutomaticas, fn ($opcion) => $this->disponibles($asignados, $opcion, $disponibilidad)
             ));
             if ($faltan && ! $admitidas) {
                 $this->rechazar($this->nombreGrupo($grupo).' no tiene horas comunes en la disponibilidad aprobada de sus docentes.');

@@ -28,6 +28,7 @@
 
     <x-filtros-compactos
         id="filtros-form"
+        data-filtros-url="{{ route('programacion.asignacion.profesores.filtros') }}"
         :campos="4"
         action="{{ route('programacion.asignacion.profesores') }}"
         class="mb-2"
@@ -131,6 +132,7 @@
             <button type="submit" class="boton boton-primario">Aplicar</button>
         </x-slot:acciones>
     </x-filtros-compactos>
+    <p id="estado-filtros-docentes" role="status" class="mb-3 hidden px-1 text-sm text-texto-secundario"></p>
 
     @if (!$seccion)
 
@@ -370,12 +372,14 @@
                                         <input type="hidden" name="semestre" value="{{ $semestre }}">
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
-                                                Docentes sugeridos
+                                            <label for="docente-grupo-{{ $grupo->id }}" class="mb-1 block text-xs font-semibold text-gray-600">
+                                                Docente a asignar
                                             </label>
 
                                             <select
+                                                id="docente-grupo-{{ $grupo->id }}"
                                                 name="profesor_id"
+                                                required
                                                 class="profesor-select h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                             >
                                                 <option value="">
@@ -393,7 +397,7 @@
 
                                         <div class="rounded-md border border-gray-200 bg-gray-50 p-2">
 
-                                            <label class="mb-1 block text-xs font-semibold text-gray-600">
+                                            <label for="buscar-docente-grupo-{{ $grupo->id }}" class="mb-1 block text-xs font-semibold text-gray-600">
                                                 Buscar otro docente
                                             </label>
 
@@ -401,6 +405,8 @@
 
                                                 <input
                                                     type="text"
+                                                    id="buscar-docente-grupo-{{ $grupo->id }}"
+                                                    maxlength="120"
                                                     class="buscar-profesor h-9 min-w-0 flex-1 rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
                                                     placeholder="Nombre, RUT o correo"
                                                 >
@@ -414,11 +420,14 @@
 
                                             </div>
 
+                                            <p class="estado-busqueda-profesor mt-2 hidden text-xs text-texto-secundario" role="status"></p>
                                             <div class="resultados-profesor mt-2 hidden min-w-0 space-y-1 break-words"></div>
 
                                         </div>
 
+                                        <label class="sr-only" for="participacion-grupo-{{ $grupo->id }}">Tipo de participación</label>
                                         <select
+                                            id="participacion-grupo-{{ $grupo->id }}"
                                             name="tipo_participacion"
                                             required
                                             class="h-9 min-w-0 w-full max-w-full rounded-md border-gray-300 bg-white px-2.5 text-xs text-gray-700 focus:border-institucional focus:ring-institucional"
@@ -436,7 +445,9 @@
                                             </option>
                                         </select>
 
+                                        <label class="sr-only" for="observaciones-grupo-{{ $grupo->id }}">Observaciones</label>
                                         <textarea
+                                            id="observaciones-grupo-{{ $grupo->id }}"
                                             name="observaciones"
                                             rows="2"
                                             maxlength="1000"
@@ -485,263 +496,173 @@
 </div>
 
 <script>
-    const filtrosUrl = @json(
-        route('programacion.asignacion.profesores.filtros')
-    );
+(() => {
+    const filtros = document.getElementById('filtros-form');
+    const estadoFiltros = document.getElementById('estado-filtros-docentes');
+    const aplicar = filtros.querySelector('button[type="submit"]');
+    const campos = [...filtros.querySelectorAll('select[name]')];
+    const [periodo, ...dependientes] = campos;
+    const opciones = [
+        ['carreras', 'Todas las carreras', ({ id, nombre }) => new Option(nombre, id)],
+        ['semestres', 'Todos', semestre => new Option(`Semestre ${semestre}`, semestre)],
+        ['secciones', 'Seleccionar sección', ({ id, texto }) => new Option(texto, id)],
+    ];
+    let consultaFiltros;
 
-    const periodoSelect = document.getElementById('periodo_id');
-    const carreraSelect = document.getElementById('carrera_id');
-    const semestreSelect = document.getElementById('semestre');
-    const seccionSelect = document.getElementById('seccion_id');
-
-    function limpiarSelect(select, texto) {
-        select.innerHTML = '';
-
-        const option = document.createElement('option');
-
-        option.value = '';
-        option.textContent = texto;
-
-        select.appendChild(option);
-    }
-
-    function cargarCarreras(carreras) {
-        limpiarSelect(carreraSelect, 'Todas las carreras');
-
-        carreras.forEach(function (carrera) {
-            const option = document.createElement('option');
-
-            option.value = carrera.id;
-            option.textContent = carrera.nombre;
-
-            carreraSelect.appendChild(option);
-        });
-    }
-
-    function cargarSemestres(semestres) {
-        limpiarSelect(semestreSelect, 'Todos');
-
-        semestres.forEach(function (semestre) {
-            const option = document.createElement('option');
-
-            option.value = semestre;
-            option.textContent = semestre;
-
-            semestreSelect.appendChild(option);
-        });
-    }
-
-    function cargarSecciones(secciones) {
-        limpiarSelect(seccionSelect, 'Seleccionar sección');
-
-        secciones.forEach(function (seccion) {
-            const option = document.createElement('option');
-
-            option.value = seccion.id;
-            option.textContent = seccion.texto;
-
-            seccionSelect.appendChild(option);
-        });
-    }
-
-    let ultimaConsultaFiltros = 0;
-
-    async function consultarFiltros(parametros) {
-        const consultaActual = ++ultimaConsultaFiltros;
+    async function consultar(parametros, controlador) {
+        const espera = setTimeout(() => controlador.abort(), 15000);
         try {
-            const respuesta = await fetch(
-                filtrosUrl + '?' + parametros.toString(),
-                {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                }
-            );
-
-            if (!respuesta.ok) {
-                throw new Error('No fue posible actualizar los filtros.');
-            }
-
-            const datos = await respuesta.json();
-            return consultaActual === ultimaConsultaFiltros ? datos : null;
-
-        } catch (error) {
-            console.error(error);
-
-            return null;
+            const respuesta = await fetch(`${filtros.dataset.filtrosUrl}?${parametros}`, {
+                signal: controlador.signal,
+                headers: { Accept: 'application/json' },
+            });
+            if (!respuesta.ok) throw new Error('No se pudo completar la consulta.');
+            return await respuesta.json();
+        } finally {
+            clearTimeout(espera);
         }
     }
 
-    periodoSelect.addEventListener('change', async function () {
-        limpiarSelect(carreraSelect, 'Cargando carreras...');
-        limpiarSelect(semestreSelect, 'Cargando semestres...');
-        limpiarSelect(seccionSelect, 'Cargando secciones...');
+    function mostrarEstado(elemento, mensaje, error = false) {
+        elemento.textContent = mensaje;
+        elemento.classList.toggle('hidden', !mensaje);
+        elemento.classList.toggle('text-red-700', error);
+    }
 
-        const parametros = new URLSearchParams();
+    function restablecerFiltros(indice) {
+        dependientes.forEach((campo, posicion) => {
+            if (posicion >= indice) campo.replaceChildren(new Option(opciones[posicion][1], ''));
+        });
+    }
 
-        parametros.set('periodo_id', periodoSelect.value);
-
-        const datos = await consultarFiltros(parametros);
-
-        if (!datos) {
-            return;
+    async function actualizarFiltros(indice) {
+        consultaFiltros?.abort();
+        const consulta = new AbortController();
+        consultaFiltros = consulta;
+        restablecerFiltros(indice);
+        const parametros = new URLSearchParams(campos.slice(0, indice + 1)
+            .filter(campo => campo.value).map(campo => [campo.name, campo.value]));
+        dependientes.forEach((campo, posicion) => { campo.disabled = posicion >= indice; });
+        aplicar.disabled = true;
+        filtros.setAttribute('aria-busy', 'true');
+        estadoFiltros.classList.add('estado-filtros-cargando');
+        mostrarEstado(estadoFiltros, 'Actualizando opciones disponibles…');
+        try {
+            const datos = await consultar(parametros, consulta);
+            if (consultaFiltros !== consulta) return;
+            const listas = opciones.slice(indice).map(([clave, vacio, crear]) => [
+                new Option(vacio, ''), ...datos[clave].map(crear),
+            ]);
+            listas.forEach((lista, posicion) => dependientes[indice + posicion].replaceChildren(...lista));
+            mostrarEstado(estadoFiltros, 'Selecciona una sección y aplica los filtros.');
+        } catch {
+            if (consultaFiltros === consulta) {
+                mostrarEstado(estadoFiltros, 'No se pudieron actualizar las opciones. Aplica los filtros para volver a cargarlas.', true);
+            }
+        } finally {
+            if (consultaFiltros === consulta) {
+                consultaFiltros = null;
+                dependientes.forEach(campo => { campo.disabled = false; });
+                aplicar.disabled = false;
+                filtros.removeAttribute('aria-busy');
+                estadoFiltros.classList.remove('estado-filtros-cargando');
+            }
         }
+    }
 
-        cargarCarreras(datos.carreras);
-        cargarSemestres(datos.semestres);
-        cargarSecciones(datos.secciones);
+    [periodo, ...dependientes.slice(0, -1)].forEach((campo, indice) => {
+        campo.addEventListener('change', () => actualizarFiltros(indice));
+    });
+    filtros.addEventListener('submit', evento => {
+        if (consultaFiltros) evento.preventDefault();
     });
 
-    carreraSelect.addEventListener('change', async function () {
-        limpiarSelect(semestreSelect, 'Cargando semestres...');
-        limpiarSelect(seccionSelect, 'Cargando secciones...');
-
-        const parametros = new URLSearchParams();
-
-        parametros.set('periodo_id', periodoSelect.value);
-
-        if (carreraSelect.value) {
-            parametros.set('carrera_id', carreraSelect.value);
-        }
-
-        const datos = await consultarFiltros(parametros);
-
-        if (!datos) {
-            return;
-        }
-
-        cargarSemestres(datos.semestres);
-        cargarSecciones(datos.secciones);
-    });
-
-    semestreSelect.addEventListener('change', async function () {
-        limpiarSelect(seccionSelect, 'Cargando secciones...');
-
-        const parametros = new URLSearchParams();
-
-        parametros.set('periodo_id', periodoSelect.value);
-
-        if (carreraSelect.value) {
-            parametros.set('carrera_id', carreraSelect.value);
-        }
-
-        if (semestreSelect.value) {
-            parametros.set('semestre', semestreSelect.value);
-        }
-
-        const datos = await consultarFiltros(parametros);
-
-        if (!datos) {
-            return;
-        }
-
-        cargarSecciones(datos.secciones);
-    });
-
-    document.querySelectorAll('.formulario-profesor').forEach(function (formulario) {
+    document.querySelectorAll('.formulario-profesor').forEach(formulario => {
         const inputBusqueda = formulario.querySelector('.buscar-profesor');
         const botonBuscar = formulario.querySelector('.boton-buscar');
         const resultados = formulario.querySelector('.resultados-profesor');
-        const profesorSelect = formulario.querySelector('.profesor-select');
+        const estado = formulario.querySelector('.estado-busqueda-profesor');
+        const docente = formulario.querySelector('.profesor-select');
+        let consultaDocentes;
+
+        const limpiarResultados = () => {
+            resultados.replaceChildren();
+            resultados.classList.add('hidden');
+            resultados.removeAttribute('aria-busy');
+        };
+
+        function crearResultado(profesor) {
+            const nombre = document.createElement('span');
+            nombre.className = 'block font-semibold text-gray-700';
+            nombre.textContent = profesor.nombre;
+            const tipoDocente = (profesor.tipo_profesor ?? '').replace(/\bprofesor(?:a)?\b/gi, 'docente');
+            const detalle = document.createElement('span');
+            detalle.className = 'block text-gray-500';
+            detalle.textContent = `RUT: ${profesor.rut ?? '—'}${tipoDocente ? ` · ${tipoDocente}` : ''}`;
+            const boton = document.createElement('button');
+            boton.type = 'button';
+            boton.className = 'block min-h-11 w-full break-words rounded-md border border-borde bg-superficie p-2 text-left text-xs hover:bg-fondo';
+            boton.append(nombre, detalle);
+            boton.addEventListener('click', () => {
+                const valor = String(profesor.id);
+                if (!Array.from(docente.options).some(opcion => opcion.value === valor)) {
+                    docente.add(new Option(`${profesor.nombre} — ${profesor.rut ?? 'Sin RUT'}`, valor));
+                }
+                docente.value = valor;
+                inputBusqueda.value = '';
+                limpiarResultados();
+                mostrarEstado(estado, `Docente seleccionado: ${profesor.nombre}.`);
+                docente.focus();
+            });
+            return boton;
+        }
 
         async function buscarProfesor() {
+            consultaDocentes?.abort();
+            consultaDocentes = null;
+            limpiarResultados();
             const termino = inputBusqueda.value.trim();
-
-            resultados.innerHTML = '';
-
             if (termino.length < 2) {
+                mostrarEstado(estado, 'Escribe al menos 2 caracteres.');
+                return;
+            }
+
+            const consulta = new AbortController();
+            consultaDocentes = consulta;
+            const parametros = new URLSearchParams({ buscar_profesores: '1', seccion_id: formulario.dataset.seccionId, q: termino });
+            resultados.setAttribute('aria-busy', 'true');
+            mostrarEstado(estado, 'Buscando docentes…');
+            try {
+                const { profesores } = await consultar(parametros, consulta);
+                if (consultaDocentes !== consulta) return;
+                if (!profesores.length) {
+                    mostrarEstado(estado, 'No se encontraron docentes. Prueba con otro nombre, RUT o correo.');
+                    return;
+                }
+                resultados.replaceChildren(...profesores.map(crearResultado));
                 resultados.classList.remove('hidden');
-                resultados.innerHTML = `
-                    <div class="text-xs text-gray-500">
-                        Escribe al menos 2 caracteres.
-                    </div>
-                `;
-                return;
+                mostrarEstado(estado, profesores.length === 1 ? '1 docente encontrado. Selecciónalo.' : `${profesores.length} docentes encontrados. Selecciona uno.`);
+            } catch {
+                if (consultaDocentes === consulta) mostrarEstado(estado, 'No se pudo completar la búsqueda. Presiona Buscar para volver a intentarlo.', true);
+            } finally {
+                if (consultaDocentes === consulta) resultados.removeAttribute('aria-busy');
             }
-
-            resultados.classList.remove('hidden');
-            resultados.innerHTML = `
-                <div class="text-xs text-gray-500">
-                    Buscando...
-                </div>
-            `;
-
-            const parametros = new URLSearchParams();
-
-            parametros.set('buscar_profesores', '1');
-            parametros.set('seccion_id', formulario.dataset.seccionId);
-            parametros.set('q', termino);
-
-            const datos = await consultarFiltros(parametros);
-
-            resultados.innerHTML = '';
-
-            if (!datos || datos.profesores.length === 0) {
-                resultados.innerHTML = `
-                    <div class="text-xs text-gray-500">
-                        No se encontraron docentes.
-                    </div>
-                `;
-                return;
-            }
-
-            datos.profesores.forEach(function (profesor) {
-                const tipoDocente = (profesor.tipo_profesor ?? '').replace(/\bprofesor(?:a)?\b/gi, (termino) => ({
-                    PROFESOR: 'DOCENTE', PROFESORA: 'DOCENTE',
-                    Profesor: 'Docente', Profesora: 'Docente',
-                    profesor: 'docente', profesora: 'docente',
-                }[termino] ?? 'Docente'));
-                const boton = document.createElement('button');
-
-                boton.type = 'button';
-                boton.className =
-                    'block min-w-0 w-full break-words rounded-md border border-gray-200 bg-white px-2 py-2 text-left text-xs hover:bg-gray-50';
-
-                boton.innerHTML = `
-                    <div class="font-semibold text-gray-700">
-                        ${profesor.nombre}
-                    </div>
-                    <div class="text-gray-500">
-                        RUT: ${profesor.rut ?? '—'}
-                        ${tipoDocente ? ' · ' + tipoDocente : ''}
-                    </div>
-                `;
-
-                boton.addEventListener('click', function () {
-                    let option = profesorSelect.querySelector(
-                        'option[value="' + profesor.id + '"]'
-                    );
-
-                    if (!option) {
-                        option = document.createElement('option');
-
-                        option.value = profesor.id;
-                        option.textContent =
-                            profesor.nombre + ' — ' + (profesor.rut ?? '');
-
-                        profesorSelect.appendChild(option);
-                    }
-
-                    profesorSelect.value = profesor.id;
-
-                    resultados.classList.add('hidden');
-                    inputBusqueda.value = '';
-                });
-
-                resultados.appendChild(boton);
-            });
         }
 
         botonBuscar.addEventListener('click', buscarProfesor);
-
-        inputBusqueda.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-
-                buscarProfesor();
-            }
+        inputBusqueda.addEventListener('input', () => {
+            consultaDocentes?.abort();
+            consultaDocentes = null;
+            limpiarResultados();
+            mostrarEstado(estado, '');
+        });
+        inputBusqueda.addEventListener('keydown', evento => {
+            if (evento.key !== 'Enter') return;
+            evento.preventDefault();
+            buscarProfesor();
         });
     });
+})();
 </script>
 
 @endsection

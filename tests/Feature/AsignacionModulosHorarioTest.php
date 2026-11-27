@@ -316,6 +316,30 @@ class AsignacionModulosHorarioTest extends IsolatedDatabaseTestCase
         $this->assertSame((string) $this->version->id, $xpath->query('.//input[@name="version_id"]', $formularios->item(0))->item(0)->getAttribute('value'));
     }
 
+    public function test_permite_usar_el_docente_de_la_seccion_cuando_el_grupo_no_tiene_docente(): void
+    {
+        $this->asignacion->delete();
+        Models\SeccionProfesor::create(['seccion_id' => $this->actividad->seccion_id, 'profesor_id' => $this->profesor->id, 'estado' => true]);
+
+        $this->get($this->pantalla())->assertOk()->assertSee('name="profesores_ids[]"', false);
+        $this->post($this->guardar(), $this->datos())->assertRedirect($this->pantalla())->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('horarios_profesores', ['profesor_id' => $this->profesor->id, 'estado' => true]);
+    }
+
+    public function test_rechaza_sin_error_de_base_un_modulo_ya_reservado_por_un_horario_inactivo(): void
+    {
+        Models\Horario::create([
+            'version_planificacion_id' => $this->version->id, 'actividad_seccion_id' => $this->actividad->id,
+            'grupo_seccion_id' => $this->grupo->id, 'dia_id' => $this->dia, 'bloque_horario_id' => $this->bloque->id, 'estado' => false,
+        ]);
+
+        $this->post($this->guardar(), $this->datos())->assertSessionHasErrors('bloques_horarios');
+
+        $this->assertDatabaseCount('horarios', 1);
+        $this->assertDatabaseCount('horarios_profesores', 0);
+    }
+
     public function test_las_mutaciones_exigen_el_permiso_y_autenticacion(): void
     {
         $h = $this->existente($this->bloque); auth()->user()->revokePermissionTo('asignar horarios');

@@ -147,6 +147,31 @@ class ProgramacionSemestralTest extends IsolatedDatabaseTestCase
             ->assertViewHas('horarios', fn ($horarios) => $horarios->count() === 2);
     }
 
+    public function test_el_calendario_y_los_filtros_coinciden_con_el_docente_efectivo_del_horario(): void
+    {
+        $datos = $this->crearProgramacion();
+        $horario = Horario::findOrFail($datos['horario_id']);
+        $docenteModulo = Profesor::findOrFail($datos['profesor_id']);
+        $docenteGrupo = Profesor::create(['universidad_id' => $docenteModulo->universidad_id, 'nombre' => 'Javiera', 'apellido' => 'del Grupo']);
+        $docenteSeccion = Profesor::create(['universidad_id' => $docenteModulo->universidad_id, 'nombre' => 'Ana', 'apellido' => 'de Sección']);
+        $grupo = $horario->grupoSeccion->profesores()->create(['profesor_id' => $docenteGrupo->id, 'estado' => true]);
+        $horario->actividadSeccion->seccion->profesores()->create(['profesor_id' => $docenteSeccion->id, 'estado' => true]);
+
+        foreach ([$docenteModulo, $docenteGrupo, $docenteSeccion] as $docente) {
+            $filtros = ['periodo_id' => $datos['periodo_id'], 'version_id' => $datos['version_id'], 'asignatura_id' => $datos['asignatura_id']];
+            $this->getJson(route('programacion.semestral.filtros', $filtros))
+                ->assertOk()->assertJsonCount(1, 'profesores')->assertJsonPath('profesores.0.id', $docente->id);
+            $this->get(route('programacion.semestral', ['profesor_id' => $docente->id]))
+                ->assertOk()->assertViewHas('horarios', fn ($filas) => $filas->pluck('id')->all() === [$horario->id])
+                ->assertViewHas('horarios', fn ($filas) => $filas->first()->docentesEfectivos->pluck('profesor_id')->all() === [$docente->id]);
+            if ($docente->is($docenteModulo)) $horario->profesores()->update(['estado' => false]);
+            if ($docente->is($docenteGrupo)) $grupo->update(['estado' => false]);
+        }
+
+        $this->get(route('programacion.semestral', ['profesor_id' => $docenteModulo->id]))
+            ->assertOk()->assertViewHas('horarios', fn ($filas) => $filas->isEmpty());
+    }
+
     private function crearProgramacion(): array
     {
         $universidadId = DB::table('universidades')->value('id');

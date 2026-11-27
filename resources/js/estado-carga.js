@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
         consulta: ['Consultando horario', 'Búsqueda de clases y preparación del horario según los filtros elegidos.'],
         revision: ['Revisando programación', 'Comprobación de topes, disponibilidad docente, capacidades y carga de los grupos.'],
         generacion: ['Generando programación', 'Asignación de horarios y espacios según la disponibilidad, la capacidad y las prioridades.'],
+        completar: ['Preparando módulos pendientes', 'Búsqueda de horarios y espacios para los grupos seleccionados.'],
+        reorganizar: ['Preparando la reorganización', 'Búsqueda de nuevos horarios para las clases de la versión base.'],
     };
     const rutas = new Map(Object.entries(JSON.parse(dialogo.dataset.cargaRutas))
         .map(([url, operacion]) => [new URL(url, location.href).pathname, operacion]));

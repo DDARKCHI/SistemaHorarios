@@ -1,6 +1,6 @@
 # Perfiles y permisos de PROSEC
 
-Actualizado el 15 de noviembre de 2026.
+Actualizado el 27 de noviembre de 2026.
 
 ## Administrar un perfil
 
@@ -30,7 +30,20 @@ El perfil **Administrador** permite consultar sus funciones y está protegido co
 | Configuración y calendario | Consultar institución, días y módulos. Modificar exige además cuentas, perfiles y catálogos |
 | Cuentas, perfiles y catálogos | Accesos, permisos, docentes y oferta institucional completa |
 
-PROSEC comprueba los permisos también al recibir cada operación, incluso si se intenta abrir una dirección directamente. Al iniciar sesión dirige a una pantalla permitida. Si la cuenta no tiene ninguna función reconocida, informa del problema y cierra esa sesión. Las peticiones de datos sin autorización reciben un rechazo de acceso.
+PROSEC comprueba los permisos también al recibir cada operación, incluso si se intenta abrir una dirección directamente. Al iniciar sesión dirige a una pantalla permitida. Si la cuenta no tiene ninguna función reconocida, informa del problema y cierra esa sesión.
+
+## Panel de carrera
+
+**Administrador** y **Jefe de carrera** pueden abrir el Panel de carrera con el permiso **Programación semestral**. Jefatura abre el panel al ingresar, después del cambio de contraseña si corresponde. Las acciones se habilitan según los permisos del perfil.
+
+| Función | Acciones en el panel |
+| --- | --- |
+| Programación semestral | Consultar horarios, ramos, laboratorios, carga docente y versiones de una carrera. Exportar la consulta a Excel. |
+| Asignación y disponibilidad docente | Asignar y confirmar al responsable del grupo. |
+| Asignación de horarios y cambios | Agregar, mover o quitar módulos y asignar sus espacios. |
+| Versiones, generación y publicación | Copiar una versión a un borrador y revisar su activación. |
+
+Las ediciones de horarios, docentes y espacios se guardan en el borrador actual de un período activo y se reflejan en las demás vistas de esa programación.
 
 ## Ejemplos para preparar perfiles
 
@@ -45,7 +58,7 @@ Estos ejemplos son propuestas para revisión institucional; no se crean ni asign
 
 ## Alcance y conservación
 
-**Todos los perfiles actuales tienen alcance institucional sobre todas las carreras.** Llamar a un perfil “Jefatura de carrera” no lo limita a una carrera. La vinculación de una cuenta a la ficha académica de un profesor tampoco se establece por el nombre del perfil. La separación por carrera requiere un bloque específico que abarque consultas, operaciones, catálogos compartidos y exportaciones, y permanece pendiente.
+**El alcance de los perfiles es institucional.** Jefatura elige la carrera que va a gestionar en el panel. La ficha académica se vincula a la cuenta del docente desde su registro.
 
 La actualización separa importar de consultar mediante una migración aditiva. Los perfiles y permisos directos que ya podían consultar programación anterior conservan la importación que antes incluía ese permiso. Los perfiles nuevos de consulta no la reciben automáticamente. La migración no cambia contraseñas, cuentas, perfiles asignados ni horarios. Una reversión del archivo de migración conserva las decisiones administrativas sobre permisos.
 

@@ -1,16 +1,24 @@
 # Manual de usuario de PROSEC
 
-15 de noviembre de 2026
+27 de noviembre de 2026
 
-Guía de uso de PROSEC. Las opciones visibles dependen de los permisos de tu cuenta.
+En el menú de tu cuenta, abre **Manual de usuario** para consultar las funciones de tu perfil.
 
-También disponible en la aplicación: menú de usuario → Manual de usuario.
+## Funciones por perfil
+
+- **Administrador.** Consulta catálogos, programación, Panel de carrera, publicaciones y permisos.
+
+- **Jefe de carrera.** Comienza en el Panel de carrera y trabaja sobre la programación del período.
+
+- **Asistente académico.** Consulta horarios y publicaciones.
+
+- **Docente.** Registra tu disponibilidad y consulta tus horarios.
 
 ## 1. Entrar y cuidar tu cuenta
 
-**Dónde:** Acceso y menú de usuario
+**Acceso y menú de usuario**
 
-**Para qué:** Entrar al sistema y administrar tu contraseña.
+Entrar al sistema y administrar tu contraseña.
 
 ### Iniciar sesión
 
@@ -25,15 +33,13 @@ También disponible en la aplicación: menú de usuario → Manual de usuario.
 3. Ingresa la contraseña actual y una nueva de al menos 12 caracteres con letras y números. Confírmala y guarda.
 4. Vuelve a iniciar sesión con la nueva contraseña. Para salir normalmente utiliza Cerrar sesión.
 
-**Ten en cuenta:** La recuperación por correo requiere que el servidor institucional tenga configurado el envío. Si no recibes el enlace, revisa correo no deseado y contacta al administrador.
-
-**Resultado:** Una sesión con los accesos que corresponden a tu cuenta.
+La recuperación por correo requiere que el servidor institucional tenga configurado el envío. Si no recibes el enlace, revisa correo no deseado y contacta al administrador.
 
 ## 2. Orientarte e interpretar Inicio
 
-**Dónde:** Inicio y menú lateral
+**Inicio y menú lateral**
 
-**Para qué:** Encontrar funciones y conocer el avance de la programación.
+Encontrar funciones y conocer el avance de la programación.
 
 ### Navegar
 
@@ -45,21 +51,17 @@ También disponible en la aplicación: menú de usuario → Manual de usuario.
 
 Inicio muestra el período activo más reciente, cantidades de carreras, docentes, salas y secciones, el avance de la programación y accesos frecuentes. Para preparar la publicación, revisa los conflictos y abre Aprobación y publicación.
 
-
 ### Controles comunes
 
 Buscar reduce un listado. Aplicar o Consultar utiliza los filtros elegidos. Limpiar restablece la consulta. Crear registra un elemento nuevo; Editar cambia el seleccionado. Cancelar vuelve sin guardar. El asterisco (*) identifica campos obligatorios.
 
-
-**Ten en cuenta:** Una opción que no aparece puede depender de tu perfil. No solicites otro usuario prestado; pide al administrador revisar tus permisos.
-
-**Resultado:** Puedes localizar una tarea y consultar el contexto de trabajo.
+Una opción que no aparece puede depender de tu perfil. No solicites otro usuario prestado; pide al administrador revisar tus permisos.
 
 ## 3. El orden recomendado de trabajo
 
-**Dónde:** Recorrido completo
+**Recorrido completo**
 
-**Para qué:** Preparar y cerrar un período sin saltar las revisiones.
+Preparar y cerrar un período sin saltar las revisiones.
 
 ### Preparación
 
@@ -76,15 +78,13 @@ Buscar reduce un listado. Aplicar o Consultar utiliza los filtros elegidos. Limp
 4. Activa el borrador cuando corresponda, aprueba la versión actual y después publícala.
 5. Consulta la publicación y descarga sus PDF. Para cambios posteriores crea un borrador para ajustes.
 
-**Ten en cuenta:** Guardar una propuesta no la activa ni la publica. Cada paso tiene su propia revisión y confirmación.
-
-**Resultado:** Una programación revisada y publicada para consulta interna.
+Guardar una propuesta no la activa ni la publica. Cada paso tiene su propia revisión y confirmación.
 
 ## 4. Catálogos institucionales y académicos
 
-**Dónde:** Administración
+**Administración**
 
-**Para qué:** Preparar las referencias que utilizan secciones, docentes y recursos.
+Preparar las referencias que utilizan secciones, docentes y recursos.
 
 ### Crear o editar
 
@@ -96,19 +96,17 @@ Buscar reduce un listado. Aplicar o Consultar utiliza los filtros elegidos. Limp
 | --- | --- |
 | Sedes | Nombre, institución y estado. Identifica dónde se imparten clases. |
 | Carreras | Datos de la carrera, sede principal y otras sedes donde se imparte. |
-| Facultades e institutos | Unidades académicas a las que pertenecen las carreras. |
+| Facultades e institutos | Unidades académicas a las que pertenecen las carreras. Pueden abarcar varias sedes. |
 | Asignaturas y ramos | Código, nombre y módulos de referencia por actividad. |
 | Períodos académicos | Año, semestre, nombre, fechas opcionales y estado. |
 
-**Ten en cuenta:** Un registro utilizado puede tener campos protegidos. No cambies códigos históricos para reutilizarlos con otro significado. Archivar un período conserva sus datos; primero deben resolverse versiones actuales sin publicar y solicitudes pendientes.
-
-**Resultado:** Catálogos coherentes que pueden seleccionarse en los demás formularios.
+Un registro utilizado puede tener campos protegidos. No cambies códigos históricos para reutilizarlos con otro significado. Archivar un período conserva sus datos; primero deben resolverse versiones actuales sin publicar y solicitudes pendientes.
 
 ## 5. Docentes y cuentas de acceso
 
-**Dónde:** Administración → Docentes / Usuarios
+**Administración → Docentes / Usuarios**
 
-**Para qué:** Distinguir la ficha académica de un docente de su acceso al sistema.
+Distinguir la ficha académica de un docente de su acceso al sistema.
 
 ### Registrar un docente
 
@@ -124,15 +122,13 @@ Buscar reduce un listado. Aplicar o Consultar utiliza los filtros elegidos. Limp
 3. Selecciona un perfil y guarda. Revisa sus permisos antes de entregar el acceso.
 4. Usa Editar para actualizar la cuenta. El sistema protege al último administrador y evita eliminar tu propia cuenta.
 
-**Ten en cuenta:** Puedes corregir el RUT desde Editar docente. Al guardar, se actualizan el acceso y el RUT de sus versiones. Las clases, solicitudes y respuestas siguen vinculadas al mismo docente. Desde Disponibilidad docente puedes preparar y enviar su acceso.
-
-**Resultado:** Datos docentes disponibles para asignar y accesos separados según las funciones autorizadas.
+Puedes corregir el RUT desde Editar docente. Al guardar, se actualizan el acceso y el RUT de sus versiones. Las clases y solicitudes siguen vinculadas al mismo docente. Desde Disponibilidad docente puedes preparar y enviar su acceso.
 
 ## 6. Oferta por período
 
-**Dónde:** Administración → Oferta por período
+**Administración → Oferta por período**
 
-**Para qué:** Crear las secciones, actividades y grupos que deben recibir horarios.
+Crear las secciones, actividades y grupos que deben recibir horarios.
 
 ### Crear la oferta
 
@@ -146,16 +142,13 @@ Buscar reduce un listado. Aplicar o Consultar utiliza los filtros elegidos. Limp
 
 Cuando aún no exista una versión semestral actual y cumplas los permisos necesarios, utiliza la opción de iniciar un borrador desde la oferta. Crear secciones o ramos por sí solo no les asigna días, docentes ni salas.
 
-
-**Ten en cuenta:** La carga se expresa en módulos de la actividad. Las definiciones académicas son compartidas; una programación cerrada puede impedir cambios que alteren su significado.
-
-**Resultado:** Grupos activos con carga y matrícula para asignar o generar horarios.
+La carga se expresa en módulos de la actividad. Las definiciones académicas son compartidas; una programación cerrada puede impedir cambios que alteren su significado.
 
 ## 7. Importar y consultar programación anterior
 
-**Dónde:** Programación anterior
+**Programación anterior**
 
-**Para qué:** Usar un archivo institucional como referencia y conservar las versiones anteriores.
+Usar un archivo institucional como referencia y conservar las versiones anteriores.
 
 ### Importar un archivo
 
@@ -168,16 +161,13 @@ Cuando aún no exista una versión semestral actual y cumplas los permisos neces
 
 En Consultar programación anterior elige período, versión y los filtros del horario. Pulsa Aplicar y revisa la tabla. Cambiar el archivo de nombre no permite volver a confirmar un contenido ya reconocido como idéntico.
 
-
-**Ten en cuenta:** El análisis vence a los 30 minutos. Si cambian el archivo o los datos, analízalo otra vez. Importar no corrige automáticamente cupos, semestres ni plantillas manuales. El importador utiliza la primera institución configurada; revisa ese contexto antes de usarlo en otra instalación.
-
-**Resultado:** Una referencia anterior trazable y disponible para preparar la programación semestral.
+El análisis vence a los 30 minutos. Si cambian el archivo o los datos, analízalo otra vez. Importar no corrige automáticamente cupos, semestres ni plantillas manuales. El importador utiliza la primera institución configurada; revisa ese contexto antes de usarlo en otra instalación.
 
 ## 8. Salas y laboratorios
 
-**Dónde:** Salas y recursos → Catálogo de salas / Laboratorios
+**Salas y recursos → Catálogo de salas / Laboratorios**
 
-**Para qué:** Registrar espacios y distinguir laboratorios fijos de recursos móviles.
+Registrar espacios y distinguir laboratorios fijos de recursos móviles.
 
 ### Salas
 
@@ -192,15 +182,13 @@ En Consultar programación anterior elige período, versión y los filtros del h
 2. Para uno fijo, selecciona la sala física. Puedes utilizar automáticamente el nombre de esa sala.
 3. Para uno móvil, indica su sede de origen. Completa capacidad, identificación y estado, y guarda.
 
-**Ten en cuenta:** Un laboratorio fijo y su sala comparten ocupación. Informar capacidad 0 significa que no está informada; no equivale a capacidad ilimitada. Una sala y un laboratorio activo deben tener datos compatibles.
-
-**Resultado:** Espacios identificados y disponibles para asignaciones compatibles.
+Un laboratorio fijo y su sala comparten ocupación. Informar capacidad 0 significa que no está informada; no equivale a capacidad ilimitada. Una sala y un laboratorio activo deben tener datos compatibles.
 
 ## 9. Equipamiento y distribución
 
-**Dónde:** Salas y recursos → Equipamiento y recursos
+**Salas y recursos → Equipamiento y recursos**
 
-**Para qué:** Registrar existencias y señalar dónde están disponibles.
+Registrar existencias y señalar dónde están disponibles.
 
 ### Registrar inventario
 
@@ -215,15 +203,13 @@ En Consultar programación anterior elige período, versión y los filtros del h
 3. Pulsa Ubicar unidades. Revisa los totales En inventario, Ubicadas y Sin ubicar.
 4. Edita una cantidad o retira una ubicación antes de redistribuirla, respetando los vínculos existentes.
 
-**Ten en cuenta:** El inventario general no garantiza que el equipo esté disponible en una sala. La generación y revisión utilizan el equipamiento ubicado. Los laboratorios fijos utilizan el inventario de su sala; el de un laboratorio móvil viaja con él.
-
-**Resultado:** Existencias y ubicaciones coherentes entre todas las sedes.
+El inventario general no garantiza que el equipo esté disponible en una sala. La generación y revisión utilizan el equipamiento ubicado. Los laboratorios fijos utilizan el inventario de su sala; el de un laboratorio móvil viaja con él.
 
 ## 10. Prioridades y requerimientos
 
-**Dónde:** Salas y recursos → Prioridades / Programación semestral → Requerimientos
+**Salas y recursos → Prioridades / Programación semestral → Requerimientos**
 
-**Para qué:** Expresar qué necesita una clase y qué ramo tiene preferencia sobre recursos compartidos.
+Expresar qué necesita una clase y qué ramo tiene preferencia sobre recursos compartidos.
 
 ### Prioridad por ramo
 
@@ -241,43 +227,37 @@ En Consultar programación anterior elige período, versión y los filtros del h
 
 Backend puede tener prioridad 1 para laboratorio de computación, mientras otro ramo tiene prioridad 2. La prioridad ayuda a elegir entre opciones; el requerimiento expresa la necesidad concreta de su actividad.
 
-
-**Ten en cuenta:** La prioridad no desplaza clases ya conservadas ni garantiza el mejor horario global. Para editar requerimientos necesitas revisión de conflictos y asignación de horarios.
-
-**Resultado:** Necesidades verificables y preferencias claras al revisar o generar.
+La prioridad no desplaza clases ya conservadas ni garantiza el mejor horario global. Para editar requerimientos necesitas revisión de conflictos y asignación de horarios.
 
 ## 11. Solicitar y aprobar disponibilidad
 
-**Dónde:** Disponibilidad docente
+**Disponibilidad docente**
 
-**Para qué:** Recibir la disponibilidad del docente y revisarla antes de utilizarla.
+Recibir la disponibilidad del docente y revisarla antes de utilizarla.
 
-### Coordinación
+### Coordinar y revisar
 
-1. Elige el período y busca los docentes por nombre, RUT o correo.
-2. Marca a los destinatarios o usa **Seleccionar todos los resultados**. Indica la fecha límite y pulsa **Enviar accesos**.
-3. En la misma lista, consulta el envío, los recordatorios, el primer ingreso y el estado de la respuesta.
-4. Abre la disponibilidad del docente para ver sus módulos y observaciones. Si está en revisión, aprueba la respuesta o indica el motivo si la rechazas.
+1. Elige el período y filtra por sede. También puedes buscar por nombre, RUT o correo.
+2. Selecciona los docentes, indica la fecha límite y elige Enviar accesos. Antes de confirmar, verifica cuántas solicitudes se enviarán.
+3. Consulta el envío, el ingreso, los recordatorios y el estado de la respuesta desde la misma lista.
+4. Abre la disponibilidad para ver los módulos y observaciones. Si está en revisión, aprueba la respuesta o indica el motivo si la rechazas.
 
-### Respuesta del docente
+### Responder como docente
 
-1. Abre el correo de acceso y pulsa **Haz clic aquí para ingresar**.
-2. Usa el RUT que aparece en el correo, sin puntos ni guion. Si recibiste una contraseña provisoria, cámbiala en el primer ingreso. Si ya tienes cuenta, usa tu contraseña habitual.
-3. Abre **Mi disponibilidad**, selecciona el período, marca tus bloques y pulsa **Enviar disponibilidad**. Si careces de horarios disponibles, selecciona la opción correspondiente.
-4. Consulta el estado de tu respuesta desde **Mi disponibilidad**.
+1. Abre el correo y pulsa Haz clic aquí para ingresar. Usa el RUT del correo, sin puntos ni guion.
+2. En el primer ingreso con una contraseña temporal, crea una contraseña personal y vuelve a iniciar sesión.
+3. Abre Mi disponibilidad, marca los módulos del período y pulsa Enviar disponibilidad. Si careces de horarios disponibles, selecciona la opción correspondiente.
+4. Consulta el estado de tu respuesta desde Mi disponibilidad.
 
-
-PROSEC envía un recordatorio tres días y otro un día antes del vencimiento cuando la invitación ya se envió y el docente aún no responde. La generación utiliza la disponibilidad aprobada del período.
-
-**Resultado:** Disponibilidad revisada y aprobada para construir horarios.
+La importación de Excel prepara las cuentas docentes. Para enviar la invitación, la ficha debe tener RUT y correo. Si la solicitud sigue pendiente, PROSEC puede enviar recordatorios tres días y un día antes del vencimiento.
 
 ## 12. Consultar programación y espacios
 
-**Dónde:** Programación semestral / Horario de espacios
+**Programación semestral → Consultar horarios / Horario de espacios**
 
-**Para qué:** Ver clases de una versión o la ocupación de un espacio concreto.
+Ver clases de una versión o la ocupación de un espacio concreto.
 
-### Programación semestral
+### Consultar horarios
 
 1. Selecciona período y versión.
 2. Filtra por sede, carrera, semestre, sección, ramo o docente.
@@ -290,15 +270,48 @@ PROSEC envía un recordatorio tres días y otro un día antes del vencimiento cu
 2. Elige el período y la versión. Revisa el horario semanal o la agenda diaria según el tamaño de pantalla.
 3. Si no ves clases, comprueba la selección y que el espacio esté asignado en esa versión.
 
-**Ten en cuenta:** Consultar otra versión no la convierte en actual. En móvil, las tablas amplias pueden desplazarse horizontalmente; usa la vista diaria cuando esté disponible.
+Consultar otra versión no la convierte en actual. En móvil, las tablas amplias pueden desplazarse horizontalmente; usa la vista diaria cuando esté disponible.
 
-**Resultado:** Una consulta del horario sin modificar asignaciones.
+## 13. Panel de carrera
 
-## 13. Asignar docentes
+**Programación semestral → Panel de carrera**
 
-**Dónde:** Programación semestral → Asignación de docentes
+Organiza la programación de una carrera. Es la pantalla de inicio para Jefatura de carrera con acceso al panel. Administración puede abrirla desde el menú lateral.
 
-**Para qué:** Definir los responsables de cada actividad y grupo.
+### Consultar una carrera
+
+1. Elige el período, la versión y la carrera. Pulsa Consultar.
+2. En Horario revisa el avance y filtra por semestre o docente. En Laboratorios consulta la ocupación de cada espacio.
+3. En Carga docente busca por nombre o apellido y selecciona el docente para ver su semana.
+4. En Versiones puedes consultar otros borradores y publicaciones. Usa Exportar a Excel para guardar una copia de la consulta.
+
+### Asignar y confirmar el docente
+
+1. En Ramos busca el ramo y abre la sección. En su grupo pulsa Asignar docente al grupo y elige al responsable.
+2. Cuando el docente acepte impartir el grupo, pulsa Confirmar docente. Una asignación directa en un módulo conserva su prioridad.
+
+### Completar módulos y espacios
+
+1. En Ramos abre un grupo con carga pendiente. Elige día y módulo, y pulsa Agregar módulo. El grupo debe tener docente asignado.
+2. En el módulo pulsa Asignar espacio para elegir una sala, un laboratorio o buscar un espacio libre y compatible. Usa Quitar para retirar ese módulo.
+
+### Mover una clase
+
+1. En Horario arrastra desde cualquier parte de la tarjeta. También puedes seleccionar la tarjeta y pulsar Mover aquí en el destino.
+2. Lee el estado del destino y sus motivos. Verde indica que no se detectaron cruces, ámbar pide revisión y rojo señala un conflicto o un destino bloqueado.
+3. Confirma el movimiento disponible para guardarlo. Para revertir el último cambio de ubicación, pulsa Deshacer movimiento y verifica el destino.
+
+### Preparar otra versión
+
+En Versiones, selecciona la versión de origen. El botón Copiar V… como borrador indica cuál se copiará. Usa Revisar para activar el borrador antes de editarlo.
+
+La edición se guarda en el borrador actual de un período activo. Los módulos, docentes y espacios se consultan desde la misma programación al abrir o recargar las otras vistas.
+
+## 14. Asignar docentes
+
+**Programación semestral → Asignación de docentes**
+
+Definir los responsables de cada actividad y grupo.
 
 ### Asignar
 
@@ -311,16 +324,13 @@ PROSEC envía un recordatorio tres días y otro un día antes del vencimiento cu
 
 Una asignación expresa en el módulo tiene prioridad sobre la del grupo; la del grupo tiene prioridad sobre la plantilla general de la sección. Al revisar un horario comprueba sus docentes efectivos, especialmente si antes participaban varias personas.
 
+No se cambian los docentes de una programación actual aprobada o publicada. Crea un borrador para ajustes antes de continuar. Asignar una plantilla no corrige por sí solo conflictos ni garantiza disponibilidad.
 
-**Ten en cuenta:** No se cambian los docentes de una programación actual aprobada o publicada. Crea un borrador para ajustes antes de continuar. Asignar una plantilla no corrige por sí solo conflictos ni garantiza disponibilidad.
+## 15. Asignar y corregir horarios
 
-**Resultado:** Grupos con responsables definidos para asignar módulos y generar propuestas.
+**Programación semestral → Asignación de horarios**
 
-## 14. Asignar y corregir horarios
-
-**Dónde:** Programación semestral → Asignación de horarios
-
-**Para qué:** Crear o ajustar módulos manualmente en la versión actual en Borrador.
+Crear o ajustar módulos manualmente en la versión actual en Borrador.
 
 ### Agregar una clase
 
@@ -334,22 +344,17 @@ Una asignación expresa en el módulo tiene prioridad sobre la del grupo; la del
 
 En los horarios existentes utiliza la opción de docente para asignar o corregir sus participantes. Para cambiar el intervalo, utiliza la gestión manual disponible o Solicitar cambio. Eliminar retira el horario indicado; no utilices esta acción si solo querías quitar un filtro.
 
+La asignación manual permite un docente sin disponibilidad declarada mediante advertencia. No equivale a aprobar su disponibilidad. Un módulo con solicitudes de cambio conserva su historial y puede impedir su eliminación. Después de editar vuelve a revisar conflictos.
 
-**Ten en cuenta:** La asignación manual permite un docente sin disponibilidad declarada mediante advertencia. No equivale a aprobar su disponibilidad. Un módulo con solicitudes de cambio conserva su historial y puede impedir su eliminación. Después de editar vuelve a revisar conflictos.
+## 16. Generar propuestas de horarios
 
-**Resultado:** Clases concretas con día, módulos, docentes y recursos.
+**Programación semestral**
 
-## 15. Generar propuestas de horarios
-
-**Dónde:** Programación semestral
-
-**Para qué:** Generar horarios y espacios compatibles con la oferta y las asignaciones de la versión base.
+Generar horarios y espacios compatibles con la oferta y las asignaciones de la versión base.
 
 ### Antes de generar
 
-Revisa la matrícula de los grupos, la capacidad de los espacios y sus requerimientos. Asigna los docentes y aprueba su disponibilidad con el calendario vigente.
-
-El generador usa las referencias de cátedra y laboratorio del ramo para completar carga faltante. Entre los horarios compatibles, favorece las horas tempranas y concentra las clases de cada docente para reducir ventanas y días de asistencia.
+Revisa la matrícula de los grupos, la capacidad de los espacios y sus requerimientos. Asigna los docentes y aprueba su disponibilidad con el calendario vigente. El generador usa las referencias de cátedra y laboratorio del ramo para completar carga faltante y favorece horas tempranas y jornadas docentes concentradas.
 
 ### Generar programación
 
@@ -372,15 +377,13 @@ El generador usa las referencias de cátedra y laboratorio del ramo para complet
 2. Con una base completa compatible, utiliza Generar propuesta para reorganizar sus horas conservando docentes y espacios.
 3. Revisa la comparación y guarda el resultado como borrador independiente.
 
-**Ten en cuenta:** Generar programación conserva los días, horas, docentes y espacios ya asignados. Los avisos de disponibilidad de esos módulos quedan en la revisión del borrador. El nivel 1 tiene preferencia sobre el 2 al asignar los recursos restantes. Si las restricciones impiden completar la programación o la búsqueda alcanza un límite, se muestra el motivo y se revierte la operación completa. Las vistas previas de Completar y Reorganizar vencen a los 30 minutos.
+Generar programación conserva los días, horas, docentes y espacios ya asignados. Los avisos de disponibilidad de esos módulos quedan en la revisión del borrador. El nivel 1 tiene preferencia sobre el 2 al asignar los recursos restantes. Si las restricciones impiden completar la programación o la búsqueda alcanza un límite, se muestra el motivo y se revierte la operación completa. Las vistas previas de Completar y Reorganizar vencen a los 30 minutos.
 
-**Resultado:** Un borrador independiente para revisar y activar antes de aprobar y publicar.
+## 17. Revisar y resolver conflictos
 
-## 16. Revisar y resolver conflictos
+**Programación semestral → Revisión de conflictos**
 
-**Dónde:** Programación semestral → Revisión de conflictos
-
-**Para qué:** Saber qué falta o qué impide utilizar formalmente una versión.
+Saber qué falta o qué impide utilizar formalmente una versión.
 
 ### Revisar
 
@@ -399,15 +402,13 @@ El generador usa las referencias de cátedra y laboratorio del ramo para complet
 | Recursos | Requerimientos, inventario ubicado y habilitación de uso. |
 | Carga o datos | Actividades, grupos, módulos requeridos y vínculos académicos. |
 
-**Ten en cuenta:** Guardar cambios no elimina automáticamente todos los problemas relacionados. La revisión global y la aprobación/publicación vuelven a comprobar los datos.
+Guardar cambios no elimina automáticamente todos los problemas relacionados. La revisión global y la aprobación/publicación vuelven a comprobar los datos.
 
-**Resultado:** Una lista concreta de correcciones y una versión comprobada.
+## 18. Versiones, publicación y PDF
 
-## 17. Versiones, publicación y PDF
+**Programación semestral → Aprobación y publicación**
 
-**Dónde:** Programación semestral → Aprobación y publicación
-
-**Para qué:** Distinguir el borrador de trabajo de una programación cerrada.
+Distinguir el borrador de trabajo de una programación cerrada.
 
 ### Avanzar de etapa
 
@@ -420,16 +421,13 @@ El generador usa las referencias de cátedra y laboratorio del ramo para complet
 
 Utiliza Crear borrador para ajustes para copiar una versión semestral. Decide si será actual para trabajar o si se conservará aparte. La fuente y la publicación anterior se mantienen. Repite la revisión y el cierre cuando termines.
 
+Activar no aprueba y aprobar no publica. La publicación es interna para usuarios autorizados. Los PDF admiten hasta 300 módulos filtrados y la vista semanal hasta 60 partes; reduce los filtros si se solicita. Cambiar la marca afecta a los nuevos PDF, no a los ya descargados.
 
-**Ten en cuenta:** Activar no aprueba y aprobar no publica. La publicación es interna para usuarios autorizados. Los PDF admiten hasta 300 módulos filtrados y la vista semanal hasta 60 partes; reduce los filtros si se solicita. Cambiar la marca afecta a los nuevos PDF, no a los ya descargados.
+## 19. Solicitudes de cambio de horario
 
-**Resultado:** Una copia publicada conservada y documentos listos para consultar.
+**Asignación de horarios → Solicitar cambio**
 
-## 18. Solicitudes de cambio de horario
-
-**Dónde:** Asignación de horarios → Solicitar cambio
-
-**Para qué:** Acordar otro horario con los docentes antes de mover una clase.
+Acordar otro horario con los docentes antes de mover una clase.
 
 ### Crear la solicitud
 
@@ -445,15 +443,13 @@ Utiliza Crear borrador para ajustes para copiar una versión semestral. Decide s
 3. Aplica la alternativa acordada si sigue siendo compatible. Si cambió la ocupación o la clase original, vuelve a revisar.
 4. Rechaza o cancela con motivo cuando la solicitud no deba continuar.
 
-**Ten en cuenta:** Crear una solicitud no reserva la alternativa ni mueve el módulo. Una respuesta favorable tampoco cambia el horario automáticamente. Una versión cerrada requiere primero un borrador para ajustes.
+Crear una solicitud no reserva la alternativa ni mueve el módulo. Una respuesta favorable tampoco cambia el horario automáticamente. Una versión cerrada requiere primero un borrador para ajustes.
 
-**Resultado:** El cambio se aplica solo después del acuerdo y de una validación final.
+## 20. Intercambio y carga docente
 
-## 19. Intercambio y carga docente
+**Intercambio docente**
 
-**Dónde:** Intercambio docente
-
-**Para qué:** Evaluar un reemplazo de docente sin perder la referencia de las clases afectadas.
+Evaluar un reemplazo de docente sin perder la referencia de las clases afectadas.
 
 ### Evaluar y aplicar
 
@@ -466,16 +462,13 @@ Utiliza Crear borrador para ajustes para copiar una versión semestral. Decide s
 
 Historial de reemplazos permite filtrar registros y abrir Ver detalle para revisar responsables y módulos afectados. Consultar carga por ramo permite comparar la distribución de clases entre docentes; utiliza sus filtros antes de sacar conclusiones.
 
+La evaluación y la aplicación tienen permisos distintos. Las clases de una versión aprobada o publicada no se reemplazan directamente. Un cambio docente no sustituye la revisión final de la programación.
 
-**Ten en cuenta:** La evaluación y la aplicación tienen permisos distintos. Las clases de una versión aprobada o publicada no se reemplazan directamente. Un cambio docente no sustituye la revisión final de la programación.
+## 21. Configuración, calendario e identidad
 
-**Resultado:** Un reemplazo revisado y trazable, o información para elegir otro candidato.
+**Configuración**
 
-## 20. Configuración, calendario e identidad
-
-**Dónde:** Configuración
-
-**Para qué:** Administrar datos institucionales y adaptar la presentación de la instalación.
+Administrar datos institucionales y adaptar la presentación de la instalación.
 
 ### Institución y calendario
 
@@ -490,15 +483,13 @@ Historial de reemplazos permite filtrar registros y abrir Ver detalle para revis
 3. Carga logos y favicon. Se admiten PNG, JPG y WebP de hasta 2 MB; el favicon debe ser cuadrado.
 4. Revisa la vista previa, confirma el alcance y pulsa Guardar y aplicar identidad. Puedes restaurar el diseño inicial de PROSEC.
 
-**Ten en cuenta:** Existe una identidad para toda la instalación: menú, acceso, pestañas, correos y nuevos PDF. No separa las cuentas o datos por institución. Los registros del calendario ya utilizados conservan su definición y los módulos activos no pueden superponerse.
+Existe una identidad para toda la instalación: menú, acceso, pestañas, correos y nuevos PDF. No separa las cuentas o datos por institución. Los registros del calendario ya utilizados conservan su definición y los módulos activos no pueden superponerse.
 
-**Resultado:** Una instalación identificada con la institución y un calendario consistente.
+## 22. Perfiles y permisos
 
-## 21. Perfiles y permisos
+**Administración → Perfiles y permisos**
 
-**Dónde:** Administración → Perfiles y permisos
-
-**Para qué:** Dar a cada cuenta las funciones necesarias para su trabajo.
+Dar a cada cuenta las funciones necesarias para su trabajo.
 
 ### Crear y asignar
 
@@ -512,20 +503,17 @@ Historial de reemplazos permite filtrar registros y abrir Ver detalle para revis
 2. Modifica los permisos y confirma su efecto sobre esas cuentas.
 3. Guarda. Si la pantalla quedó desactualizada, recarga y revisa de nuevo.
 
-**Ten en cuenta:** Los perfiles actuales tienen alcance institucional sobre todas las carreras. Llamar a un perfil Jefatura de carrera no restringe su acceso. Administrador está protegido. El permiso de cuentas, perfiles y catálogos incluye la oferta académica completa; concédelo solo a quien corresponda.
+Los perfiles actuales tienen alcance institucional sobre todas las carreras. Llamar a un perfil Jefatura de carrera no restringe su acceso. Administrador está protegido. El permiso de cuentas, perfiles y catálogos incluye la oferta académica completa; concédelo solo a quien corresponda.
 
-**Resultado:** Accesos definidos por función, con trazabilidad y protección del acceso administrativo.
+## 23. Resolver dudas frecuentes
 
-## 22. Resolver dudas frecuentes
+**Ayuda para el trabajo diario**
 
-**Dónde:** Ayuda para el trabajo diario
-
-**Para qué:** Encontrar la causa de un mensaje sin repetir operaciones a ciegas.
+Encontrar la causa de un mensaje sin repetir operaciones a ciegas.
 
 ### Antes de informar un problema
 
 Anota la pantalla, período y versión, qué intentabas hacer y el mensaje recibido. Si compartes una imagen, evita incluir contraseñas o enlaces docentes privados.
-
 
 | Situación | Qué hacer |
 | --- | --- |
@@ -534,15 +522,13 @@ Anota la pantalla, período y versión, qué intentabas hacer y el mensaje recib
 | No puedo generar | Revisa docentes asignados, disponibilidad aprobada, matrícula, capacidad, inventario y carga. |
 | La vista previa venció o cambió | Actualiza los datos y prepara o analiza una propuesta nueva. |
 | No puedo editar una clase | Comprueba que sea el borrador actual de un período activo. Una publicación requiere copia para ajustes. |
-| No llega el correo | Revisa el correo no deseado y comprueba el envío en Disponibilidad docente. La ficha debe tener RUT y correo. |
+| No llega el correo | Revisa correo no deseado y configuración de envío con el administrador. Los correos de acceso abren el inicio de sesión de PROSEC. |
 | Hay equipos pero faltan recursos | Revisa dónde están ubicadas las unidades; el stock institucional no garantiza disponibilidad en cada sala. |
 | El PDF solicita filtros | Reduce la selección de clases. La exportación no recorta silenciosamente el resultado. |
 
-**Resultado:** Un siguiente paso concreto o una consulta clara para el administrador.
+## 24. Glosario
 
-## 23. Glosario
-
-**Dónde:** Consulta rápida
+**Consulta rápida**
 
 Consulta el significado de los términos que aparecen en PROSEC.
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models;
 use App\Support\IntervalosHorario;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -27,8 +28,7 @@ class AsignacionModulosHorario
                 || (int) $seccion->periodo_academico_id !== (int) $periodo->id) {
                 $this->rechazar('horario', 'El grupo, la actividad o la sección ya no están activos en este período. Actualiza la página.');
             }
-            $asignaciones = Models\GrupoProfesor::where('grupo_seccion_id', $grupo->id)->where('estado', true)
-                ->whereIn('profesor_id', $profesoresIds)->orderBy('id')->lockForUpdate()->get()->unique('profesor_id');
+            $asignaciones = $this->docentesHeredados($grupo, $seccion)->whereIn('profesor_id', $profesoresIds);
             $directas = Models\HorarioProfesor::where('estado', true)->whereIn('profesor_id', $profesoresIds)
                 ->whereHas('horario', fn ($q) => $q->where('grupo_seccion_id', $grupo->id)->where('version_planificacion_id', $version->id)->where('estado', true))
                 ->orderByDesc('es_principal')->orderBy('id')->lockForUpdate()->get();
@@ -50,6 +50,13 @@ class AsignacionModulosHorario
                     $this->rechazar('bloques_horarios', 'Los módulos seleccionados se superponen. Elige intervalos que no coincidan entre sí.');
                 }
                 $rangos[$bloque->id] = $rango;
+            }
+            $reservado = Models\Horario::where('version_planificacion_id', $version->id)
+                ->where('actividad_seccion_id', $actividad->id)->where('grupo_seccion_id', $grupo->id)
+                ->where('dia_id', $dia->id)->whereIn('bloque_horario_id', $bloques->modelKeys())
+                ->where('estado', false)->with('bloqueHorario')->first();
+            if ($reservado) {
+                $this->rechazar('bloques_horarios', 'El módulo '.$reservado->bloqueHorario->numero.' de este día tiene un horario inactivo. Elige otro módulo o revisa la programación de origen.');
             }
             $asignados = Models\Horario::where('version_planificacion_id', $version->id)->where('grupo_seccion_id', $grupo->id)->where('estado', true)->count();
             $maximo = (int) $actividad->cantidad_horas;
@@ -128,7 +135,8 @@ class AsignacionModulosHorario
     public static function firmaDocentes($asignaciones): string
     {
         return hash('sha256', json_encode($asignaciones->where('estado', true)->sortBy('id')
-            ->map(fn ($a) => $a->only(['id', 'profesor_id', 'tipo_participacion', 'es_principal', 'observaciones']))->values()->all(), JSON_THROW_ON_ERROR));
+            ->map(fn ($a) => ['origen' => $a->getTable()] + $a->only(['id', 'profesor_id', 'tipo_participacion', 'es_principal', 'observaciones']))
+            ->values()->all(), JSON_THROW_ON_ERROR));
     }
 
     public function asignarProfesor(Models\Horario $referencia, array $datos, int $usuarioId, ?string $ip): array
@@ -153,7 +161,8 @@ class AsignacionModulosHorario
                 $this->rechazar('profesor_id', 'Selecciona un docente activo de la institución de este período.');
             }
             $actuales = $horario->profesores()->where('estado', true)->orderBy('id')->lockForUpdate()->get();
-            if (!hash_equals(self::firmaDocentes($actuales), $datos['huella_profesores'])) {
+            $efectivos = $actuales->isEmpty() ? $this->docentesHeredados($grupo, $seccion) : $actuales;
+            if (!hash_equals(self::firmaDocentes($efectivos), $datos['huella_profesores'])) {
                 $this->rechazar('horario', 'Los docentes de este horario cambiaron mientras lo editabas. Actualiza la página antes de guardar.');
             }
             $rango = IntervalosHorario::deBloque($horario->bloqueHorario);
@@ -181,9 +190,7 @@ class AsignacionModulosHorario
             if ($actuales->contains('profesor_id', $profesor->id) && ($añadir || $actuales->count() === 1)) return $resultado;
             $antes = $actuales->toArray();
             if ($añadir && $actuales->isEmpty()) {
-                $inferidos = $grupo->profesores()->where('estado', true)->get();
-                if ($inferidos->isEmpty()) $inferidos = $seccion->profesores()->where('estado', true)->get();
-                foreach ($inferidos->unique('profesor_id') as $inferido) {
+                foreach ($efectivos->unique('profesor_id') as $inferido) {
                     Models\HorarioProfesor::create(['horario_id' => $horario->id, 'profesor_id' => $inferido->profesor_id,
                         'tipo_participacion' => $inferido->tipo_participacion, 'es_principal' => $inferido->es_principal,
                         'observaciones' => $inferido->observaciones, 'estado' => true]);
@@ -204,6 +211,14 @@ class AsignacionModulosHorario
                 'profesores_sin_declaracion' => $declaradas->isEmpty() ? [$profesor->id] : []]);
             return $resultado;
         }, 3);
+    }
+
+    private function docentesHeredados(Models\GrupoSeccion $grupo, Models\Seccion $seccion): Collection
+    {
+        $docentes = $grupo->profesores()->where('estado', true)->orderBy('id')->lockForUpdate()->get();
+        return $docentes->isNotEmpty()
+            ? $docentes
+            : $seccion->profesores()->where('estado', true)->orderBy('id')->lockForUpdate()->get();
     }
 
     private function versionEditable(Models\PeriodoAcademico $periodo, int $versionId): Models\VersionPlanificacion

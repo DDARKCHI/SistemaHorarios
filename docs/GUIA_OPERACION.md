@@ -146,4 +146,4 @@ Las solicitudes pueden rechazarse o cancelarse con motivo. Un módulo con solici
 
 ## Manual de consulta por tareas
 
-El menú de usuario incluye **Manual de usuario**. La ayuda permite buscar entre 23 temas y descargar el PDF de 27 páginas en la hoja carta oficial de la UCSC, con pasos, ejemplos, esquemas e índice navegable. También se conserva la versión de consulta en `MANUAL_USUARIO.md` y el PDF en `docs/manual/Manual_de_usuario_PROSEC.pdf`.
+Abre **Manual de usuario** desde el menú de tu cuenta. La guía web muestra los temas y pasos disponibles según el perfil. El PDF completo incluye un índice navegable y los accesos por perfil en la hoja carta institucional de la UCSC. También puedes consultar `MANUAL_USUARIO.md` y `docs/manual/Manual_de_usuario_PROSEC.pdf`.

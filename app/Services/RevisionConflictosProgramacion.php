@@ -8,6 +8,7 @@ use App\Models\Horario;
 use App\Models\ProfesorVersion;
 use App\Models\PrioridadRecurso;
 use App\Models\VersionPlanificacion;
+use Illuminate\Database\Eloquent\Collection;
 
 class RevisionConflictosProgramacion
 {
@@ -21,9 +22,9 @@ class RevisionConflictosProgramacion
         'disponibilidad' => 'Disponibilidad docente', 'recursos' => 'Compatibilidad de recursos',
         'carga' => 'Módulos requeridos y asignados', 'datos' => 'Datos por revisar'];
 
-    public function revisar(VersionPlanificacion $version): array
+    public function cargarHorarios(VersionPlanificacion $version, array $relacionesAdicionales = []): Collection
     {
-        $horarios = Horario::where('version_planificacion_id', $version->id)->where('estado', true)->with([
+        return Horario::where('version_planificacion_id', $version->id)->where('estado', true)->with(array_merge([
             'dia', 'bloqueHorario', 'actividadSeccion.seccion.asignatura', 'grupoSeccion',
             'actividadSeccion.grupos' => fn ($query) => $query->where('estado_activo', true),
             'actividadSeccion.requerimientos' => fn ($query) => $query->where('estado', true)->where('obligatorio', true)->orderBy('id'),
@@ -36,8 +37,15 @@ class RevisionConflictosProgramacion
             'asignacionesSalas' => fn ($query) => $query->where('estado', true), 'asignacionesSalas.sala.tipoSala',
             'asignacionesLaboratorios' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratorios.laboratorio.sala.tipoSala',
             'asignacionesLaboratoriosMoviles' => fn ($query) => $query->where('estado', true), 'asignacionesLaboratoriosMoviles.laboratorioMovil',
-        ])->orderBy('id')->get();
-        $docentesVersion = ProfesorVersion::where('version_planificacion_id', $version->id)->get()->keyBy('profesor_id');
+        ], $relacionesAdicionales))->orderBy('id')->get();
+    }
+
+    public function revisar(VersionPlanificacion $version, ?Collection $horarios = null, ?array $secciones = null, ?Collection $docentesVersion = null): array
+    {
+        $horarios ??= $this->cargarHorarios($version);
+        // Los diagnósticos individuales pueden acotarse a una carrera, pero sus cruces se buscan en toda la versión.
+        $seccionesRevisadas = $secciones === null ? null : array_fill_keys($secciones, true);
+        $docentesVersion ??= ProfesorVersion::where('version_planificacion_id', $version->id)->get()->keyBy('profesor_id');
         $docentesPorHorario = $horarios->mapWithKeys(function ($horario) {
             $docentes = $horario->profesores;
             if ($docentes->isEmpty()) $docentes = $horario->grupoSeccion?->profesores ?? collect();
@@ -74,15 +82,18 @@ class RevisionConflictosProgramacion
             if (! $seccion || (int) $seccion->periodo_academico_id !== (int) $version->periodo_academico_id) {
                 $problemas[] = 'La sección no corresponde al período de esta versión.';
             }
-            if ($problemas) $datos[] = $base + ['tipo' => 'datos', 'mensaje' => implode(' ', $problemas), 'recursos' => [], 'intervalo' => $presentacion['hora']];
             $docentes = $docentesPorHorario->get($horario->id);
-            $revision = $revisionAsignaciones->revisar($horario, $docentes);
-            if ($revision['asignaciones']) $asignaciones[] = $base + ['tipo' => 'asignaciones', 'intervalo' => $presentacion['hora']] + $revision['asignaciones'];
-            if ($revision['capacidad']) $capacidades[] = $base + ['tipo' => 'capacidad', 'intervalo' => $presentacion['hora']] + $revision['capacidad'];
-            $revisionDocente = $revisionDisponibilidad->revisar($horario, $docentes);
-            if ($revisionDocente) $disponibilidad[] = $base + ['tipo' => 'disponibilidad', 'intervalo' => $presentacion['hora']] + $revisionDocente;
-            $revisionRecurso = $revisionRecursos->revisar($horario);
-            if ($revisionRecurso) $compatibilidad[] = $base + ['tipo' => 'recursos', 'intervalo' => $presentacion['hora']] + $revisionRecurso;
+            $enAlcance = $seccionesRevisadas === null || isset($seccionesRevisadas[$seccion?->id]);
+            if ($enAlcance) {
+                if ($problemas) $datos[] = $base + ['tipo' => 'datos', 'mensaje' => implode(' ', $problemas), 'recursos' => [], 'intervalo' => $presentacion['hora']];
+                $revision = $revisionAsignaciones->revisar($horario, $docentes);
+                if ($revision['asignaciones']) $asignaciones[] = $base + ['tipo' => 'asignaciones', 'intervalo' => $presentacion['hora']] + $revision['asignaciones'];
+                if ($revision['capacidad']) $capacidades[] = $base + ['tipo' => 'capacidad', 'intervalo' => $presentacion['hora']] + $revision['capacidad'];
+                $revisionDocente = $revisionDisponibilidad->revisar($horario, $docentes);
+                if ($revisionDocente) $disponibilidad[] = $base + ['tipo' => 'disponibilidad', 'intervalo' => $presentacion['hora']] + $revisionDocente;
+                $revisionRecurso = $revisionRecursos->revisar($horario);
+                if ($revisionRecurso) $compatibilidad[] = $base + ['tipo' => 'recursos', 'intervalo' => $presentacion['hora']] + $revisionRecurso;
+            }
             if (! $valido) continue;
 
             $recursos = [];
@@ -108,7 +119,7 @@ class RevisionConflictosProgramacion
                 $agregar('movil', $asignacion->laboratorio_movil_id, $lab?->codigo ?: ($lab?->nombre ?: 'Laboratorio móvil #'.$asignacion->laboratorio_movil_id));
             }
             foreach ($recursos as $clave => $recurso) {
-                $grupos[$horario->dia_id.':'.$clave][] = $base + ['inicio' => $inicio, 'fin' => $fin, 'recurso' => $recurso];
+                $grupos[$horario->dia_id.':'.$clave][] = $base + ['inicio' => $inicio, 'fin' => $fin, 'recurso' => $recurso, 'en_alcance' => $enAlcance];
             }
         }
 
@@ -118,6 +129,7 @@ class RevisionConflictosProgramacion
             foreach ($eventos as $actual) {
                 $activos = array_filter($activos, fn ($previo) => $previo['fin'] > $actual['inicio']);
                 foreach ($activos as $previo) {
+                    if (! $actual['en_alcance'] && ! $previo['en_alcance']) continue;
                     $modulos = [$previo['horarios'][0], $actual['horarios'][0]];
                     usort($modulos, fn ($a, $b) => $a['id'] <=> $b['id']);
                     $clave = $modulos[0]['id'].'-'.$modulos[1]['id'];

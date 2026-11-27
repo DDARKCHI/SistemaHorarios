@@ -629,6 +629,29 @@ class GeneracionAutomaticaTest extends IsolatedDatabaseTestCase
         $this->assertSame($copiado->id, $revision['observaciones']->sole()['horarios'][0]['id']);
     }
 
+    public function test_conserva_un_modulo_manual_de_almuerzo_y_solo_asigna_nuevos_fuera_de_ese_intervalo(): void
+    {
+        $lunes = Models\Dia::where('numero', 1)->firstOrFail();
+        $martes = Models\Dia::where('numero', 2)->firstOrFail();
+        $almuerzo = Models\BloqueHorario::where('es_almuerzo', true)->firstOrFail();
+        $manual = $this->manual(slot: $lunes->id.':'.$almuerzo->id);
+        $atributosOriginales = $manual->fresh()->getAttributes();
+        $this->aprobar(slots: [$martes->id.':'.$almuerzo->id, $this->slots()[1]]);
+
+        $nueva = $this->generar();
+
+        $this->assertSame($atributosOriginales, $manual->fresh()->getAttributes());
+        $this->assertSame(0, $manual->asignacionesSalas()->count());
+        $this->assertSame(2, $nueva->horarios()->count());
+        $copiado = $nueva->horarios()->where('bloque_horario_id', $almuerzo->id)->sole();
+        $this->assertSame($manual->dia_id, $copiado->dia_id);
+        $this->assertSame($manual->observaciones, $copiado->observaciones);
+        $this->assertSame($this->profesor->id, $copiado->profesores()->sole()->profesor_id);
+        $this->assertSame($this->sala->id, $copiado->asignacionesSalas()->sole()->sala_id);
+        $nuevo = $nueva->horarios()->where('bloque_horario_id', '!=', $almuerzo->id)->sole();
+        $this->assertSame($this->slots()[1], $nuevo->dia_id.':'.$nuevo->bloque_horario_id);
+    }
+
     public function test_la_fuente_anterior_tambien_puede_completarse_sin_modificarla(): void
     {
         $this->fuente->update(['tipo' => 'anterior']);

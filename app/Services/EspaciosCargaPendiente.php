@@ -15,15 +15,21 @@ class EspaciosCargaPendiente
         $familias = $actividad->requerimientos->map(fn ($r) => Models\RequerimientoActividad::tipoNormalizado($r->tipo_requerimiento));
         $requiereLab = $familias->contains('Laboratorio') || Models\RequerimientoActividad::tipoNormalizado($actividad->tipo) === 'Laboratorio';
         $requiereMovil = $familias->contains('Laboratorio móvil');
-        $movilesSede = $requiereMovil ? $moviles->filter(fn ($m) => (int) $m->sede_id === $sedeId && $m->estado && $m->disponible) : collect([null]);
+        $alternativaMovil = $requiereLab && ! $familias->contains('Laboratorio');
+        $movilesSede = $requiereMovil || $alternativaMovil
+            ? $moviles->filter(fn ($m) => (int) $m->sede_id === $sedeId && $m->estado && $m->disponible)->values()
+            : collect();
+        if (! $requiereMovil) $movilesSede->prepend(null);
         $cantidad = (int) ($grupo->inscritos ?: $grupo->cupos);
         if (! $cantidad && $actividad->grupos->where('estado_activo', true)->count() <= 1) $cantidad = (int) ($actividad->cantidad_estudiantes ?: ($actividad->seccion->inscritos ?: $actividad->seccion->cupos));
         $resultado = [];
         foreach ($salas as $sala) {
             if ((int) $sala->sede_id !== $sedeId || ! $sala->estado || ! $sala->disponible || ! $sala->tipoSala?->estado || ! $sala->sede?->estado) continue;
             $laboratorios = $sala->laboratorios->filter(fn ($l) => $l->estado && $l->disponible);
-            if ($sala->laboratorios->isEmpty() && ! $requiereLab) $laboratorios = collect([null]);
+            if ($sala->laboratorios->isEmpty() && (! $requiereLab || $alternativaMovil)) $laboratorios = collect([null]);
             foreach ($laboratorios as $lab) foreach ($movilesSede as $movil) {
+                if ($requiereLab && ! $lab && (! $alternativaMovil || ! $movil)) continue;
+                if ($lab && $movil && ! $requiereMovil) continue;
                 if (++$intentos > 30000) throw ValidationException::withMessages(['generacion' => 'La revisión de recursos alcanzó su límite. Reduce los grupos o precisa sus requerimientos para preparar una propuesta más acotada.']);
                 $virtual = new Models\Horario(['actividad_seccion_id' => $actividad->id, 'grupo_seccion_id' => $grupo->id, 'estado' => true]);
                 $virtual->setRelation('actividadSeccion', $actividad)->setRelation('grupoSeccion', $grupo)->setRelation('profesores', $docentes);
@@ -43,7 +49,7 @@ class EspaciosCargaPendiente
                 $clave = 's'.$sala->id.':l'.($lab?->id ?? 0).':m'.($movil?->id ?? 0);
                 $resultado[$clave] = ['sala_id' => (int) $sala->id, 'sede_id' => $sedeId, 'laboratorio_id' => $lab?->id, 'movil_id' => $movil?->id,
                     'cantidad' => $cantidad, 'recursos' => $recursos, 'prioridad' => $niveles->min() ?? 256,
-                    'preferencia' => ($lab && ! $requiereLab ? 20 : 0) + ($capacidad - $cantidad) / $capacidad,
+                    'preferencia' => ($lab && ! $requiereLab ? 20 : 0) + ($alternativaMovil && $movil ? 40 : 0) + ($capacidad - $cantidad) / $capacidad,
                     'nombre' => $sala->codigo.($lab ? ' · '.$lab->nombre : '').($movil ? ' · '.$movil->nombre : '').' · '.$sala->sede->nombre];
             }
         }

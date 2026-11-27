@@ -15,6 +15,7 @@ use App\Models\Seccion;
 use App\Models\VersionPlanificacion;
 use App\Services\GeneracionAutomatica;
 use App\Support\DiasCalendario;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ProgramacionSemestralController extends Controller
@@ -49,13 +50,14 @@ class ProgramacionSemestralController extends Controller
 
         $versionIdSolicitada = $request->input('version_id');
 
-        $versionId = $versiones
+        $version = $versiones
             ->firstWhere(
                 'id',
                 (int) $versionIdSolicitada
-            )?->id
-            ?? $versiones->firstWhere('es_actual', true)?->id
-            ?? $versiones->first()?->id;
+            )
+            ?? $versiones->firstWhere('es_actual', true)
+            ?? $versiones->first();
+        $versionId = $version?->id;
 
         $sedeId = $request->input('sede_id');
         $carreraId = $request->input('carrera_id');
@@ -111,7 +113,7 @@ class ProgramacionSemestralController extends Controller
         );
 
         $profesores = $this->obtenerProfesores(
-            $versionId,
+            $version,
             $sedeId,
             $carreraId,
             $semestre,
@@ -121,102 +123,38 @@ class ProgramacionSemestralController extends Controller
 
         $horarios = collect();
 
-        if ($versionId && $hayFiltroAplicado) {
-            $horariosQuery = Horario::with([
-                'actividadSeccion.seccion.asignatura',
-                'actividadSeccion.seccion.carreras',
-                'actividadSeccion.seccion.profesores.profesor',
-                'grupoSeccion',
-                'dia',
-                'bloqueHorario',
-                'profesores.profesor',
-                'asignacionesSalas.sala',
-                'asignacionesLaboratorios.laboratorio',
-                'asignacionesLaboratoriosMoviles.laboratorioMovil',
-            ])
-                ->where('version_planificacion_id', $versionId)
-                ->where('estado', true);
-
-            if ($sedeId) {
-                $horariosQuery->whereHas(
-                    'actividadSeccion.seccion.carreras.sedes',
-                    function ($query) use ($sedeId) {
-                        $query->where(
-                            'sedes.id',
-                            $sedeId
-                        );
-                    }
-                );
-            }
-
-            if ($carreraId) {
-                $horariosQuery->whereHas(
+        if ($version && $hayFiltroAplicado) {
+            $horariosQuery = $this->consultaHorarios($versionId, $sedeId, $carreraId, $semestre, $seccionNumero, $asignaturaId)
+                ->with([
+                    'actividadSeccion.seccion.asignatura',
                     'actividadSeccion.seccion.carreras',
-                    function ($query) use ($carreraId) {
-                        $query->where(
-                            'carreras.id',
-                            $carreraId
-                        );
-                    }
-                );
-            }
-
-            if ($semestre !== null && $semestre !== '') {
-                $horariosQuery->whereHas(
-                    'actividadSeccion.seccion',
-                    function ($query) use ($semestre) {
-                        $query->where(
-                            'secciones.semestre',
-                            $semestre
-                        );
-                    }
-                );
-            }
-
-            if ($seccionNumero) {
-                $horariosQuery->whereHas(
-                    'actividadSeccion.seccion',
-                    function ($query) use ($seccionNumero) {
-                        $query->where(
-                            'secciones.codigo',
-                            $seccionNumero
-                        );
-                    }
-                );
-            }
-
-            if ($asignaturaId) {
-                $horariosQuery->whereHas(
-                    'actividadSeccion.seccion',
-                    function ($query) use ($asignaturaId) {
-                        $query->where(
-                            'secciones.asignatura_id',
-                            $asignaturaId
-                        );
-                    }
-                );
-            }
+                    'actividadSeccion.seccion.profesores' => fn ($q) => $q->where('estado', true),
+                    'actividadSeccion.seccion.profesores.profesor',
+                    'grupoSeccion.profesores' => fn ($q) => $q->where('estado', true),
+                    'grupoSeccion.profesores.profesor',
+                    'dia',
+                    'bloqueHorario',
+                    'profesores' => fn ($q) => $q->where('estado', true),
+                    'profesores.profesor',
+                    'asignacionesSalas' => fn ($q) => $q->where('estado', true),
+                    'asignacionesSalas.sala',
+                    'asignacionesLaboratorios' => fn ($q) => $q->where('estado', true),
+                    'asignacionesLaboratorios.laboratorio',
+                    'asignacionesLaboratoriosMoviles' => fn ($q) => $q->where('estado', true),
+                    'asignacionesLaboratoriosMoviles.laboratorioMovil',
+                ]);
 
             if ($profesorId) {
-                $horariosQuery->whereHas(
-                    'profesores',
-                    function ($query) use ($profesorId) {
-                        $query->where(
-                            'profesor_id',
-                            $profesorId
-                        );
-                    }
-                );
+                $horariosQuery = $this->unirDocentesEfectivos($horariosQuery)
+                    ->whereRaw(self::DOCENTE_EFECTIVO.' = ?', [(int) $profesorId])
+                    ->select('horarios.*')->distinct();
             }
 
-            $horarios = $horariosQuery
-                ->orderBy('dia_id')
-                ->orderBy('bloque_horario_id')
-                ->get();
+            $horarios = $horariosQuery->orderBy('horarios.dia_id')->orderBy('horarios.bloque_horario_id')->get();
 
             $this->aplicarDatosProfesoresVersion(
                 $horarios,
-                $versionId
+                $version
             );
         }
 
@@ -297,15 +235,11 @@ class ProgramacionSemestralController extends Controller
         $seccionNumero = $request->input('seccion_numero');
         $asignaturaId = $request->input('asignatura_id');
 
-        if (!$versionId && $periodoId) {
-            $versionId = VersionPlanificacion::where(
-                'periodo_academico_id',
-                $periodoId
-            )
-                ->where('tipo', 'semestral')
-                ->where('es_actual', true)
-                ->value('id');
-        }
+        $versiones = VersionPlanificacion::where('tipo', 'semestral')
+            ->when($periodoId, fn ($consulta) => $consulta->where('periodo_academico_id', $periodoId));
+        $version = $versionId
+            ? $versiones->find($versionId)
+            : ($periodoId ? $versiones->where('es_actual', true)->orderByDesc('id')->first() : null);
 
         $carreras = $this->obtenerCarreras(
             $periodoId,
@@ -334,7 +268,7 @@ class ProgramacionSemestralController extends Controller
         );
 
         $profesores = $this->obtenerProfesores(
-            $versionId,
+            $version,
             $sedeId,
             $carreraId,
             $semestre,
@@ -566,118 +500,43 @@ class ProgramacionSemestralController extends Controller
         return $query->get();
     }
 
-    private function obtenerProfesores(
-        $versionId,
-        $sedeId = null,
-        $carreraId = null,
-        $semestre = null,
-        $seccionNumero = null,
-        $asignaturaId = null
-    ) {
-        if (!$versionId) {
-            return collect();
+    private const DOCENTE_EFECTIVO = 'COALESCE(hp.profesor_id, gp.profesor_id, sp.profesor_id)';
+
+    private function consultaHorarios($versionId, $sedeId, $carreraId, $semestre, $seccionNumero, $asignaturaId): Builder
+    {
+        $consulta = Horario::query()->where('horarios.version_planificacion_id', $versionId)->where('horarios.estado', true);
+
+        if ($sedeId || $carreraId || $semestre !== null && $semestre !== '' || $seccionNumero || $asignaturaId) {
+            $consulta->whereHas('actividadSeccion.seccion', function ($seccion) use ($sedeId, $carreraId, $semestre, $seccionNumero, $asignaturaId) {
+                if ($sedeId) $seccion->whereHas('carreras.sedes', fn ($s) => $s->where('sedes.id', $sedeId));
+                if ($carreraId) $seccion->whereHas('carreras', fn ($c) => $c->where('carreras.id', $carreraId));
+                if ($semestre !== null && $semestre !== '') $seccion->where('secciones.semestre', $semestre);
+                if ($seccionNumero) $seccion->where('secciones.codigo', $seccionNumero);
+                if ($asignaturaId) $seccion->where('secciones.asignatura_id', $asignaturaId);
+            });
         }
 
-        $query = Profesor::query()
-            ->where('estado', true);
+        return $consulta;
+    }
 
-        $query->whereHas(
-            'horarios',
-            function ($horarioProfesorQuery) use (
-                $versionId,
-                $sedeId,
-                $carreraId,
-                $semestre,
-                $seccionNumero,
-                $asignaturaId
-            ) {
-                $horarioProfesorQuery->whereHas(
-                    'horario',
-                    function ($horarioQuery) use (
-                        $versionId,
-                        $sedeId,
-                        $carreraId,
-                        $semestre,
-                        $seccionNumero,
-                        $asignaturaId
-                    ) {
-                        $horarioQuery->where(
-                            'version_planificacion_id',
-                            $versionId
-                        );
+    private function unirDocentesEfectivos(Builder $consulta): Builder
+    {
+        // Una asignación activa de módulo prevalece sobre el grupo y la sección.
+        return $consulta->join('actividades_seccion as actividad', 'actividad.id', '=', 'horarios.actividad_seccion_id')
+            ->leftJoin('horarios_profesores as hp', fn ($j) => $j->on('hp.horario_id', '=', 'horarios.id')->where('hp.estado', true))
+            ->leftJoin('grupos_profesores as gp', fn ($j) => $j->on('gp.grupo_seccion_id', '=', 'horarios.grupo_seccion_id')->where('gp.estado', true)->whereNull('hp.id'))
+            ->leftJoin('secciones_profesores as sp', fn ($j) => $j->on('sp.seccion_id', '=', 'actividad.seccion_id')->where('sp.estado', true)->whereNull('hp.id')->whereNull('gp.id'));
+    }
 
-                        $horarioQuery->whereHas(
-                            'actividadSeccion.seccion',
-                            function ($seccionQuery) use (
-                                $sedeId,
-                                $carreraId,
-                                $semestre,
-                                $seccionNumero,
-                                $asignaturaId
-                            ) {
-                                if ($seccionNumero) {
-                                    $seccionQuery->where(
-                                        'secciones.codigo',
-                                        $seccionNumero
-                                    );
-                                }
+    private function obtenerProfesores(?VersionPlanificacion $version, $sedeId = null, $carreraId = null, $semestre = null, $seccionNumero = null, $asignaturaId = null)
+    {
+        if (! $version) return collect();
 
-                                if ($semestre !== null && $semestre !== '') {
-                                    $seccionQuery->where(
-                                        'secciones.semestre',
-                                        $semestre
-                                    );
-                                }
+        $horarios = $this->consultaHorarios($version->id, $sedeId, $carreraId, $semestre, $seccionNumero, $asignaturaId);
+        $docentes = $this->unirDocentesEfectivos($horarios)->selectRaw(self::DOCENTE_EFECTIVO);
+        $profesores = Profesor::where('estado', true)->whereIn('id', $docentes)->get();
 
-                                if ($asignaturaId) {
-                                    $seccionQuery->where(
-                                        'secciones.asignatura_id',
-                                        $asignaturaId
-                                    );
-                                }
-
-                                if ($sedeId) {
-                                    $seccionQuery->whereHas(
-                                        'carreras.sedes',
-                                        function ($careerQuery) use ($sedeId) {
-                                            $careerQuery->where(
-                                                'sedes.id',
-                                                $sedeId
-                                            );
-                                        }
-                                    );
-                                }
-
-                                if ($carreraId) {
-                                    $seccionQuery->whereHas(
-                                        'carreras',
-                                        function ($careerQuery) use ($carreraId) {
-                                            $careerQuery->where(
-                                                'carreras.id',
-                                                $carreraId
-                                            );
-                                        }
-                                    );
-                                }
-                            }
-                        );
-                    }
-                );
-            }
-        );
-
-        $profesores = $query->get();
-
-        $datosVersion = ProfesorVersion::where(
-            'version_planificacion_id',
-            $versionId
-        )
-            ->whereIn(
-                'profesor_id',
-                $profesores->pluck('id')
-            )
-            ->get()
-            ->keyBy('profesor_id');
+        $datosVersion = $this->datosProfesoresVersion($version, $profesores->modelKeys());
 
         foreach ($profesores as $profesor) {
             $datos = $datosVersion->get($profesor->id);
@@ -701,106 +560,33 @@ class ProgramacionSemestralController extends Controller
             ->values();
     }
 
-    private function aplicarDatosProfesoresVersion(
-        $horarios,
-        $versionId
-    ): void {
-        if (!$versionId || $horarios->isEmpty()) {
-            return;
+    private function aplicarDatosProfesoresVersion($horarios, VersionPlanificacion $version): void
+    {
+        $asignaciones = $horarios->flatMap(function (Horario $horario) {
+            $docentes = $horario->profesores;
+            if ($docentes->isEmpty()) $docentes = $horario->grupoSeccion?->profesores ?? collect();
+            if ($docentes->isEmpty()) $docentes = $horario->actividadSeccion?->seccion?->profesores ?? collect();
+
+            $docentes = $docentes->unique('profesor_id')->values();
+            $horario->setRelation('docentesEfectivos', $docentes);
+
+            return $docentes;
+        });
+
+        $datosVersion = $this->datosProfesoresVersion($version, $asignaciones->pluck('profesor_id')->unique()->all());
+
+        foreach ($asignaciones as $asignacion) {
+            $datos = $datosVersion->get($asignacion->profesor_id);
+            if ($datos && $asignacion->profesor) $this->aplicarDatosProfesor($asignacion->profesor, $datos);
         }
+    }
 
-        $profesorIds = collect();
+    private function datosProfesoresVersion(VersionPlanificacion $version, array $profesorIds): \Illuminate\Support\Collection
+    {
+        if (! $profesorIds || ($version->es_actual && $version->estado === 'Borrador')) return collect();
 
-        foreach ($horarios as $horario) {
-            foreach ($horario->profesores as $horarioProfesor) {
-                if ($horarioProfesor->profesor_id) {
-                    $profesorIds->push(
-                        $horarioProfesor->profesor_id
-                    );
-                }
-            }
-
-            $seccion = $horario
-                ->actividadSeccion
-                ?->seccion;
-
-            if ($seccion) {
-                foreach ($seccion->profesores as $seccionProfesor) {
-                    if ($seccionProfesor->profesor_id) {
-                        $profesorIds->push(
-                            $seccionProfesor->profesor_id
-                        );
-                    }
-                }
-            }
-        }
-
-        $profesorIds = $profesorIds
-            ->unique()
-            ->values();
-
-        if ($profesorIds->isEmpty()) {
-            return;
-        }
-
-        $datosVersion = ProfesorVersion::where(
-            'version_planificacion_id',
-            $versionId
-        )
-            ->whereIn(
-                'profesor_id',
-                $profesorIds
-            )
-            ->get()
-            ->keyBy('profesor_id');
-
-        foreach ($horarios as $horario) {
-            foreach ($horario->profesores as $horarioProfesor) {
-                $profesor = $horarioProfesor->profesor;
-
-                if (!$profesor) {
-                    continue;
-                }
-
-                $datos = $datosVersion->get(
-                    $horarioProfesor->profesor_id
-                );
-
-                if ($datos) {
-                    $this->aplicarDatosProfesor(
-                        $profesor,
-                        $datos
-                    );
-                }
-            }
-
-            $seccion = $horario
-                ->actividadSeccion
-                ?->seccion;
-
-            if (!$seccion) {
-                continue;
-            }
-
-            foreach ($seccion->profesores as $seccionProfesor) {
-                $profesor = $seccionProfesor->profesor;
-
-                if (!$profesor) {
-                    continue;
-                }
-
-                $datos = $datosVersion->get(
-                    $seccionProfesor->profesor_id
-                );
-
-                if ($datos) {
-                    $this->aplicarDatosProfesor(
-                        $profesor,
-                        $datos
-                    );
-                }
-            }
-        }
+        return ProfesorVersion::where('version_planificacion_id', $version->id)
+            ->whereIn('profesor_id', $profesorIds)->get()->keyBy('profesor_id');
     }
 
     private function aplicarDatosProfesor(

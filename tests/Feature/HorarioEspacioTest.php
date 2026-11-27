@@ -296,7 +296,7 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
         $this->assertSame($datos['otra_sala']->sede->nombre, $response->viewData('espacioSeleccionado')['sede']);
     }
 
-    public function test_los_docentes_proceden_del_modulo_y_del_snapshot_de_la_version_consultada(): void
+    public function test_los_docentes_se_resuelven_por_modulo_grupo_o_seccion_con_identidad_segun_la_version(): void
     {
         $datos = $this->programacion();
         $responsable = $this->profesor('Nombre actual', 'Apellido actual');
@@ -315,12 +315,19 @@ class HorarioEspacioTest extends IsolatedDatabaseTestCase
             'version_planificacion_id' => $datos['importacion']->id, 'profesor_id' => $colaborador->id,
             'nombre' => 'Nombre de otra', 'apellido' => 'Versión',
         ]);
+        HorarioProfesor::create(['horario_id' => $datos['horario_importacion']->id, 'profesor_id' => $colaborador->id, 'estado' => true]);
 
         $response = $this->paraSala($datos['sala'])->assertOk();
         $sesion = $response->viewData('sesiones')->firstWhere('id', $datos['directa']->id);
 
-        $this->assertEqualsCanonicalizing(['Nombre de la versión Apellido histórico', 'Colaborador Vigente'], $sesion['profesores']);
-        $this->assertCount(2, $sesion['profesores']);
+        $this->assertEqualsCanonicalizing(['Nombre actual Apellido actual', 'Colaborador Vigente'], $sesion['profesores']);
+        $this->assertSame(['Docente solo De sección'], $response->viewData('sesiones')->firstWhere('id', $datos['laboratorio']->id)['profesores']);
+
+        $datos['grupo']->profesores()->create(['profesor_id' => $responsable->id, 'estado' => true]);
+        $conGrupo = $this->paraSala($datos['sala'])->assertOk();
+        $this->assertSame(['Nombre actual Apellido actual'], $conGrupo->viewData('sesiones')->firstWhere('id', $datos['laboratorio']->id)['profesores']);
+        $historica = $this->paraSala($datos['sala'], ['version_id' => $datos['importacion']->id])->assertOk();
+        $this->assertSame(['Nombre de otra Versión'], $historica->viewData('sesiones')->sole()['profesores']);
     }
 
     public function test_conserva_domingo_y_bloques_inactivos_si_tienen_clases_en_la_version(): void

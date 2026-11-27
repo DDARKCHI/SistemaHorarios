@@ -32,10 +32,15 @@ class ImportacionProgramacionController extends Controller
 
         $archivo = $request->file('archivo');
 
-        $hojas = Excel::toArray(
-            new ProgramacionImport,
-            $archivo
-        );
+        try {
+            $hojas = Excel::toArray(new ProgramacionImport, $archivo);
+        } catch (\Throwable $error) {
+            report($error);
+
+            return redirect()->route('programacion.importar')->withErrors([
+                'archivo' => 'No se pudo leer el archivo. Ábrelo en tu planilla de cálculo, guárdalo como XLSX, XLS o CSV y vuelve a cargarlo.',
+            ]);
+        }
 
         $excelService = new ProgramacionExcelService;
 

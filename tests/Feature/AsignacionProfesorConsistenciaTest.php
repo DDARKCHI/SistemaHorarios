@@ -119,6 +119,47 @@ class AsignacionProfesorConsistenciaTest extends IsolatedDatabaseTestCase
         );
     }
 
+    public function test_no_quita_un_docente_que_el_horario_hereda_del_grupo(): void
+    {
+        $horario = $this->crearHorario([], ['estado' => false]);
+
+        $this->quitarProfesor()->assertRedirect($this->url)->assertSessionHasErrors('asignacion');
+
+        $this->assertDatabaseHas('grupos_profesores', ['id' => $this->asignacion->id, 'estado' => true]);
+        $this->assertDatabaseHas('horarios', ['id' => $horario->id, 'estado' => true]);
+    }
+
+    #[DataProvider('contextosInactivos')]
+    public function test_revalida_el_contexto_al_guardar_el_docente(string $relacion, string $atributo, string $error): void
+    {
+        $cambio = false;
+        DB::connection()->beforeStartingTransaction(function () use ($relacion, $atributo, &$cambio) {
+            if (! $cambio) {
+                $cambio = true;
+                $this->$relacion->update([$atributo => false]);
+            }
+        });
+
+        $this->from($this->url)->post(route('programacion.asignacion.profesores.guardar'), [
+            'grupo_seccion_id' => $this->grupo->id, 'profesor_id' => $this->profesor->id,
+            'tipo_participacion' => 'AYUDANTE', 'es_principal' => '0',
+        ])->assertRedirect($this->url)->assertSessionHasErrors($error);
+
+        $this->assertTrue($cambio);
+        $this->assertDatabaseHas('grupos_profesores', ['id' => $this->asignacion->id, 'tipo_participacion' => 'PROFESOR RESPONSABLE', 'es_principal' => true]);
+    }
+
+    public static function contextosInactivos(): array
+    {
+        return [
+            'grupo' => ['grupo', 'estado_activo', 'grupo_seccion_id'],
+            'actividad' => ['actividad', 'estado', 'grupo_seccion_id'],
+            'sección' => ['seccion', 'estado_activo', 'grupo_seccion_id'],
+            'período' => ['periodo', 'estado', 'grupo_seccion_id'],
+            'docente' => ['profesor', 'estado', 'profesor_id'],
+        ];
+    }
+
     public function test_permite_quitar_un_docente_sin_modulos(): void
     {
         $this->quitarProfesor()->assertRedirect($this->url)->assertSessionHasNoErrors()->assertSessionHas('success');
@@ -168,6 +209,7 @@ class AsignacionProfesorConsistenciaTest extends IsolatedDatabaseTestCase
                 break;
             case 'participacion_inactiva':
                 $horario->profesores()->update(['estado' => false]);
+                HorarioProfesor::create(['horario_id' => $horario->id, 'profesor_id' => $this->colaborador->id, 'estado' => true]);
                 break;
             case 'semestral_historica':
                 $this->version->update(['es_actual' => false]);

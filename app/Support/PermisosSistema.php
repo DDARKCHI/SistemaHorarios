@@ -26,7 +26,7 @@ class PermisosSistema
         return [
             'Consulta' => [
                 'ver panel inicio' => ['Inicio y resumen', 'Consultar indicadores generales del sistema.'],
-                'ver programacion semestral' => ['Programación semestral', 'Consultar horarios y descargar publicaciones y sus reportes.'],
+                'ver programacion semestral' => ['Programación semestral', 'Consultar horarios, publicaciones e informes. Incluye el Panel de carrera para Administración y Jefatura de carrera.'],
                 'ver programacion anterior' => ['Programación anterior', 'Consultar versiones anteriores y sus filtros.'],
                 'ver intercambio docente' => ['Evaluación de reemplazos', 'Consultar candidatos, carga docente e historial. Aplicar requiere también asignación de docentes.'],
             ],
@@ -52,6 +52,9 @@ class PermisosSistema
             && ! $usuario->can('ver panel inicio') && ! $usuario->can('asignar profesores')
             && ! $usuario->can('administrar usuarios')) {
             return 'mi.disponibilidad.index';
+        }
+        if ($usuario->hasRole('Jefe de carrera') && ! $usuario->hasRole('Administrador') && PanelCarrera::visible($usuario)) {
+            return 'programacion.panel-carrera';
         }
         foreach ([
             'ver panel inicio' => 'inicio', 'ver programacion semestral' => 'programacion.semestral',

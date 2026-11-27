@@ -29,150 +29,62 @@
         </div>
     @endif
 
-    <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
-
-        <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 [&>div]:min-w-0">
-
-            <div>
-                <label for="periodo_id" class="mb-1 block text-xs font-semibold text-gray-600">
-                    Período
-                </label>
-
-                <select
-                    id="periodo_id"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
-                >
-                    <option value="">
-                        Seleccionar
-                    </option>
-
-                    @foreach ($periodos as $periodo)
-                        <option
-                            value="{{ $periodo->id }}"
-                            @selected((int) $periodoId === (int) $periodo->id)
-                        >
-                            {{ $periodo->nombre ?? ($periodo->anio . '-' . $periodo->numero_semestre) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="carrera_id" class="mb-1 block text-xs font-semibold text-gray-600">
-                    Carrera
-                </label>
-
-                <select
-                    id="carrera_id"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
-                >
-                    <option value="">
-                        Todas
-                    </option>
-
-                    @foreach ($carreras as $carrera)
-                        <option
-                            value="{{ $carrera->id }}"
-                            @selected((int) $carreraId === (int) $carrera->id)
-                        >
-                            {{ $carrera->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="semestre" class="mb-1 block text-xs font-semibold text-gray-600">
-                    Semestre
-                </label>
-
-                <select
-                    id="semestre"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
-                >
-                    <option value="">
-                        Todos
-                    </option>
-
-                    @foreach ($semestres as $item)
-                        <option
-                            value="{{ $item }}"
-                            @selected((string) $semestre === (string) $item)
-                        >
-                            Semestre {{ $item }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label for="seccion_id" class="mb-1 block text-xs font-semibold text-gray-600">
-                    Sección
-                </label>
-
-                <select
-                    id="seccion_id"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-institucional focus:outline-none focus:ring-1 focus:ring-institucional"
-                >
-                    <option value="">
-                        Seleccionar
-                    </option>
-
-                    @foreach ($seccionesFiltro as $item)
-                        <option
-                            value="{{ $item->id }}"
-                            @selected((int) $seccionId === (int) $item->id)
-                        >
-                            {{ $item->codigo }}
-                            —
-                            {{ $item->asignatura?->codigo }}
-                            {{ $item->asignatura?->nombre ?? $item->nombre }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
+    <x-filtros-compactos
+        id="filtros-horarios"
+        :campos="4"
+        action="{{ route('programacion.asignacion.horarios') }}"
+        data-url-opciones="{{ route('programacion.asignacion.horarios.filtros') }}"
+        class="mb-3"
+        aria-label="Filtros para asignar horarios"
+    >
+        <div>
+            <label for="periodo_id" class="mb-2 block text-sm font-semibold">Período</label>
+            <select id="periodo_id" name="periodo_id" data-select-buscable class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto">
+                <option value="">Seleccionar período</option>
+                @foreach ($periodos as $periodo)
+                    <option value="{{ $periodo->id }}" @selected((int) $periodoId === (int) $periodo->id)>{{ $periodo->nombre }}</option>
+                @endforeach
+            </select>
         </div>
+        <div>
+            <label for="carrera_id" class="mb-2 block text-sm font-semibold">Carrera</label>
+            <select id="carrera_id" name="carrera_id" data-select-buscable class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto">
+                <option value="">Todas las carreras</option>
+                @foreach ($carreras as $carrera)
+                    <option value="{{ $carrera->id }}" @selected((int) $carreraId === (int) $carrera->id)>{{ $carrera->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="semestre" class="mb-2 block text-sm font-semibold">Semestre</label>
+            <select id="semestre" name="semestre" data-select-buscable class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto">
+                <option value="">Todos</option>
+                @foreach ($semestres as $item)
+                    <option value="{{ $item }}" @selected((string) $semestre === (string) $item)>Semestre {{ $item }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label for="seccion_id" class="mb-2 block text-sm font-semibold">Sección</label>
+            <select id="seccion_id" name="seccion_id" data-select-buscable class="h-11 min-w-0 w-full rounded-lg border border-borde bg-superficie px-3 text-sm text-texto">
+                <option value="">Seleccionar sección</option>
+                @foreach ($seccionesFiltro as $item)
+                    <option value="{{ $item->id }}" @selected((int) $seccionId === (int) $item->id)>{{ $item->codigo }} · {{ $item->asignatura?->codigo }} {{ $item->asignatura?->nombre ?? $item->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+        <x-slot:acciones>
+            <a href="{{ route('programacion.asignacion.horarios') }}" class="boton boton-secundario">Limpiar</a>
+            <button type="submit" class="boton boton-primario">Consultar</button>
+        </x-slot:acciones>
+    </x-filtros-compactos>
+    <p id="estado-filtros-horarios" class="mb-3 rounded-lg border border-borde bg-superficie px-4 py-3 text-sm text-texto-secundario" role="status" hidden></p>
 
-    </div>
-
+    <div id="resultado-asignacion-horarios" class="min-w-0">
     @if ($version)
-        <div class="mb-2 rounded-xl border border-borde bg-white px-4 py-3 shadow-sm">
-
-            <div class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3 [&>div]:min-w-0">
-
-                <div>
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
-                        Versión actual
-                    </div>
-
-                    <div class="mt-1 text-sm font-semibold text-gray-800">
-                        {{ $version->nombre }}
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
-                        Versión
-                    </div>
-
-                    <div class="mt-1 text-sm font-semibold text-gray-800">
-                        V{{ $version->version }}
-                    </div>
-                </div>
-
-                <div>
-                    <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
-                        Estado
-                    </div>
-
-                    <div class="mt-1 text-sm font-semibold text-gray-800">
-                        {{ $version->estado }}
-                    </div>
-                </div>
-
-            </div>
-
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-sm shadow-sm">
+            <p class="font-semibold text-texto">{{ $version->nombre }}</p>
+            <p class="rounded-full bg-fondo px-3 py-1 text-xs font-medium text-texto-secundario">V{{ $version->version }} · {{ $version->estado }}</p>
         </div>
     @endif
 
@@ -230,7 +142,8 @@
 
                     @forelse ($actividad->grupos as $grupo)
 @php
-    $profesoresGrupo = $grupo->profesores
+    $docentesBase = $grupo->profesores->isNotEmpty() ? $grupo->profesores : $seccion->profesores;
+    $profesoresGrupo = $docentesBase
         ->concat($grupo->horarios->flatMap(fn ($h) => $h->profesores))
         ->filter(fn ($asignacion) => $asignacion->profesor?->estado)
         ->unique('profesor_id')->values();
@@ -323,6 +236,17 @@
                                 </div>
 
                                 @forelse ($grupo->horarios as $horario)
+                                    @php
+                                        $docentesHorario = $horario->profesores->isNotEmpty() ? $horario->profesores : $docentesBase;
+                                        $nombresDocentes = $docentesHorario->unique('profesor_id')->pluck('profesor')->filter()
+                                            ->map(fn ($docente) => trim($docente->nombre.' '.$docente->apellido))->implode(' · ');
+                                        $laboratoriosHorario = $horario->asignacionesLaboratorios->pluck('laboratorio')->filter();
+                                        $salasHorario = $horario->asignacionesSalas->pluck('sala')->filter()->whereNotIn('id', $laboratoriosHorario->pluck('sala_id'));
+                                        $espaciosHorario = $salasHorario->map(fn ($sala) => $sala->codigo.($sala->nombre && $sala->nombre !== $sala->codigo ? ' · '.$sala->nombre : ''))
+                                            ->concat($laboratoriosHorario->pluck('nombre'))
+                                            ->concat($horario->asignacionesLaboratoriosMoviles->pluck('laboratorioMovil.nombre'))
+                                            ->filter()->unique()->implode(' · ');
+                                    @endphp
 
                                     <div class="mb-2 flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3 lg:flex-row lg:items-center lg:justify-between">
 
@@ -346,9 +270,9 @@
                 ·
             </span>
 
-            {{ substr($horario->bloqueHorario?->hora_inicio, 0, 5) }}
+            {{ substr((string) $horario->bloqueHorario?->hora_inicio, 0, 5) }}
             -
-            {{ substr($horario->bloqueHorario?->hora_fin, 0, 5) }}
+            {{ substr((string) $horario->bloqueHorario?->hora_fin, 0, 5) }}
 
         </div>
 
@@ -362,39 +286,24 @@
 
     </div>
 
-    @if ($horario->profesores->isNotEmpty())
-
-        <div class="min-w-0 max-w-full break-words rounded-md border border-gray-200 bg-white px-3 py-2 lg:flex-1">
-
-            <div class="text-xs font-bold uppercase tracking-wide text-gray-400">
-                {{ $horario->profesores->count() === 1 ? 'Docente asignado' : 'Docentes asignados' }}
-            </div>
-
-            <div class="mt-0.5 text-xs font-semibold text-gray-700">
-
-                {{ $horario->profesores
-                    ->filter(fn ($horarioProfesor) => $horarioProfesor->profesor)
-                    ->map(function ($horarioProfesor) {
-                        return trim(
-                            $horarioProfesor->profesor->nombre
-                            . ' '
-                            . $horarioProfesor->profesor->apellido
-                        );
-                    })
-                    ->implode(' · ') }}
-
-            </div>
-
-        </div>
-
-    @endif
+    <dl class="min-w-0 break-words rounded-md border border-gray-200 bg-white px-3 py-2 text-xs lg:flex-1">
+        <dt class="font-semibold text-gray-500">{{ $docentesHorario->unique('profesor_id')->count() === 1 ? 'Docente asignado' : 'Docentes' }}</dt>
+        <dd class="mt-0.5 font-semibold text-gray-700">{{ $nombresDocentes ?: 'Sin docente asignado' }}</dd>
+        @if ($nombresDocentes && $horario->profesores->isEmpty())
+            <dd class="mt-0.5 text-gray-500">{{ $grupo->profesores->isNotEmpty() ? 'Asignación del grupo' : 'Asignación de la sección' }}</dd>
+        @endif
+        <dt class="mt-2 font-semibold text-gray-500">Espacio</dt>
+        <dd class="mt-0.5 text-gray-700">{{ $espaciosHorario ?: 'Pendiente de asignar' }}</dd>
+    </dl>
 
                                         @if ($editable)
+                                        <div class="flex flex-wrap items-center gap-2">
                                         <a class="boton boton-secundario" href="{{ route('programacion.cambios.create', $horario) }}">Solicitar cambio</a>
                                         <button type="button" class="boton boton-secundario" data-asignar-docente
                                             data-url="{{ route('programacion.asignacion.horarios.profesor', $horario) }}"
                                             data-horario="{{ $horario->id }}"
-                                            data-huella="{{ \App\Services\AsignacionModulosHorario::firmaDocentes($horario->profesores) }}"
+                                            data-huella="{{ \App\Services\AsignacionModulosHorario::firmaDocentes($docentesHorario) }}"
+                                            data-docentes-actuales="{{ $nombresDocentes }}"
                                             data-resumen="{{ $seccion->asignatura?->nombre }} · {{ $horario->dia?->nombre }} · {{ substr((string) $horario->bloqueHorario?->hora_inicio, 0, 5) }}–{{ substr((string) $horario->bloqueHorario?->hora_fin, 0, 5) }}">
                                             Asignar docente
                                         </button>
@@ -427,6 +336,7 @@
                                                 Eliminar
                                             </button>
                                         </form>
+                                        </div>
                                         @endif
 
                                     </div>
@@ -441,9 +351,16 @@
 
                             </div>
 
-                            @if ($profesoresGrupo->isNotEmpty())
+                            @if ($editable && $progresoModulos['puede_agregar'] && $profesoresGrupo->isEmpty())
+                                <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-borde bg-fondo px-4 py-3 text-sm text-texto-secundario">
+                                    <p>Asigna un docente al grupo para poder agregar horarios.</p>
+                                    @can('asignar profesores')
+                                        <a class="boton boton-secundario" href="{{ route('programacion.asignacion.profesores', ['periodo_id' => $periodoId, 'carrera_id' => $carreraId ?: null, 'semestre' => $semestre, 'seccion_id' => $seccion->id]) }}">Asignar docentes al grupo</a>
+                                    @endcan
+                                </div>
+                            @endif
 
-    @if ($editable && $progresoModulos['puede_agregar'])
+    @if ($editable && $progresoModulos['puede_agregar'] && $profesoresGrupo->isNotEmpty())
 
         <form
             method="POST"
@@ -690,7 +607,6 @@
 
                                 </form>
 @endif
-                            @endif
 
                         </div>
 
@@ -717,11 +633,12 @@
     @else
 
         <div class="rounded-lg border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-500">
-            Selecciona una sección para consultar y administrar sus horarios.
+            Elige una sección y pulsa Consultar para ver sus horarios.
         </div>
 
     @endif
 
+    </div>
 </div>
 
 @if ($seccion && $editable)
@@ -729,767 +646,84 @@
 @endif
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const periodo = document.getElementById('periodo_id');
-    const carrera = document.getElementById('carrera_id');
-    const semestre = document.getElementById('semestre');
-    const seccion = document.getElementById('seccion_id');
-
-    const filtrosUrl = @json(
-        route('programacion.asignacion.horarios.filtros')
-    );
-
-    const indexUrl = @json(
-        route('programacion.asignacion.horarios')
-    );
-
-    const filtrosBuscables = new Map();
-
-    function normalizarTexto(texto) {
-        return String(texto ?? '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim();
-    }
-
-    function crearFiltroBuscable(select, placeholder) {
-
-        if (!select || filtrosBuscables.has(select)) {
-            return;
-        }
-
-        const contenedor = document.createElement('div');
-        contenedor.className = 'relative w-full';
-
-        const input = document.createElement('input');
-
-        input.type = 'text';
-        input.autocomplete = 'off';
-        input.spellcheck = false;
-        input.placeholder = placeholder;
-
-        input.className =
-            'h-10 w-full rounded-lg border border-gray-300 bg-white px-3 pr-8 text-sm text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-institucional focus:ring-1 focus:ring-institucional';
-
-        const icono = document.createElement('div');
-
-        icono.className =
-            'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400';
-
-        icono.innerHTML = `
-            <svg
-                class="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 9l-7 7-7-7"
-                />
-            </svg>
-        `;
-
-        const lista = document.createElement('div');
-
-        lista.className =
-            'absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 w-full overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg';
-
-        contenedor.appendChild(input);
-        contenedor.appendChild(icono);
-        contenedor.appendChild(lista);
-
-        select.insertAdjacentElement(
-            'afterend',
-            contenedor
-        );
-
-        select.classList.add('hidden');
-
-        const estado = {
-            contenedor,
-            input,
-            lista,
-        };
-
-        filtrosBuscables.set(
-            select,
-            estado
-        );
-
-        function obtenerOpciones() {
-            return Array.from(select.options);
-        }
-        function obtenerTextoOpcion(opcion) {
-
-    return opcion
-        ? opcion.textContent
-            .replace(/\s+/g, ' ')
-            .trim()
-        : '';
-}
-
-        function cerrarLista() {
-            lista.classList.add('hidden');
-        }
-
-        function mostrarOpciones(busqueda = '') {
-
-            lista.innerHTML = '';
-
-            const textoBusqueda =
-                normalizarTexto(busqueda);
-
-            const opciones = obtenerOpciones()
-                .filter(function (opcion) {
-
-                    if (!opcion.value) {
-                        return false;
-                    }
-
-                    return normalizarTexto(
-    obtenerTextoOpcion(opcion)
-).includes(textoBusqueda);
-                });
-
-            if (opciones.length === 0) {
-
-                const vacio =
-                    document.createElement('div');
-
-                vacio.className =
-                    'px-3 py-2 text-xs text-gray-400';
-
-                vacio.textContent =
-                    'Sin resultados';
-
-                lista.appendChild(vacio);
-
-            } else {
-
-                opciones.forEach(function (opcion) {
-
-                    const item =
-                        document.createElement('button');
-
-                    item.type = 'button';
-
-                    item.className =
-    'flex w-full items-center px-3 py-2 text-left text-xs text-gray-700 transition hover:bg-gray-50';
-
-if (
-    String(opcion.value) ===
-    String(select.value)
-) {
-    item.classList.add(
-        'bg-red-50',
-        'font-semibold',
-        'text-red-700'
-    );
-}
-
-const texto =
-    document.createElement('span');
-
-texto.className =
-    'block min-w-0 whitespace-normal break-words';
-
-texto.textContent =
-    obtenerTextoOpcion(opcion);
-
-item.appendChild(texto);
-
-if (
-    String(opcion.value) ===
-    String(select.value)
-) {
-
-    const check =
-        document.createElement('span');
-
-    check.className =
-        'ml-2 shrink-0 text-red-700';
-
-    check.innerHTML = `
-        <svg
-            class="h-3.5 w-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-            />
-        </svg>
-    `;
-
-    item.appendChild(check);
-}
-
-                    item.addEventListener(
-                        'mousedown',
-                        function (event) {
-
-                            event.preventDefault();
-
-                            select.value =
-                                opcion.value;
-
-                            input.value =
-    obtenerTextoOpcion(opcion);
-
-                            cerrarLista();
-
-                            select.dispatchEvent(
-                                new Event(
-                                    'change',
-                                    {
-                                        bubbles: true
-                                    }
-                                )
-                            );
-                        }
-                    );
-
-                    lista.appendChild(item);
-                });
-            }
-
-            lista.classList.remove('hidden');
-        }
-
-       input.addEventListener(
-    'focus',
-    function () {
-
-        input.select();
-
-        mostrarOpciones('');
-    }
-);
-
-input.addEventListener(
-    'click',
-    function () {
-
-        input.select();
-
-        mostrarOpciones('');
-    }
-);
-
-        input.addEventListener(
-            'input',
-            function () {
-
-                const opcionSeleccionada =
-                    select.options[
-                        select.selectedIndex
-                    ];
-
-                const textoSeleccionado =
-    opcionSeleccionada?.value
-        ? obtenerTextoOpcion(opcionSeleccionada)
-        : '';
-
-                if (
-                    normalizarTexto(input.value)
-                    !== normalizarTexto(textoSeleccionado)
-                ) {
-                    select.value = '';
-                }
-
-                mostrarOpciones(
-                    input.value
-                );
-            }
-        );
-
-        input.addEventListener(
-            'keydown',
-            function (event) {
-
-                if (event.key === 'Escape') {
-                    cerrarLista();
-                    input.blur();
-                }
-            }
-        );
-
-        input.addEventListener(
-            'blur',
-            function () {
-
-                setTimeout(function () {
-
-                    cerrarLista();
-
-                    const opcionSeleccionada =
-                        select.options[
-                            select.selectedIndex
-                        ];
-
-                    if (
-                        opcionSeleccionada
-                        && opcionSeleccionada.value
-                    ) {
-                        input.value =
-    obtenerTextoOpcion(opcionSeleccionada);
-                    } else {
-                        input.value = '';
-                    }
-
-                }, 120);
-            }
-        );
-
-        actualizarFiltroBuscable(select);
-    }
-
-    function actualizarFiltroBuscable(select) {
-
-        const estado =
-            filtrosBuscables.get(select);
-
-        if (!estado) {
-            return;
-        }
-
-        const opcionSeleccionada =
-            select.options[
-                select.selectedIndex
-            ];
-
-        if (
-            opcionSeleccionada
-            && opcionSeleccionada.value
-        ) {
-            estado.input.value =
-    opcionSeleccionada
-        .textContent
-        .replace(/\s+/g, ' ')
-        .trim();
-        } else {
-            estado.input.value = '';
-        }
-
-        estado.lista.classList.add(
-            'hidden'
-        );
-    }
-
-    function limpiarSelect(select, texto) {
-
-        select.innerHTML = '';
-
-        const opcion =
-            document.createElement('option');
-
-        opcion.value = '';
-        opcion.textContent = texto;
-
-        select.appendChild(opcion);
-
-        actualizarFiltroBuscable(select);
-    }
-
-    function agregarOpcion(
-        select,
-        valor,
-        texto
-    ) {
-
-        const opcion =
-            document.createElement('option');
-
-        opcion.value = valor;
-        opcion.textContent = texto;
-
-        select.appendChild(opcion);
-    }
-
-    async function cargarFiltros() {
-
+document.addEventListener('DOMContentLoaded', () => {
+    const filtros = document.getElementById('filtros-horarios');
+    const resultado = document.getElementById('resultado-asignacion-horarios');
+    const estado = document.getElementById('estado-filtros-horarios');
+    const consultar = filtros.querySelector('button[type="submit"]');
+    const { periodo_id: periodo, carrera_id: carrera, semestre, seccion_id: seccion } = filtros.elements;
+    let peticion;
+
+    const informar = (mensaje) => {
+        estado.textContent = mensaje;
+        estado.hidden = mensaje === '';
+    };
+    const opciones = (select, etiqueta, items = [], valor = '') => {
+        select.replaceChildren(new Option(etiqueta, ''), ...items.map(([id, texto]) => new Option(texto, id)));
+        select.value = items.some(([id]) => String(id) === valor) ? valor : '';
+    };
+
+    async function cargarOpciones(origen) {
+        peticion?.abort();
+        peticion = null;
+        if (origen === periodo) opciones(carrera, 'Todas las carreras');
+        if (origen !== semestre) opciones(semestre, 'Todos');
+        opciones(seccion, 'Seleccionar sección');
+        resultado.hidden = true;
+        consultar.disabled = Boolean(periodo.value);
         if (!periodo.value) {
-
-            limpiarSelect(
-                carrera,
-                'Todas'
-            );
-
-            limpiarSelect(
-                semestre,
-                'Todos'
-            );
-
-            limpiarSelect(
-                seccion,
-                'Seleccionar'
-            );
-
+            filtros.removeAttribute('aria-busy');
+            informar('Selecciona un período para ver sus secciones.');
             return;
         }
 
-        const parametros =
-            new URLSearchParams({
-                periodo_id:
-                    periodo.value,
+        const solicitud = new AbortController();
+        peticion = solicitud;
+        const contexto = new URLSearchParams({ periodo_id: periodo.value, carrera_id: carrera.value, semestre: semestre.value });
+        filtros.setAttribute('aria-busy', 'true');
+        informar('Actualizando secciones…');
 
-                carrera_id:
-                    carrera.value,
-
-                semestre:
-                    semestre.value
+        try {
+            const respuesta = await fetch(filtros.dataset.urlOpciones + '?' + contexto, {
+                headers: { Accept: 'application/json' }, signal: solicitud.signal,
             });
-
-        const respuesta = await fetch(
-            filtrosUrl
-            + '?'
-            + parametros.toString(),
-            {
-                headers: {
-                    'Accept':
-                        'application/json'
-                }
+            if (!respuesta.ok) throw new Error('No se pudieron obtener las secciones.');
+            const datos = await respuesta.json();
+            if (peticion !== solicitud) return;
+            opciones(carrera, 'Todas las carreras', datos.carreras.map(i => [i.id, i.nombre]), contexto.get('carrera_id'));
+            opciones(semestre, 'Todos', datos.semestres.map(i => [i, 'Semestre ' + i]), contexto.get('semestre'));
+            opciones(seccion, 'Seleccionar sección', datos.secciones.map(i => [i.id, i.texto]));
+            informar(datos.secciones.length ? 'Elige una sección y pulsa Consultar.' : 'No hay secciones para estos filtros.');
+        } catch {
+            if (peticion === solicitud) informar('No se pudieron actualizar las secciones. Pulsa Consultar para volver a cargar las opciones.');
+        } finally {
+            if (peticion === solicitud) {
+                peticion = null;
+                filtros.removeAttribute('aria-busy');
+                consultar.disabled = false;
             }
-        );
-
-        if (!respuesta.ok) {
-            return;
         }
-
-        const datos =
-            await respuesta.json();
-
-        const carreraActual =
-            carrera.value;
-
-        const semestreActual =
-            semestre.value;
-
-        limpiarSelect(
-            carrera,
-            'Todas'
-        );
-
-        datos.carreras.forEach(
-            function (item) {
-
-                agregarOpcion(
-                    carrera,
-                    item.id,
-                    item.nombre
-                );
-            }
-        );
-
-        if (
-            carreraActual
-            && Array.from(
-                carrera.options
-            ).some(
-                opcion =>
-                    opcion.value
-                    === carreraActual
-            )
-        ) {
-            carrera.value =
-                carreraActual;
-        }
-
-        actualizarFiltroBuscable(
-            carrera
-        );
-
-        limpiarSelect(
-            semestre,
-            'Todos'
-        );
-
-        datos.semestres.forEach(
-            function (item) {
-
-                agregarOpcion(
-                    semestre,
-                    item,
-                    'Semestre ' + item
-                );
-            }
-        );
-
-        if (
-            semestreActual
-            && Array.from(
-                semestre.options
-            ).some(
-                opcion =>
-                    opcion.value
-                    === semestreActual
-            )
-        ) {
-            semestre.value =
-                semestreActual;
-        }
-
-        actualizarFiltroBuscable(
-            semestre
-        );
-
-        limpiarSelect(
-            seccion,
-            'Seleccionar'
-        );
-
-        datos.secciones.forEach(
-            function (item) {
-
-                agregarOpcion(
-                    seccion,
-                    item.id,
-                    item.texto
-                );
-            }
-        );
-
-        actualizarFiltroBuscable(
-            seccion
-        );
     }
 
-    function navegar() {
+    [periodo, carrera, semestre].forEach(select => select.addEventListener('change', () => cargarOpciones(select)));
+    seccion.addEventListener('change', () => {
+        resultado.hidden = true;
+        informar('Pulsa Consultar para ver los horarios de esta sección.');
+    });
+    filtros.addEventListener('submit', evento => {
+        if (peticion) evento.preventDefault();
+    });
 
-        if (!seccion.value) {
-            return;
-        }
-
-        const parametros =
-            new URLSearchParams({
-                periodo_id:
-                    periodo.value,
-
-                carrera_id:
-                    carrera.value,
-
-                semestre:
-                    semestre.value,
-
-                seccion_id:
-                    seccion.value
-            });
-
-        window.location.href =
-            indexUrl
-            + '?'
-            + parametros.toString();
-    }
-
-    crearFiltroBuscable(
-        periodo,
-        'Buscar período...'
-    );
-
-    crearFiltroBuscable(
-        carrera,
-        'Buscar carrera...'
-    );
-
-    crearFiltroBuscable(
-        semestre,
-        'Buscar semestre...'
-    );
-
-    crearFiltroBuscable(
-        seccion,
-        'Buscar sección...'
-    );
-
-    periodo.addEventListener(
-        'change',
-        async function () {
-
-            carrera.value = '';
-            semestre.value = '';
-            seccion.value = '';
-
-            actualizarFiltroBuscable(
-                carrera
-            );
-
-            actualizarFiltroBuscable(
-                semestre
-            );
-
-            actualizarFiltroBuscable(
-                seccion
-            );
-
-            await cargarFiltros();
-        }
-    );
-
-    carrera.addEventListener(
-        'change',
-        async function () {
-
-            semestre.value = '';
-            seccion.value = '';
-
-            actualizarFiltroBuscable(
-                semestre
-            );
-
-            actualizarFiltroBuscable(
-                seccion
-            );
-
-            await cargarFiltros();
-        }
-    );
-
-    semestre.addEventListener(
-        'change',
-        async function () {
-
-            seccion.value = '';
-
-            actualizarFiltroBuscable(
-                seccion
-            );
-
-            await cargarFiltros();
-        }
-    );
-
-    seccion.addEventListener(
-        'change',
-        navegar
-    );
-
-    document.addEventListener(
-        'click',
-        function (event) {
-
-            filtrosBuscables.forEach(
-                function (estado) {
-
-                    if (
-                        !estado.contenedor
-                            .contains(
-                                event.target
-                            )
-                    ) {
-                        estado.lista
-                            .classList
-                            .add('hidden');
-                    }
-                }
-            );
-        }
-    );
-
-    document
-        .querySelectorAll(
-            '.js-form-horario'
-        )
-        .forEach(
-            function (formulario) {
-
-                const maxModulos =
-                    Number(
-                        formulario.dataset
-                            .maxModulos || 0
-                    );
-
-                const modulosAsignados =
-                    Number(
-                        formulario.dataset
-                            .modulosAsignados || 0
-                    );
-
-                const disponibles =
-                    Math.max(
-                        0,
-                        maxModulos
-                        - modulosAsignados
-                    );
-
-                const checkboxes =
-                    Array.from(
-                        formulario
-                            .querySelectorAll(
-                                'input[name="bloques_horarios[]"]'
-                            )
-                    );
-
-                const boton =
-                    formulario.querySelector(
-                        'button[type="submit"]'
-                    );
-
-                function actualizarSeleccion() {
-
-                    const seleccionados =
-                        checkboxes.filter(
-                            checkbox =>
-                                checkbox.checked
-                        );
-
-                    checkboxes.forEach(
-                        function (checkbox) {
-
-                            if (
-                                seleccionados.length
-                                    >= disponibles
-                                && !checkbox.checked
-                            ) {
-                                checkbox.disabled =
-                                    true;
-                            } else {
-                                checkbox.disabled =
-                                    false;
-                            }
-                        }
-                    );
-
-                    if (boton) {
-
-                        boton.disabled =
-                            disponibles <= 0;
-
-                        boton.classList.toggle(
-                            'opacity-50',
-                            disponibles <= 0
-                        );
-
-                        boton.classList.toggle(
-                            'cursor-not-allowed',
-                            disponibles <= 0
-                        );
-                    }
-                }
-
-                checkboxes.forEach(
-                    function (checkbox) {
-
-                        checkbox.addEventListener(
-                            'change',
-                            actualizarSeleccion
-                        );
-                    }
-                );
-
-                actualizarSeleccion();
-            }
-        );
+    document.querySelectorAll('.js-form-horario').forEach(formulario => {
+        const disponibles = Number(formulario.dataset.modulosDisponibles);
+        const modulos = [...formulario.querySelectorAll('input[name="bloques_horarios[]"]')];
+        const actualizarSeleccion = () => {
+            const elegidos = modulos.filter(modulo => modulo.checked).length;
+            for (const modulo of modulos) modulo.disabled = elegidos >= disponibles && !modulo.checked;
+        };
+        modulos.forEach(modulo => modulo.addEventListener('change', actualizarSeleccion));
+        actualizarSeleccion();
+    });
 });
 </script>
 @endsection

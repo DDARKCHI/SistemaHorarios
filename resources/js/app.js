@@ -10,6 +10,8 @@ import './confirmaciones';
 import './accesos-docentes';
 import './estado-carga';
 import './manual-usuario';
+import './panel-carrera';
+import '../css/panel-carrera.css';
 
 document.addEventListener('DOMContentLoaded', function () {
     const menuAcciones = document.querySelector('[data-menu-acciones]');

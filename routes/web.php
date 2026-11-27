@@ -424,6 +424,7 @@ require __DIR__.'/secciones-academicas.php';
 require __DIR__.'/docentes.php';
 
 require __DIR__.'/completar-programacion.php';
+require __DIR__.'/panel-carrera.php';
 
 require __DIR__.'/configuracion.php';
 

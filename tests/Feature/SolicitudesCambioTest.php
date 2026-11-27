@@ -260,7 +260,11 @@ class SolicitudesCambioTest extends IsolatedDatabaseTestCase
     public function test_clases_sin_recurso_o_docente_no_se_pueden_proponer(): void
     {
         Models\GrupoProfesor::query()->delete();
-        $this->get(route('programacion.cambios.create', $this->horario))->assertSessionHasErrors('cambio');
+        $this->from(route('inicio'))->get(route('programacion.cambios.create', $this->horario))
+            ->assertRedirect(route('programacion.cambios.index', [
+                'periodo_id' => $this->periodo->id,
+                'q' => $this->horario->actividadSeccion->seccion->asignatura->codigo,
+            ]))->assertSessionHasErrors('cambio');
         Models\GrupoProfesor::create(['grupo_seccion_id' => $this->grupo->id, 'profesor_id' => $this->profesor->id, 'estado' => true]);
         Models\AsignacionSala::query()->delete();
         $this->get(route('programacion.cambios.create', $this->horario))->assertSessionHasErrors('cambio');

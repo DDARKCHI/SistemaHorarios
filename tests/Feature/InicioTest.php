@@ -119,7 +119,8 @@ class InicioTest extends IsolatedDatabaseTestCase
             ->assertOk()
             ->assertViewHas('versionSemestral', fn ($version) => $version->is($esperada))
             ->assertViewHas('resumen', ['modulos' => 0, 'grupos' => 0, 'secciones' => 0])
-            ->assertSee('Esta versión todavía no tiene módulos programados.')
+            ->assertSee('Módulos programados')
+            ->assertDontSee('Esta versión todavía no tiene módulos programados.')
             ->assertSee('Semestral · Borrador');
 
         $url = $response->viewData('urlProgramacion');
@@ -222,7 +223,7 @@ class InicioTest extends IsolatedDatabaseTestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('rolesDisponibilidad')]
-    public function test_la_disponibilidad_personal_no_aparece_en_el_panel_ni_en_los_menus_del_administrador(array $roles, bool $visible): void
+    public function test_la_propuesta_de_horario_se_distingue_de_la_disponibilidad_personal(array $roles, bool $visible): void
     {
         $this->darPermisos('enviar propuesta horario', 'ver programacion semestral');
         foreach ($roles as $rol) {
@@ -231,7 +232,8 @@ class InicioTest extends IsolatedDatabaseTestCase
         $this->actingAs($this->usuario->fresh());
 
         $response = $this->get(route('inicio'))->assertOk();
-        $this->assertSame($visible, collect($response->viewData('accesos'))->contains('titulo', 'Mi disponibilidad'));
+        $this->assertSame($visible, collect($response->viewData('accesos'))->contains('titulo', 'Propuesta de horario'));
+        $this->assertFalse(collect($response->viewData('accesos'))->contains('titulo', 'Mi disponibilidad'));
         $this->assertSame($visible, str_contains($response->getContent(), 'href="'.e(route('programacion.propuesta')).'"'));
     }
 
