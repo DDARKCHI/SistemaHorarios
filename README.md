@@ -22,7 +22,9 @@ git clone https://github.com/DDARKCHI/SistemaHorarios.git
 cd SistemaHorarios
 ```
 
-Sigue la [guía de instalación](docs/INSTALACION.md) para configurar el servidor, instalar dependencias, compilar los recursos y preparar la base. El servidor web debe apuntar a `public`. El repositorio no incluye `.env`, contraseñas, la base de datos ni archivos privados de los usuarios; para trasladar una instalación existente sigue también la [guía de respaldo](docs/RESPALDO_Y_RECUPERACION.md) y conserva su `APP_KEY`.
+Sigue la [guía de instalación](docs/INSTALACION.md) para configurar el servidor, instalar dependencias, compilar los recursos y preparar la base. El servidor web debe apuntar a `public`.
+
+Para probar PROSEC con horarios de ejemplo, importa la [base de demostración](database/distribucion/sistema_horarios_demo.sql) en una base vacía. Incluye el esquema y una programación ficticia con sala y laboratorio. Para trasladar una instalación activa y sus datos, sigue la [guía de respaldo y recuperación](docs/RESPALDO_Y_RECUPERACION.md).
 
 El [manual completo en PDF](docs/manual/Manual_de_usuario_PROSEC.pdf) está incluido. Dentro del sistema, la ayuda adapta sus instrucciones a los permisos de cada usuario.
 

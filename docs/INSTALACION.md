@@ -33,6 +33,18 @@ composer check-platform-reqs --no-dev
 
 El inicializador rechaza cualquier base con usuarios, aunque ninguno conserve el rol Administrador. No permite reinicializar, ascender una cuenta existente ni recuperar contraseñas; utiliza los procedimientos de Administración y recuperación para eso. Tampoco admite ejecución no interactiva. Al transferir una instalación existente, conserva sus cuentas y permisos y omite este paso. En la base local del proyecto solo se comprobó el rechazo: no se creó una cuenta real nueva.
 
+### Base de demostración
+
+La [base de demostración](../database/distribucion/sistema_horarios_demo.sql) contiene el esquema con sus migraciones registradas y una programación ficticia con un docente, dos módulos, una sala y un laboratorio. El primer administrador se crea al instalar.
+
+1. Crea una base de datos vacía, por ejemplo `prosec_demo`, con codificación `utf8mb4`.
+2. En phpMyAdmin, selecciona esa base, abre **Importar** y elige `sistema_horarios_demo.sql`.
+3. Configura el nombre y las credenciales de la base en `.env`. Completa los pasos de dependencias, clave y permisos de carpetas de la instalación nueva.
+4. Ejecuta `php artisan migrate` para aplicar las migraciones posteriores al SQL. Luego ejecuta `php artisan prosec:inicializar` para crear tu acceso.
+5. Ingresa a PROSEC y abre **Programación semestral → Panel de carrera** para revisar los módulos del ejemplo.
+
+Para trasladar registros de una instalación activa, utiliza el [procedimiento de respaldo y recuperación](RESPALDO_Y_RECUPERACION.md).
+
 ## Configuración de entrega
 
 ```dotenv
